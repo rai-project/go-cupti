@@ -1,10 +1,12 @@
 package cupti
 
-func cuptiActivityEnable(kind CUpti_ActivityKind) {
+import "github.com/rai-project/go-cupti/types"
+
+func cuptiActivityEnable(kind types.CUpti_ActivityKind) {
 
 }
 
-func cuptiActivityDisable(kind CUpti_ActivityKind) {
+func cuptiActivityDisable(kind types.CUpti_ActivityKind) {
 
 }
 

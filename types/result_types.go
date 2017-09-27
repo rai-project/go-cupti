@@ -1,4 +1,4 @@
-// //go:generate enumer -type=CUptiResult -json
+//go:generate enumer -type=CUptiResult -json
 
 package types
 
