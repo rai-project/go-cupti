@@ -7,26 +7,26 @@ import (
 	"github.com/rai-project/go-cupti/types"
 )
 
-func checkCUPTIError(code types.CUptiResult) error {
-	if code == types.CUPTI_SUCCESS {
+func checkCUPTIError(code C.CUptiResult) error {
+	if code == C.CUPTI_SUCCESS {
 		return nil
 	}
 	var errstr *C.char
-	C.cuptiGetResultString(C.CUptiResult(code), &errstr)
-	return errors.Errorf("cupti error code = %s, message = %s", code.String(), C.GoString(errstr))
+	C.cuptiGetResultString(code, &errstr)
+	return errors.Errorf("cupti error code = %s, message = %s", types.CUptiResult(code).String(), C.GoString(errstr))
 }
 
-func checkCUResult(code types.CUresult) error {
-	if code == types.CUDA_SUCCESS {
+func checkCUResult(code C.CUresult) error {
+	if code == C.CUDA_SUCCESS {
 		return nil
 	}
-	return errors.Errorf("cuda error code = %s", code.String())
+	return errors.Errorf("cuda error code = %s", types.CUresult(code).String())
 }
 
-func checkCUDAError(code types.CUDAError) error {
-	if code == types.CUDASuccess {
+func checkCUDAError(code C.cudaError_t) error {
+	if code == C.cudaSuccess {
 		return nil
 	}
-	errstr := C.cudaGetErrorString(C.cudaError_t(code))
-	return errors.Errorf("cuda error code = %s, message = %s", code.String(), C.GoString(errstr))
+	errstr := C.cudaGetErrorString(code)
+	return errors.Errorf("cuda error code = %s, message = %s", types.CUDAError(code).String(), C.GoString(errstr))
 }

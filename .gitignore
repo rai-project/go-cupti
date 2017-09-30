@@ -509,6 +509,9 @@ bld/
 *.VisualState.xml
 TestResult.xml
 
+
+_obj
+
 # Build Results of an ATL Project
 [Dd]ebugPS/
 [Rr]eleasePS/
