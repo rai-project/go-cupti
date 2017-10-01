@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		os.Exit(-1)
 	}
-	pp.Println(int(version))
+	pp.Println(version)
 	_ = cupti.GetActivityObjectKindId()
 	// cupti.GetActivityObjectKindId(types.CUPTI_ACTIVITY_OBJECT_PROCESS, nil)
 }

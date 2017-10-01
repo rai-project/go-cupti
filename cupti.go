@@ -19,6 +19,8 @@ type CUPTI struct {
 	*Options
 	subscriber      C.CUpti_SubscriberHandle
 	deviceResetTime time.Time
+	startTimeStamp  uint64
+	beginTime       time.Time
 }
 
 func New(opts ...Option) (*CUPTI, error) {
@@ -43,6 +45,12 @@ func New(opts ...Option) (*CUPTI, error) {
 		return nil, err
 	}
 
+	startTimeStamp, err := cuptiGetTimestamp()
+	if err != nil {
+		return nil, err
+	}
+	c.startTimeStamp = startTimeStamp
+	c.beginTime = time.Now()
 	return c, nil
 }
 
@@ -71,6 +79,10 @@ func (c *CUPTI) init() error {
 	// })
 
 	if _, err := c.DeviceReset(); err != nil {
+		return err
+	}
+
+	if err := c.cuptiSubscribe(); err != nil {
 		return err
 	}
 
@@ -123,5 +135,11 @@ func (c *CUPTI) stopActivies() error {
 }
 
 func (c *CUPTI) registerCallbacks() error {
+	for _, callback := range c.callbacks {
+		err := c.addCallback(callback)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

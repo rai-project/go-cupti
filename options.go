@@ -11,6 +11,7 @@ type Options struct {
 	samplingPeriod int
 	activities     []string
 	domains        []string
+	callbacks      []string
 }
 
 type Option func(o *Options)
@@ -39,6 +40,12 @@ func Domains(domains []string) Option {
 	}
 }
 
+func Callbacks(callbacks []string) Option {
+	return func(o *Options) {
+		o.callbacks = callbacks
+	}
+}
+
 func SamplingPeriod(s int) Option {
 	return func(o *Options) {
 		o.samplingPeriod = s
@@ -53,7 +60,8 @@ func NewOptions(opts ...Option) *Options {
 		tracer:         tracer,
 		samplingPeriod: Config.SamplingPeriod,
 		activities:     Config.Activities,
-		domains:      Config.Domains,
+		domains:        Config.Domains,
+		callbacks:      Config.Callbacks,
 	}
 
 	for _, o := range opts {

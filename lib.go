@@ -1,6 +1,8 @@
 package cupti
 
 /*
+#cgo CFLAGS: -I${SRCDIR}/cbits -O3 -Wall -g
+#cgo CXXFLAGS: -std=c++11
 #cgo CFLAGS: -I . -I /usr/local/cuda/include -I /usr/local/cuda/extras/CUPTI/include -DFMT_HEADER_ONLY
 #cgo LDFLAGS: -L . -lcupti -lcudart -Wl,-rpath -Wl,$ORIGIN
 #cgo darwin,amd64 LDFLAGS: -L /usr/local/cuda/lib -L /usr/local/cuda/extras/CUPTI/lib
