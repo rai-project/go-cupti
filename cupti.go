@@ -57,26 +57,29 @@ func New(opts ...Option) (*CUPTI, error) {
 var cuInitOnce sync.Once
 
 func (c *CUPTI) init() error {
-	panic("restore next block")
-	// cuInitOnce.Do(func() {
-	// 	if err := checkCUResult(C.cuInit(0)); err != nil {
-	// 		log.WithError(err).Error("failed to perform cuInit")
-	// 		return
-	// 	}
-	// 	for _, gpu := range nvidiasmi.Info.GPUS {
-	// 		var cuCtx C.CUcontext
-	// 		if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, gpu.ID)); err != nil {
-	// 			log.WithError(err).WithField("device_id", gpu.ID).Error("failed to create cuda context")
-	// 			return
-	// 		}
-	// 		var samplingConfig C.CUpti_ActivityPCSamplingConfig
-	// 		samplingConfig.samplingPeriod = c.options.samplingPeriod
-	// 		if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
-	// 			log.WithError(err).WithField("device_id", gpu.ID).Error("failed to set cupti sampling period")
-	// 			return
-	// 		}
-	// 	}
-	// })
+	cuInitOnce.Do(func() {
+		if err := checkCUResult(C.cuInit(0)); err != nil {
+			log.WithError(err).Error("failed to perform cuInit")
+			return
+		}
+		for id, gpu := range nvidiasmi.Info.GPUS {
+			var cuCtx C.CUcontext
+
+			if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, C.CUdevice(id))); err != nil {
+				log.WithError(err).
+					WithField("device_index", id).
+					WithField("device_id", gpu.ID).
+					Error("failed to create cuda context")
+				return
+			}
+			// var samplingConfig C.CUpti_ActivityPCSamplingConfig
+			// samplingConfig.samplingPeriod = C.CUpti_ActivityPCSamplingPeriod(c.samplingPeriod)
+			// if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
+			// 	log.WithError(err).WithField("device_id", gpu.ID).Error("failed to set cupti sampling period")
+			// 	return
+			// }
+		}
+	})
 
 	if _, err := c.DeviceReset(); err != nil {
 		return err

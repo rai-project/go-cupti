@@ -22,7 +22,7 @@ func Context(ctx context.Context) Option {
 	}
 }
 
-func Tracer(ctx context.Context) Option {
+func Tracer(tracer tr.Tracer) Option {
 	return func(o *Options) {
 		o.tracer = tracer
 	}

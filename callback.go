@@ -7,6 +7,7 @@ import "C"
 import (
 	"unsafe"
 
+	"github.com/ianlancetaylor/demangle"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
@@ -31,6 +32,15 @@ var (
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoDAsync_v2",
 	}
 )
+
+func demangleName(n *C.char) string {
+	mangledName := C.GoString(n)
+	name, err := demangle.ToString(mangledName)
+	if err != nil {
+		return mangledName
+	}
+	return name
+}
 
 func cuptiEnableCallback(subscriber C.CUpti_SubscriberHandle, domain C.CUpti_CallbackDomain, cbid C.CUpti_CallbackId) error {
 	return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, subscriber, domain, cbid))
@@ -90,15 +100,15 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     C.GoString(cbInfo.functionName),
+		"function_name":     demangleName(cbInfo.functionName),
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 	}
 	if cbInfo.symbolName != nil {
 		tags["symbol_name"] = C.GoString(cbInfo.symbolName)
 	}
-	span, ctx := c.tracer.StartSpanFromContext(c.ctx, "cupti_operation", tags)
-	c.ctx = setSpanContextCorrelationId(ctx, correlationId, span)
+	span, _ := c.tracer.StartSpanFromContext(c.ctx, "configure_call", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
 }
@@ -138,16 +148,16 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     C.GoString(cbInfo.functionName),
+		"function_name":     demangleName(cbInfo.functionName),
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"stream":            uintptr(unsafe.Pointer(params.hStream)),
 	}
 	if cbInfo.symbolName != nil {
-		tags["kernel"] = C.GoString(cbInfo.symbolName)
+		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, ctx := c.tracer.StartSpanFromContext(c.ctx, "cupti_operation", tags)
-	c.ctx = setSpanContextCorrelationId(ctx, correlationId, span)
+	span, _ := c.tracer.StartSpanFromContext(c.ctx, "launch_kernel", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
 }
@@ -216,12 +226,12 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			types.CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoDAsync_v2,
 			types.CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoHAsync_v2,
 			types.CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoDAsync_v2:
-			panic("handle device memcpy case....")
+			// panic("handle device memcpy case....")
 			return
 		default:
 			entry := log.WithField("cbid", cbid.String())
 			if cbInfo.functionName != nil {
-				entry = entry.WithField("function_name", C.GoString(cbInfo.functionName))
+				entry = entry.WithField("function_name", demangleName(cbInfo.functionName))
 			}
 			entry.Debug("skipping runtime call")
 			return
@@ -244,7 +254,7 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		default:
 			entry := log.WithField("cbid", cbid.String())
 			if cbInfo.functionName != nil {
-				entry = entry.WithField("function_name", C.GoString(cbInfo.functionName))
+				entry = entry.WithField("function_name", demangleName(cbInfo.functionName))
 			}
 			entry.Debug("skipping runtime call")
 			return

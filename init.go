@@ -14,6 +14,6 @@ var (
 func init() {
 	config.AfterInit(func() {
 		log = logger.New().WithField("pkg", "go-cupti")
-		tracer = tr.MustNew("cupti")
+		tracer = tr.MustNew("pkg/cupti")
 	})
 }
