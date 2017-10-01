@@ -1,9 +1,5 @@
 package cupti
 
-// #cgo CFLAGS: -I . -I /usr/local/cuda/include -I /usr/local/cuda/extras/CUPTI/include -DFMT_HEADER_ONLY
-// #cgo LDFLAGS: -L . -lcupti -lcudart
-// #cgo amd64 LDFLAGS: -L /usr/local/cuda/lib64 -L /usr/local/cuda/extras/CUPTI/lib64
-// #cgo ppc64le LDFLAGS: -L /usr/local/cuda/lib -L /usr/local/cuda/extras/CUPTI/lib
 // #include <cupti.h>
 import "C"
 import "github.com/rai-project/go-cupti/types"
@@ -70,7 +66,12 @@ func getActivityObjectKindString(kind types.CUpti_ActivityObjectKind) string {
 	return "<unknown> " + kind.String()
 }
 
-func GetActivityObjectKindId(kind types.CUpti_ActivityObjectKind, id *C.CUpti_ActivityObjectKindId) uint {
+// export GetActivityObjectKindId
+func GetActivityObjectKindId() *C.CUpti_ActivityObjectKindId {
+	return nil
+}
+
+func getActivityObjectKindId(kind types.CUpti_ActivityObjectKind, id *C.CUpti_ActivityObjectKindId) uint {
 	switch kind {
 	// case types.CUPTI_ACTIVITY_OBJECT_PROCESS:
 	// return (*id).__pt
