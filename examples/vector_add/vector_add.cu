@@ -45,7 +45,7 @@ extern "C" int VectorAdd(void) {
   cudaError_t err = cudaSuccess;
 
   // Print the vector length to be used, and compute its size
-  int numElements = 1000000;
+  int numElements = 1024*1024*256;
   size_t size = numElements * sizeof(float);
   printf("[Vector addition of %d elements]\n", numElements);
 
@@ -124,10 +124,10 @@ extern "C" int VectorAdd(void) {
 
   for (int ii = 0; ii < 10; ii++) {
     // Launch the Vector Add CUDA Kernel
-    int threadsPerBlock = 256;
+    int threadsPerBlock = 1024;
     int blocksPerGrid = (numElements + threadsPerBlock - 1) / threadsPerBlock;
-    printf("CUDA kernel launch with %d blocks of %d threads\n", blocksPerGrid,
-           threadsPerBlock);
+    // printf("CUDA kernel launch with %d blocks of %d threads\n", blocksPerGrid,
+    //        threadsPerBlock);
     vectorAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, numElements);
     err = cudaGetLastError();
     cudaDeviceSynchronize();

@@ -64,25 +64,27 @@ func main() {
 	tracer := tr.MustNew("cupti")
 	defer tr.Close()
 
-	span, ctx := tracer.StartSpanFromContext(ctx, "cupti")
-	defer span.Finish()
+	func() {
+		span, ctx := tracer.StartSpanFromContext(ctx, "cupti")
+		defer span.Finish()
 
-	cupti, err := cupti.New(cupti.Context(ctx), cupti.Tracer(tracer))
-	if err != nil {
-		log.WithError(err).Error("failed to create new cupti context")
-		os.Exit(-1)
-	}
-	defer cupti.Close()
+		cupti, err := cupti.New(cupti.Context(ctx), cupti.Tracer(tracer))
+		if err != nil {
+			log.WithError(err).Error("failed to create new cupti context")
+			os.Exit(-1)
+		}
+		defer cupti.Close()
 
-	var wg sync.WaitGroup
-	for ii := 0; ii < 2; ii++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			vectorAdd()
-		}()
-	}
-	wg.Wait()
+		var wg sync.WaitGroup
+		for ii := 0; ii < 1; ii++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				vectorAdd()
+			}()
+		}
+		wg.Wait()
 
+	}()
 	time.Sleep(5 * time.Second)
 }
