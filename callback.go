@@ -109,6 +109,10 @@ func (c *CUPTI) onCudaConfigureCallExit(domain types.CUpti_CallbackDomain, cbid 
 	if err != nil {
 		return err
 	}
+	if cbInfo.functionReturnValue != nil {
+		cuError := (*C.cudaError_t)(cbInfo.functionReturnValue)
+		span.SetTag("result", types.CUDAError(*cuError).String())
+	}
 	span.Finish()
 	return nil
 }
@@ -153,6 +157,10 @@ func (c *CUPTI) onCULaunchKernelExit(domain types.CUpti_CallbackDomain, cbid typ
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
 		return err
+	}
+	if cbInfo.functionReturnValue != nil {
+		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
+		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
 	return nil
