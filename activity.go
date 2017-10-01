@@ -1,8 +1,33 @@
 package cupti
 
-// #include <cupti.h>
+/*
+#include <cupti.h>
+//
+// A process object requires that we identify the process ID. A
+// thread object requires that we identify both the process and
+// thread ID.
+   typedef struct {
+    uint32_t processId;
+    uint32_t threadId;
+  } CUpti_ActivityObjectKindId_pt;
+
+  // A device object requires that we identify the device ID. A
+   // context object requires that we identify both the device and
+   // context ID. A stream object requires that we identify device,
+   // context, and stream ID.
+   //
+  typedef struct {
+    uint32_t deviceId;
+    uint32_t contextId;
+    uint32_t streamId;
+  } CUpti_ActivityObjectKindId_dcs;
+*/
 import "C"
-import "github.com/rai-project/go-cupti/types"
+import (
+	"unsafe"
+
+	"github.com/rai-project/go-cupti/types"
+)
 
 func getMemcpyKindString(kind types.CUpti_ActivityMemcpyKind) string {
 	switch kind {
@@ -67,24 +92,30 @@ func getActivityObjectKindString(kind types.CUpti_ActivityObjectKind) string {
 }
 
 // export GetActivityObjectKindId
-func GetActivityObjectKindId() *C.CUpti_ActivityObjectKindId {
+func GetActivityObjectKindId() *C.struct_pt {
 	return nil
 }
 
 func getActivityObjectKindId(kind types.CUpti_ActivityObjectKind, id *C.CUpti_ActivityObjectKindId) uint {
+	if id == nil {
+		return 0
+	}
 	switch kind {
-	// case types.CUPTI_ACTIVITY_OBJECT_PROCESS:
-	// return (*id).__pt
-	// 	return id.pt.processId
-	// return (*id).pt.processId
-	// case types.CUPTI_ACTIVITY_OBJECT_THREAD:
-	// 	return (*id).pt.threadId
-	// case types.CUPTI_ACTIVITY_OBJECT_DEVICE:
-	// 	return (*id).dcs.deviceId
-	// case types.CUPTI_ACTIVITY_OBJECT_CONTEXT:
-	// 	return (*id).dcs.contextId
-	// case types.CUPTI_ACTIVITY_OBJECT_STREAM:
-	// 	return (*id).dcs.streamId
+	case types.CUPTI_ACTIVITY_OBJECT_PROCESS:
+		pt := (*C.CUpti_ActivityObjectKindId_pt)(unsafe.Pointer(id))
+		return uint(pt.processId)
+	case types.CUPTI_ACTIVITY_OBJECT_THREAD:
+		pt := (*C.CUpti_ActivityObjectKindId_pt)(unsafe.Pointer(id))
+		return uint(pt.threadId)
+	case types.CUPTI_ACTIVITY_OBJECT_DEVICE:
+		dcs := (*C.CUpti_ActivityObjectKindId_dcs)(unsafe.Pointer(id))
+		return uint(dcs.deviceId)
+	case types.CUPTI_ACTIVITY_OBJECT_CONTEXT:
+		dcs := (*C.CUpti_ActivityObjectKindId_dcs)(unsafe.Pointer(id))
+		return uint(dcs.contextId)
+	case types.CUPTI_ACTIVITY_OBJECT_STREAM:
+		dcs := (*C.CUpti_ActivityObjectKindId_dcs)(unsafe.Pointer(id))
+		return uint(dcs.streamId)
 	default:
 		break
 	}

@@ -5,11 +5,19 @@ import (
 	"os"
 
 	"github.com/k0kubun/pp"
+	"github.com/rai-project/config"
 	"github.com/rai-project/go-cupti"
 )
 
+var configOptions = []config.Option{
+	config.AppName("carml"),
+	config.ColorMode(true),
+	config.DebugMode(true),
+	config.VerboseMode(true),
+}
+
 func main() {
-	// config.Init()
+	config.Init(configOptions...)
 	version, err := cupti.Version()
 	if err != nil {
 		os.Exit(-1)

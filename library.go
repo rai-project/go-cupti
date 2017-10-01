@@ -3,11 +3,11 @@ package cupti
 import (
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/Unknwon/com"
 
 	"github.com/rai-project/config"
-	"github.com/rai-project/nvidia-smi"
 	"github.com/rainycape/dl"
 )
 
@@ -24,6 +24,7 @@ func load() {
 		log.WithField("lib", lib).Error("unable to find cupti library")
 		return
 	}
+	log.WithField("lib", lib).Debug("loading cupti library")
 	dlib, err = dl.Open(lib, 0)
 	if err != nil {
 		log.WithError(err).Error("unable to find cupti")
@@ -42,11 +43,9 @@ func init() {
 		}
 		if DefaultCUPTILibraryPath == "" {
 			DefaultCUPTILibraryPath = filepath.Join(cudaBaseDir, "extras", "CUPTI", "lib")
-		}
-
-		nvidiasmi.Wait()
-		if !nvidiasmi.HasGPU {
-			return
+			if runtime.GOOS == "linux" && runtime.GOARCH == "amd64" {
+				DefaultCUPTILibraryPath += "64"
+			}
 		}
 		load()
 	})
