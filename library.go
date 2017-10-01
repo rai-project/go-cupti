@@ -19,7 +19,11 @@ var (
 
 func load() {
 	var err error
-	lib := filepath.Join(DefaultCUPTILibraryPath, "cupti"+dl.LibExt)
+	libPrefix := ""
+	if runtime.GOOS == "linux" {
+		libPrefix = "lib"
+	}
+	lib := filepath.Join(DefaultCUPTILibraryPath, libPrefix+"cupti"+dl.LibExt)
 	if !com.IsFile(lib) {
 		log.WithField("lib", lib).Error("unable to find cupti library")
 		return

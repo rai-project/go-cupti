@@ -23,6 +23,5 @@ func main() {
 		os.Exit(-1)
 	}
 	pp.Println(version)
-	_ = cupti.GetActivityObjectKindId()
 	// cupti.GetActivityObjectKindId(types.CUPTI_ACTIVITY_OBJECT_PROCESS, nil)
 }
