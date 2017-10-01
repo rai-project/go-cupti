@@ -29,6 +29,13 @@ import (
 	"github.com/rai-project/go-cupti/types"
 )
 
+var DefaultActivities = []string{
+	"CUPTI_ACTIVITY_KIND_MEMSET",
+	"CUPTI_ACTIVITY_KIND_MEMCPY",
+	"CUPTI_ACTIVITY_KIND_KERNEL",
+	"CUPTI_ACTIVITY_KIND_OVERHEAD",
+}
+
 func getMemcpyKindString(kind types.CUpti_ActivityMemcpyKind) string {
 	switch kind {
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_HTOD:
@@ -49,10 +56,12 @@ func getMemcpyKindString(kind types.CUpti_ActivityMemcpyKind) string {
 		return "DtoD"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_HTOH:
 		return "HtoH"
+	case types.CUPTI_ACTIVITY_MEMCPY_KIND_PTOP:
+		return "PtoP"
 	default:
 		break
 	}
-	return kind.String()
+	return "<unknown>  " + kind.String()
 }
 
 func getActivityOverheadKindString(kind types.CUpti_ActivityOverheadKind) string {
@@ -91,9 +100,23 @@ func getActivityObjectKindString(kind types.CUpti_ActivityObjectKind) string {
 	return "<unknown> " + kind.String()
 }
 
-// export GetActivityObjectKindId
-func GetActivityObjectKindId() *C.struct_pt {
-	return nil
+// Maps a MemoryKind enum to a const string.
+func getMemoryKindString(kind types.CUpti_ActivityMemoryKind) string {
+	switch kind {
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_UNKNOWN:
+		return "Unknown"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_PAGEABLE:
+		return "Pageable"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_PINNED:
+		return "Pinned"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_DEVICE:
+		return "Device"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_ARRAY:
+		return "Array"
+	default:
+		break
+	}
+	return "<unknown> " + kind.String()
 }
 
 func getActivityObjectKindId(kind types.CUpti_ActivityObjectKind, id *C.CUpti_ActivityObjectKindId) uint {
@@ -146,8 +169,13 @@ func cuptiActivityDisable(kind types.CUpti_ActivityKind) error {
 	return checkCUPTIError(e)
 }
 
-func cuptiActivityFlushAll() {
+func cuptiActivityConfigurePCSampling(ctx C.CUcontext, conf C.CUpti_ActivityPCSamplingConfig) {
+	e := C.cuptiActivityConfigurePCSampling(ctx, &conf)
+	return checkCUPTIError(e)
+}
 
+func cuptiActivityFlushAll() error {
+	return checkCUPTIError(C.cuptiActivityFlushAll(0))
 }
 
 func cuptiActivityGetNextRecord() {
