@@ -169,7 +169,7 @@ func cuptiActivityDisable(kind types.CUpti_ActivityKind) error {
 	return checkCUPTIError(e)
 }
 
-func cuptiActivityConfigurePCSampling(ctx C.CUcontext, conf C.CUpti_ActivityPCSamplingConfig) {
+func cuptiActivityConfigurePCSampling(ctx C.CUcontext, conf C.CUpti_ActivityPCSamplingConfig) error {
 	e := C.cuptiActivityConfigurePCSampling(ctx, &conf)
 	return checkCUPTIError(e)
 }

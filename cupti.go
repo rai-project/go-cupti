@@ -16,9 +16,9 @@ import (
 )
 
 type CUPTI struct {
+	*Options
 	subscriber      C.CUpti_SubscriberHandle
 	deviceResetTime time.Time
-	options         *Options
 }
 
 func New(opts ...Option) (*CUPTI, error) {
@@ -29,7 +29,7 @@ func New(opts ...Option) (*CUPTI, error) {
 
 	options := NewOptions(opts...)
 	c := &CUPTI{
-		options: options,
+		Options: options,
 	}
 	if err := c.init(); err != nil {
 		return nil, err
@@ -49,26 +49,26 @@ func New(opts ...Option) (*CUPTI, error) {
 var cuInitOnce sync.Once
 
 func (c *CUPTI) init() error {
-
-	cuInitOnce.Do(func() {
-		if err := checkCUResult(C.cuInit(0)); err != nil {
-			log.WithError(err).Error("failed to perform cuInit")
-			return
-		}
-		for _, gpu := range nvidiasmi.Info.GPUS {
-			var cuCtx C.CUcontext
-			if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, gpu.ID)); err != nil {
-				log.WithError(err).WithField("device_id", gpu.ID).Error("failed to create cuda context")
-				return
-			}
-			var samplingConfig C.CUpti_ActivityPCSamplingConfig
-			samplingConfig.samplingPeriod = c.options.samplingPeriod
-			if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
-				log.WithError(err).WithField("device_id", gpu.ID).Error("failed to set cupti sampling period")
-				return
-			}
-		}
-	})
+	panic("restore next block")
+	// cuInitOnce.Do(func() {
+	// 	if err := checkCUResult(C.cuInit(0)); err != nil {
+	// 		log.WithError(err).Error("failed to perform cuInit")
+	// 		return
+	// 	}
+	// 	for _, gpu := range nvidiasmi.Info.GPUS {
+	// 		var cuCtx C.CUcontext
+	// 		if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, gpu.ID)); err != nil {
+	// 			log.WithError(err).WithField("device_id", gpu.ID).Error("failed to create cuda context")
+	// 			return
+	// 		}
+	// 		var samplingConfig C.CUpti_ActivityPCSamplingConfig
+	// 		samplingConfig.samplingPeriod = c.options.samplingPeriod
+	// 		if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
+	// 			log.WithError(err).WithField("device_id", gpu.ID).Error("failed to set cupti sampling period")
+	// 			return
+	// 		}
+	// 	}
+	// })
 
 	if _, err := c.DeviceReset(); err != nil {
 		return err
@@ -95,7 +95,7 @@ func (c *CUPTI) Close() error {
 }
 
 func (c *CUPTI) startActivies() error {
-	for _, activityName := range c.options.activities {
+	for _, activityName := range c.activities {
 		activity, err := types.CUpti_ActivityKindString(activityName)
 		if err != nil {
 			return errors.Wrap(err, "unable to start activities")
@@ -109,7 +109,7 @@ func (c *CUPTI) startActivies() error {
 }
 
 func (c *CUPTI) stopActivies() error {
-	for _, activityName := range c.options.activities {
+	for _, activityName := range c.activities {
 		activity, err := types.CUpti_ActivityKindString(activityName)
 		if err != nil {
 			return errors.Wrap(err, "unable to stop activities")

@@ -9,7 +9,7 @@ import (
 type cuptiConfig struct {
 	SamplingPeriod int           `json:"sampling_period" config:"cupti.sampling_period" default:5`
 	Activities     []string      `json:"activities" config:"cupti.activities"`
-	Callbacks      []string      `json:"callbacks" config:"cupti.callbacks"`
+	Domains        []string      `json:"domains" config:"cupti.domains"`
 	done           chan struct{} `json:"-" config:"-"`
 }
 
@@ -33,8 +33,8 @@ func (a *cuptiConfig) Read() {
 	if len(a.Activities) == 0 {
 		a.Activities = DefaultActivities
 	}
-	if len(a.Callbacks) == 0 {
-		a.Callbacks = DefaultCallbacks
+	if len(a.Domains) == 0 {
+		a.Domains = DefaultDomains
 	}
 }
 
