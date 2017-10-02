@@ -43,23 +43,7 @@ func New(opts ...Option) (*CUPTI, error) {
 		return nil, err
 	}
 
-	if err := c.startActivies(); err != nil {
-		return nil, err
-	}
-
-	if err := c.registerCallbacks(); err != nil {
-		return nil, err
-	}
-
-	for ii, cuCtx := range c.cuCtxs {
-		var samplingConfig C.CUpti_ActivityPCSamplingConfig
-		samplingConfig.samplingPeriod = C.CUpti_ActivityPCSamplingPeriod(c.samplingPeriod)
-		if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
-			log.WithError(err).WithField("device_id", ii).Error("failed to set cupti sampling period")
-			defer c.Close()
-			return nil, err
-		}
-	}
+	c.Subscribe()
 
 	startTimeStamp, err := cuptiGetTimestamp()
 	if err != nil {
@@ -111,18 +95,37 @@ func (c *CUPTI) init() error {
 		return err
 	}
 
+	return nil
+}
+
+func (c *CUPTI) Subscribe() error {
+
 	if err := c.cuptiSubscribe(); err != nil {
 		return err
+	}
+
+	if err := c.startActivies(); err != nil {
+		return nil, err
+	}
+
+	if err := c.registerCallbacks(); err != nil {
+		return nil, err
+	}
+
+	for ii, cuCtx := range c.cuCtxs {
+		var samplingConfig C.CUpti_ActivityPCSamplingConfig
+		samplingConfig.samplingPeriod = C.CUpti_ActivityPCSamplingPeriod(c.samplingPeriod)
+		if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
+			log.WithError(err).WithField("device_id", ii).Error("failed to set cupti sampling period")
+			defer c.Close()
+			return nil, err
+		}
 	}
 
 	return nil
 }
 
-func (c *CUPTI) Close() error {
-	if c == nil {
-		return nil
-	}
-
+func (c *CUPTI) Unsubscribe() error {
 	c.Wait()
 
 	if err := c.stopActivies(); err != nil {
@@ -131,6 +134,15 @@ func (c *CUPTI) Close() error {
 	if c.subscriber != nil {
 		C.cuptiUnsubscribe(c.subscriber)
 	}
+
+}
+
+func (c *CUPTI) Close() error {
+	if c == nil {
+		return nil
+	}
+
+	c.Unsubscribe()
 
 	return nil
 }
