@@ -125,9 +125,6 @@ func (c *CUPTI) Close() error {
 
 	c.Wait()
 
-	if err := cuptiActivityFlushAll(); err != nil {
-		log.WithError(err).Error("failed to flush all activities")
-	}
 	if err := c.stopActivies(); err != nil {
 		log.WithError(err).Error("failed to stop activities")
 	}
