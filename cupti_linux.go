@@ -48,11 +48,11 @@ func New(opts ...Option) (*CUPTI, error) {
 		return nil, err
 	}
 
-	for _, cuCtx := range c.cuCtxs {
+	for ii, cuCtx := range c.cuCtxs {
 		var samplingConfig C.CUpti_ActivityPCSamplingConfig
 		samplingConfig.samplingPeriod = C.CUpti_ActivityPCSamplingPeriod(c.samplingPeriod)
 		if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
-			log.WithError(err).WithField("device_id", gpu.ID).Error("failed to set cupti sampling period")
+			log.WithError(err).WithField("device_id", ii).Error("failed to set cupti sampling period")
 			defer c.Close()
 			return nil, err
 		}
@@ -64,6 +64,7 @@ func New(opts ...Option) (*CUPTI, error) {
 	}
 	c.startTimeStamp = startTimeStamp
 	c.beginTime = time.Now()
+
 	return c, nil
 }
 
@@ -76,12 +77,12 @@ func (c *CUPTI) init() error {
 			return
 		}
 		c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
-		for id, gpu := range nvidiasmi.Info.GPUS {
+		for ii, gpu := range nvidiasmi.Info.GPUS {
 			var cuCtx C.CUcontext
 
-			if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, C.CUdevice(id))); err != nil {
+			if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, C.CUdevice(ii))); err != nil {
 				log.WithError(err).
-					WithField("device_index", id).
+					WithField("device_index", ii).
 					WithField("device_id", gpu.ID).
 					Error("failed to create cuda context")
 				return

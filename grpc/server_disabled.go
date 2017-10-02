@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func ServerUnaryInterceptor(optFuncs ...cupti.Option) grpc.UnaryServerInterceptor {
+func ServerUnaryInterceptor(_ ...cupti.Option) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},

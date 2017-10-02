@@ -23,7 +23,6 @@ const (
 	ALIGN_SIZE  = 8
 )
 
-
 func demangleName(n *C.char) string {
 	if n == nil {
 		return ""
