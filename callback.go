@@ -105,6 +105,9 @@ func spanFromContextCorrelationId(ctx context.Context, correlationId uint) (open
 
 func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
 	params := (*C.cudaConfigureCall_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
@@ -133,11 +136,15 @@ func (c *CUPTI) onCudaConfigureCallExit(domain types.CUpti_CallbackDomain, cbid 
 	if err != nil {
 		return err
 	}
+	if span == nil {
+		return errors.New("no span found")
+	}
 	if cbInfo.functionReturnValue != nil {
-		cuError := (*C.cudaError_t)(cbInfo.functionReturnValue)
-		span.SetTag("result", types.CUDAError(*cuError).String())
+		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
+		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
 	return nil
 }
 
@@ -166,6 +173,10 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"stream":            uintptr(unsafe.Pointer(params.hStream)),
+		"grid_dim":          []int{int(params.gridDimX), int(params.gridDimY), int(params.gridDimZ)},
+		"block_dim":         []int{int(params.blockDimX), int(params.blockDimY), int(params.blockDimZ)},
+		"shared_mem":        uint64(params.sharedMemBytes),
+		"shared_mem_human":  humanize.Bytes(uint64(params.sharedMemBytes)),
 	}
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
@@ -182,11 +193,16 @@ func (c *CUPTI) onCULaunchKernelExit(domain types.CUpti_CallbackDomain, cbid typ
 	if err != nil {
 		return err
 	}
+
+	if span == nil {
+		return errors.New("no span found")
+	}
 	if cbInfo.functionReturnValue != nil {
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
 	return nil
 }
 
