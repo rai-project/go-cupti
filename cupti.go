@@ -29,6 +29,10 @@ func (c *CUPTI) SetContext(ctx context.Context) {
 func (c *CUPTI) SetTracer(tracer tr.Tracer) {
 }
 
+func (c *CUPTI) Tracer() tr.Tracer {
+	return nil
+}
+
 func (c *CUPTI) Subscribe() error {
 	return nil
 }
