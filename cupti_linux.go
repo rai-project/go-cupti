@@ -102,21 +102,7 @@ func (c *CUPTI) init() error {
 				WithField("device_index", ii).
 				WithField("device_id", gpu.ID).
 				Error("failed to create cuda context")
-			return
-		}
-		c.cuCtxs[ii] = cuCtx
-	}
-
-	c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
-	for id, gpu := range nvidiasmi.Info.GPUS {
-		var cuCtx C.CUcontext
-
-		if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, C.CUdevice(id))); err != nil {
-			log.WithError(err).
-				WithField("device_index", id).
-				WithField("device_id", gpu.ID).
-				Error("failed to create cuda context")
-			return
+			return err
 		}
 		c.cuCtxs[ii] = cuCtx
 	}
