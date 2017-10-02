@@ -96,6 +96,9 @@ func (c *CUPTI) Close() error {
 	if c == nil {
 		return nil
 	}
+
+	c.Wait()
+
 	if err := cuptiActivityFlushAll(); err != nil {
 		log.WithError(err).Error("failed to flush all activities")
 	}
