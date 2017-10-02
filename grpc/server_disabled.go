@@ -1,6 +1,6 @@
-// +build !linux,!cgo
+// +build !linux !cgo
 
-package grpc
+package cuptigrpc
 
 import (
 	cupti "github.com/rai-project/go-cupti"

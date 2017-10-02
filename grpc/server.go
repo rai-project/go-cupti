@@ -1,6 +1,6 @@
 // +build linux,cgo
 
-package grpc
+package cuptigrpc
 
 import (
 	"github.com/apex/log"
