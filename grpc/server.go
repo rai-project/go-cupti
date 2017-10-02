@@ -19,9 +19,15 @@ func ServerUnaryInterceptor(opts ...cupti.Option) grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (resp interface{}, err error) {
-		cupti.Subscribe()
+		err = cupti.Subscribe()
+		if err != nil {
+			return handler(ctx, req)
+		}
 		defer cupti.Unsubscribe()
 		defer cupti.Wait()
+		tracer := cupti.Tracer()
+		span, ctx := tracer.StartSpanFromContext(ctx, "cupti")
+		defer span.Finish()
 		cupti.SetContext(ctx)
 		return handler(ctx, req)
 	}
