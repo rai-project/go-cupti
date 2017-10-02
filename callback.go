@@ -23,6 +23,8 @@ const (
 var (
 	DefaultCallbacks = []string{
 		"CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaDeviceSynchronize_v3020",
 		"CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020",
 		"CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyAsync_v3020",
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoH_v2",
@@ -31,6 +33,7 @@ var (
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoDAsync_v2",
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoD_v2",
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoDAsync_v2",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaSetupArgument_v3020",
 	}
 )
 
@@ -232,6 +235,9 @@ func (c *CUPTI) onCudaMemCopyDeviceExit(domain types.CUpti_CallbackDomain, cbid 
 	if err != nil {
 		return err
 	}
+	if span == nil {
+		return errors.New("no span found")
+	}
 	if cbInfo.functionReturnValue != nil {
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
@@ -282,6 +288,9 @@ func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.C
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
 		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
 	}
 	if cbInfo.functionReturnValue != nil {
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
