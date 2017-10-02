@@ -17,6 +17,7 @@ import (
 
 type CUPTI struct {
 	*Options
+	cuCtxs          []C.CUcontext
 	subscriber      C.CUpti_SubscriberHandle
 	deviceResetTime time.Time
 	startTimeStamp  uint64
@@ -45,6 +46,16 @@ func New(opts ...Option) (*CUPTI, error) {
 		return nil, err
 	}
 
+	for _, cuCtx := range c.cuCtxs {
+		var samplingConfig C.CUpti_ActivityPCSamplingConfig
+		samplingConfig.samplingPeriod = C.CUpti_ActivityPCSamplingPeriod(c.samplingPeriod)
+		if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
+			log.WithError(err).WithField("device_id", gpu.ID).Error("failed to set cupti sampling period")
+			defer c.Close()
+			return nil, err
+		}
+	}
+
 	startTimeStamp, err := cuptiGetTimestamp()
 	if err != nil {
 		return nil, err
@@ -62,6 +73,7 @@ func (c *CUPTI) init() error {
 			log.WithError(err).Error("failed to perform cuInit")
 			return
 		}
+		c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
 		for id, gpu := range nvidiasmi.Info.GPUS {
 			var cuCtx C.CUcontext
 
@@ -72,12 +84,7 @@ func (c *CUPTI) init() error {
 					Error("failed to create cuda context")
 				return
 			}
-			// var samplingConfig C.CUpti_ActivityPCSamplingConfig
-			// samplingConfig.samplingPeriod = C.CUpti_ActivityPCSamplingPeriod(c.samplingPeriod)
-			// if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
-			// 	log.WithError(err).WithField("device_id", gpu.ID).Error("failed to set cupti sampling period")
-			// 	return
-			// }
+			c.cuCtxs[ii] = cuCtx
 		}
 	})
 

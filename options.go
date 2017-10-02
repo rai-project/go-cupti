@@ -1,6 +1,7 @@
 package cupti
 
 import (
+	"github.com/rai-project/config"
 	tr "github.com/rai-project/tracer"
 	context "golang.org/x/net/context"
 )
@@ -12,6 +13,7 @@ type Options struct {
 	activities     []string
 	domains        []string
 	callbacks      []string
+	events         []string
 }
 
 type Option func(o *Options)
@@ -46,6 +48,12 @@ func Callbacks(callbacks []string) Option {
 	}
 }
 
+func Events(events []string) Option {
+	return func(o *Options) {
+		o.events = events
+	}
+}
+
 func SamplingPeriod(s int) Option {
 	return func(o *Options) {
 		o.samplingPeriod = s
@@ -62,6 +70,7 @@ func NewOptions(opts ...Option) *Options {
 		activities:     Config.Activities,
 		domains:        Config.Domains,
 		callbacks:      Config.Callbacks,
+		events:         config.Events,
 	}
 
 	for _, o := range opts {
