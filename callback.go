@@ -111,9 +111,6 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 	}
 	params := (*C.cudaConfigureCall_v3020_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
-	if functionName != "" {
-		ext.Component.Set(span, functionName)
-	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
@@ -130,6 +127,9 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 		tags["symbol_name"] = C.GoString(cbInfo.symbolName)
 	}
 	span, _ := c.tracer.StartSpanFromContext(c.ctx, "configure_call", tags)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -172,9 +172,6 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.cuLaunchKernel_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
-	if functionName != "" {
-		ext.Component.Set(span, functionName)
-	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
@@ -191,6 +188,9 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
 	span, _ := c.tracer.StartSpanFromContext(c.ctx, "launch_kernel", tags)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -231,10 +231,11 @@ func (c *CUPTI) onCULaunchKernel(domain types.CUpti_CallbackDomain, cbid types.C
 
 func (c *CUPTI) onCudaDeviceSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
+	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     demangleName(cbInfo.functionName),
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 	}
@@ -242,6 +243,9 @@ func (c *CUPTI) onCudaDeviceSynchronizeEnter(domain types.CUpti_CallbackDomain, 
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
 	span, _ := c.tracer.StartSpanFromContext(c.ctx, "device_synchronize", tags)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -282,9 +286,6 @@ func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid
 	}
 	params := (*C.cuMemcpyHtoD_v2_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
-	if functionName != "" {
-		ext.Component.Set(span, functionName)
-	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
@@ -300,6 +301,9 @@ func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
 	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy_dev", tags)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -344,9 +348,6 @@ func (c *CUPTI) onCudaSetupArgument(domain types.CUpti_CallbackDomain, cbid type
 func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	functionName := demangleName(cbInfo.functionName)
-	if functionName != "" {
-		ext.Component.Set(span, functionName)
-	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
@@ -358,6 +359,9 @@ func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
 	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_launch", tags)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -397,9 +401,6 @@ func (c *CUPTI) onCudaLaunch(domain types.CUpti_CallbackDomain, cbid types.CUPTI
 func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	functionName := demangleName(cbInfo.functionName)
-	if functionName != "" {
-		ext.Component.Set(span, functionName)
-	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
@@ -411,6 +412,9 @@ func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid t
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
 	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_synchronize", tags)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -448,9 +452,6 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.cudaMemcpy_v3020_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
-	if functionName != "" {
-		ext.Component.Set(span, functionName)
-	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
@@ -467,6 +468,9 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
 	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy", tags)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -523,7 +527,7 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			handle.onCudaMemCopyDevice(domain, cbid, cbInfo)
 			return
 		default:
-			entry := log.WithField("cbid", cbid.String()).
+			log.WithField("cbid", cbid.String()).
 				WithField("function_name", demangleName(cbInfo.functionName)).
 				Debug("skipping runtime call")
 			return
@@ -552,7 +556,7 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			handle.onCudaSetupArgument(domain, cbid, cbInfo)
 			return
 		default:
-			entry := log.WithField("cbid", cbid.String()).
+			log.WithField("cbid", cbid.String()).
 				WithField("function_name", demangleName(cbInfo.functionName)).
 				Debug("skipping runtime call")
 			return
