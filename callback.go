@@ -202,6 +202,9 @@ func (c *CUPTI) onCULaunchKernel(domain types.CUpti_CallbackDomain, cbid types.C
 
 func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
 	params := (*C.cuMemcpyHtoD_v2_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
@@ -211,11 +214,13 @@ func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.ByteCount),
 		"byte_count_human":  humanize.Bytes(uint64(params.ByteCount)),
+		"destination_ptr":   uintptr(params.dstDevice),
+		"source_ptr":        uintptr(unsafe.Pointer(params.srcHost)),
 	}
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy", tags)
+	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy_dev", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -232,6 +237,7 @@ func (c *CUPTI) onCudaMemCopyDeviceExit(domain types.CUpti_CallbackDomain, cbid 
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
 	return nil
 }
 
@@ -311,7 +317,7 @@ func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid t
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy", tags)
+	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_synchronize", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -356,6 +362,8 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uint64(params.count),
 		"byte_count_human":  humanize.Bytes(uint64(params.count)),
+		"destination_ptr":   uintptr(unsafe.Pointer(params.dst)),
+		"source_ptr":        uintptr(unsafe.Pointer(params.src)),
 		"kind":              types.CUDAMemcpyKind(params.kind).String(),
 	}
 	if cbInfo.symbolName != nil {
