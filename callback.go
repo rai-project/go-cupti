@@ -24,6 +24,9 @@ const (
 var (
 	DefaultCallbacks = []string{
 		"CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaDeviceSynchronize_v3020",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaStreamSynchronize_v3020",
 		"CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020",
 		"CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyAsync_v3020",
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoH_v2",
@@ -32,6 +35,7 @@ var (
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoDAsync_v2",
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoD_v2",
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoDAsync_v2",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaSetupArgument_v3020",
 	}
 )
 
@@ -102,6 +106,9 @@ func spanFromContextCorrelationId(ctx context.Context, correlationId uint) (open
 
 func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
 	params := (*C.cudaConfigureCall_v3020_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	if functionName != "" {
@@ -134,11 +141,15 @@ func (c *CUPTI) onCudaConfigureCallExit(domain types.CUpti_CallbackDomain, cbid 
 	if err != nil {
 		return err
 	}
+	if span == nil {
+		return errors.New("no span found")
+	}
 	if cbInfo.functionReturnValue != nil {
-		cuError := (*C.cudaError_t)(cbInfo.functionReturnValue)
-		span.SetTag("result", types.CUDAError(*cuError).String())
+		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
+		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
 	return nil
 }
 
@@ -171,6 +182,10 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"stream":            uintptr(unsafe.Pointer(params.hStream)),
+		"grid_dim":          []int{int(params.gridDimX), int(params.gridDimY), int(params.gridDimZ)},
+		"block_dim":         []int{int(params.blockDimX), int(params.blockDimY), int(params.blockDimZ)},
+		"shared_mem":        uint64(params.sharedMemBytes),
+		"shared_mem_human":  humanize.Bytes(uint64(params.sharedMemBytes)),
 	}
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
@@ -187,11 +202,16 @@ func (c *CUPTI) onCULaunchKernelExit(domain types.CUpti_CallbackDomain, cbid typ
 	if err != nil {
 		return err
 	}
+
+	if span == nil {
+		return errors.New("no span found")
+	}
 	if cbInfo.functionReturnValue != nil {
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
 	return nil
 }
 
@@ -209,8 +229,57 @@ func (c *CUPTI) onCULaunchKernel(domain types.CUpti_CallbackDomain, cbid types.C
 
 }
 
+func (c *CUPTI) onCudaDeviceSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     demangleName(cbInfo.functionName),
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+	}
+	if cbInfo.symbolName != nil {
+		tags["kernel"] = demangleName(cbInfo.symbolName)
+	}
+	span, _ := c.tracer.StartSpanFromContext(c.ctx, "device_synchronize", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onCudaDeviceSynchronizeExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if cbInfo.functionReturnValue != nil {
+		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
+		span.SetTag("result", types.CUresult(*cuError).String())
+	}
+	span.Finish()
+	return nil
+}
+
+func (c *CUPTI) onCudaDeviceSynchronize(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onCudaDeviceSynchronizeEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onCudaDeviceSynchronizeExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+
+}
+
 func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
 	params := (*C.cuMemcpyHtoD_v2_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	if functionName != "" {
@@ -224,11 +293,13 @@ func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.ByteCount),
 		"byte_count_human":  humanize.Bytes(uint64(params.ByteCount)),
+		"destination_ptr":   uintptr(params.dstDevice),
+		"source_ptr":        uintptr(unsafe.Pointer(params.srcHost)),
 	}
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy", tags)
+	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy_dev", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -240,11 +311,15 @@ func (c *CUPTI) onCudaMemCopyDeviceExit(domain types.CUpti_CallbackDomain, cbid 
 	if err != nil {
 		return err
 	}
+	if span == nil {
+		return errors.New("no span found")
+	}
 	if cbInfo.functionReturnValue != nil {
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
 	return nil
 }
 
@@ -294,6 +369,9 @@ func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.C
 	if err != nil {
 		return err
 	}
+	if span == nil {
+		return errors.New("no span found")
+	}
 	if cbInfo.functionReturnValue != nil {
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
@@ -332,7 +410,7 @@ func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid t
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy", tags)
+	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_synchronize", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -381,6 +459,8 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uint64(params.count),
 		"byte_count_human":  humanize.Bytes(uint64(params.count)),
+		"destination_ptr":   uintptr(unsafe.Pointer(params.dst)),
+		"source_ptr":        uintptr(unsafe.Pointer(params.src)),
 		"kind":              types.CUDAMemcpyKind(params.kind).String(),
 	}
 	if cbInfo.symbolName != nil {
@@ -451,6 +531,10 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 	case types.CUPTI_CB_DOMAIN_RUNTIME_API:
 		cbid := types.CUPTI_RUNTIME_TRACE_CBID(cbid0)
 		switch cbid {
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaDeviceSynchronize_v3020,
+			types.CUPTI_RUNTIME_TRACE_CBID_cudaStreamSynchronize_v3020:
+			handle.onCudaDeviceSynchronize(domain, cbid, cbInfo)
+			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020,
 			types.CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyAsync_v3020:
 			handle.onCudaMemCopy(domain, cbid, cbInfo)

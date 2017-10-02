@@ -65,7 +65,7 @@ func main() {
 	defer tr.Close()
 
 	func() {
-		span, ctx := tracer.StartSpanFromContext(ctx, "cupti")
+		span, ctx := tracer.StartSpanFromContext(ctx, "vector_add")
 		defer span.Finish()
 
 		cupti, err := cupti.New(cupti.Context(ctx), cupti.Tracer(tracer))

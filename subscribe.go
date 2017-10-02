@@ -26,7 +26,20 @@ func cuptiEnableDomain() {
 }
 
 func (c *CUPTI) cuptiSubscribe() error {
-	return checkCUPTIError(C.cuptiSubscribe(&c.subscriber, (C.CUpti_CallbackFunc)(unsafe.Pointer(C.callback)), unsafe.Pointer(c)))
+	var subscriber C.CUpti_SubscriberHandle
+
+	err := checkCUPTIError(
+		C.cuptiSubscribe(
+			&subscriber,
+			(C.CUpti_CallbackFunc)(unsafe.Pointer(C.callback)),
+			unsafe.Pointer(c),
+		),
+	)
+	if err != nil {
+		return err
+	}
+	c.subscriber = subscriber
+	return nil
 }
 
 func cuptiUnsubscribe() {
