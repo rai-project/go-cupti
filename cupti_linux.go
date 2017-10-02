@@ -67,6 +67,12 @@ func (c *CUPTI) SetTracer(tracer tr.Tracer) {
 	c.tracer = tracer
 }
 
+func (c *CUPTI) Tracer() tr.Tracer {
+	c.Lock()
+	defer c.Unlock()
+	return c.tracer
+}
+
 var cuInitOnce sync.Once
 
 func (c *CUPTI) init() error {
