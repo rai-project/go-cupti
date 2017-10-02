@@ -1,3 +1,5 @@
+// +build linux,cgo
+
 package cupti
 
 /*
@@ -28,13 +30,6 @@ import (
 
 	"github.com/rai-project/go-cupti/types"
 )
-
-var DefaultActivities = []string{
-	"CUPTI_ACTIVITY_KIND_MEMSET",
-	"CUPTI_ACTIVITY_KIND_MEMCPY",
-	"CUPTI_ACTIVITY_KIND_KERNEL",
-	"CUPTI_ACTIVITY_KIND_OVERHEAD",
-}
 
 func getMemcpyKindString(kind types.CUpti_ActivityMemcpyKind) string {
 	switch kind {

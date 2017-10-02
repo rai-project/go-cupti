@@ -1,7 +1,6 @@
 package cupti
 
 import (
-	"github.com/rai-project/config"
 	tr "github.com/rai-project/tracer"
 	context "golang.org/x/net/context"
 )
@@ -70,7 +69,7 @@ func NewOptions(opts ...Option) *Options {
 		activities:     Config.Activities,
 		domains:        Config.Domains,
 		callbacks:      Config.Callbacks,
-		events:         config.Events,
+		events:         Config.Events,
 	}
 
 	for _, o := range opts {
