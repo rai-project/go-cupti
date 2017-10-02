@@ -7,7 +7,7 @@ package cupti
 #cgo LDFLAGS: -L . -lcuda -lcudart -lcupti -Wl,-rpath -Wl,$ORIGIN
 #cgo darwin,amd64 LDFLAGS: -L /usr/local/cuda/lib -L /usr/local/cuda/extras/CUPTI/lib
 #cgo linux,amd64 LDFLAGS: -L /usr/local/cuda/lib64 -L /usr/local/cuda/extras/CUPTI/lib64
-#cgo linux,ppc64le LDFLAGS: -L /usr/local/cuda/lib -L /usr/local/cuda/extras/CUPTI/lib
+#cgo linux,ppc64le LDFLAGS: -L /usr/local/cuda/lib64 -L /usr/local/cuda/extras/CUPTI/lib64
 */
 import "C"
 
