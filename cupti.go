@@ -1,3 +1,5 @@
+// +build !linux !cgo
+
 package cupti
 
 type noopCloser struct{}
