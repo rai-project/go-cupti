@@ -2,6 +2,11 @@
 
 package cupti
 
+import (
+	tr "github.com/rai-project/tracer"
+	context "golang.org/x/net/context"
+)
+
 type noopCloser struct{}
 
 func (noopCloser) Close() error {
@@ -16,4 +21,10 @@ func New(opts ...Option) (*CUPTI, error) {
 
 func (c *CUPTI) Close() error {
 	return nil
+}
+
+func (c *CUPTI) SetContext(ctx context.Context) {
+}
+
+func (c *CUPTI) SetTracer(tracer tr.Tracer) {
 }

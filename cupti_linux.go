@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
+	tr "github.com/rai-project/tracer"
+	context "golang.org/x/net/context"
 
 	_ "github.com/rai-project/tracer/jaeger"
 	_ "github.com/rai-project/tracer/noop"
@@ -19,6 +21,7 @@ import (
 
 type CUPTI struct {
 	*Options
+	sync.Mutex
 	cuCtxs          []C.CUcontext
 	subscriber      C.CUpti_SubscriberHandle
 	deviceResetTime time.Time
@@ -66,6 +69,18 @@ func New(opts ...Option) (*CUPTI, error) {
 	c.beginTime = time.Now()
 
 	return c, nil
+}
+
+func (c *CUPTI) SetContext(ctx context.Context) {
+	c.Lock()
+	defer c.Unlock()
+	c.ctx = ctx
+}
+
+func (c *CUPTI) SetTracer(tracer tr.Tracer) {
+	c.Lock()
+	defer c.Unlock()
+	c.tracer = tracer
 }
 
 var cuInitOnce sync.Once
