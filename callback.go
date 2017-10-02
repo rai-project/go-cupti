@@ -10,6 +10,7 @@ import (
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ianlancetaylor/demangle"
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	context "golang.org/x/net/context"
@@ -102,10 +103,14 @@ func spanFromContextCorrelationId(ctx context.Context, correlationId uint) (open
 func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.cudaConfigureCall_v3020_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     demangleName(cbInfo.functionName),
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"grid_dim":          []int{int(params.gridDim.x), int(params.gridDim.y), int(params.gridDim.z)},
@@ -155,10 +160,14 @@ func (c *CUPTI) onCudaConfigureCall(domain types.CUpti_CallbackDomain, cbid type
 func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.cuLaunchKernel_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     demangleName(cbInfo.functionName),
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"stream":            uintptr(unsafe.Pointer(params.hStream)),
@@ -203,10 +212,14 @@ func (c *CUPTI) onCULaunchKernel(domain types.CUpti_CallbackDomain, cbid types.C
 func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.cuMemcpyHtoD_v2_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     demangleName(cbInfo.functionName),
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.ByteCount),
@@ -255,10 +268,14 @@ func (c *CUPTI) onCudaSetupArgument(domain types.CUpti_CallbackDomain, cbid type
 
 func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
+	functionName := demangleName(cbInfo.functionName)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     demangleName(cbInfo.functionName),
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 	}
@@ -301,10 +318,14 @@ func (c *CUPTI) onCudaLaunch(domain types.CUpti_CallbackDomain, cbid types.CUPTI
 
 func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
+	functionName := demangleName(cbInfo.functionName)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     demangleName(cbInfo.functionName),
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 	}
@@ -348,10 +369,14 @@ func (c *CUPTI) onCudaSynchronize(domain types.CUpti_CallbackDomain, cbid types.
 func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.cudaMemcpy_v3020_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     demangleName(cbInfo.functionName),
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uint64(params.count),
@@ -418,11 +443,9 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			handle.onCudaMemCopyDevice(domain, cbid, cbInfo)
 			return
 		default:
-			entry := log.WithField("cbid", cbid.String())
-			if cbInfo.functionName != nil {
-				entry = entry.WithField("function_name", demangleName(cbInfo.functionName))
-			}
-			entry.Debug("skipping runtime call")
+			entry := log.WithField("cbid", cbid.String()).
+				WithField("function_name", demangleName(cbInfo.functionName)).
+				Debug("skipping runtime call")
 			return
 		}
 	case types.CUPTI_CB_DOMAIN_RUNTIME_API:
@@ -445,11 +468,9 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			handle.onCudaSetupArgument(domain, cbid, cbInfo)
 			return
 		default:
-			entry := log.WithField("cbid", cbid.String())
-			if cbInfo.functionName != nil {
-				entry = entry.WithField("function_name", demangleName(cbInfo.functionName))
-			}
-			entry.Debug("skipping runtime call")
+			entry := log.WithField("cbid", cbid.String()).
+				WithField("function_name", demangleName(cbInfo.functionName)).
+				Debug("skipping runtime call")
 			return
 		}
 	}
