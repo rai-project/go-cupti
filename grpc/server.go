@@ -1,4 +1,4 @@
-// +build linux,cgo
+// +build linux,cgo,!arm64
 
 package cuptigrpc
 
