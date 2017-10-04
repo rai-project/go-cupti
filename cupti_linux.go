@@ -38,8 +38,10 @@ func New(opts ...Option) (*CUPTI, error) {
 	c := &CUPTI{
 		Options: options,
 	}
-	if err := c.init(); err != nil {
-		return nil, err
+	if false {
+		if err := c.init(); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := c.Subscribe(); err != nil {
@@ -64,13 +66,14 @@ func (c *CUPTI) SetContext(ctx context.Context) {
 
 var cuInitOnce sync.Once
 
+func init() {
+	if err := checkCUResult(C.cuInit(0)); err != nil {
+		log.WithError(err).Error("failed to perform cuInit")
+		return
+	}
+}
+
 func (c *CUPTI) init() error {
-	cuInitOnce.Do(func() {
-		if err := checkCUResult(C.cuInit(0)); err != nil {
-			log.WithError(err).Error("failed to perform cuInit")
-			return
-		}
-	})
 
 	c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
 	for ii, gpu := range nvidiasmi.Info.GPUS {
