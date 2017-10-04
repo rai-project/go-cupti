@@ -64,7 +64,7 @@ func NewOptions(opts ...Option) *Options {
 
 	options := &Options{
 		ctx:            context.Background(),
-		tracer:         tracer,
+		tracer:         tr.Std(),
 		samplingPeriod: Config.SamplingPeriod,
 		activities:     Config.Activities,
 		domains:        Config.Domains,

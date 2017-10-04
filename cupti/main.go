@@ -60,9 +60,9 @@ func main() {
 	}
 	log.WithField("version", version).Debug("running cupti")
 
-	ctx := context.Background()
-	tracer := tr.MustNew("cupti")
-	defer tr.Close()
+  ctx := context.Background()
+
+	defer tracer.Close()
 
 	func() {
 		span, ctx := tracer.StartSpanFromContext(ctx, "vector_add")
