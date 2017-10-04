@@ -18,6 +18,10 @@ func New(opts ...Option) (*CUPTI, error) {
 	return nil, nil
 }
 
+func (c *CUPTI) Wait() error {
+	return nil
+}
+
 func (c *CUPTI) Close() error {
 	return nil
 }
