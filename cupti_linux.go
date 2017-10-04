@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
-	tr "github.com/rai-project/tracer"
 	context "golang.org/x/net/context"
 
 	_ "github.com/rai-project/tracer/jaeger"
@@ -61,18 +60,6 @@ func (c *CUPTI) SetContext(ctx context.Context) {
 	c.Lock()
 	defer c.Unlock()
 	c.ctx = ctx
-}
-
-func (c *CUPTI) SetTracer(tracer tr.Tracer) {
-	c.Lock()
-	defer c.Unlock()
-	c.tracer = tracer
-}
-
-func (c *CUPTI) Tracer() tr.Tracer {
-	c.Lock()
-	defer c.Unlock()
-	return c.tracer
 }
 
 var cuInitOnce sync.Once

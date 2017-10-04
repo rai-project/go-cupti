@@ -3,7 +3,6 @@
 package cupti
 
 import (
-	tr "github.com/rai-project/tracer"
 	context "golang.org/x/net/context"
 )
 
@@ -24,13 +23,6 @@ func (c *CUPTI) Close() error {
 }
 
 func (c *CUPTI) SetContext(ctx context.Context) {
-}
-
-func (c *CUPTI) SetTracer(tracer tr.Tracer) {
-}
-
-func (c *CUPTI) Tracer() tr.Tracer {
-	return nil
 }
 
 func (c *CUPTI) Subscribe() error {

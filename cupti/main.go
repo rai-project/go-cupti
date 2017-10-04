@@ -13,7 +13,7 @@ import (
 	"github.com/rai-project/config"
 	"github.com/rai-project/go-cupti"
 	"github.com/rai-project/logger"
-	tr "github.com/rai-project/tracer"
+	"github.com/rai-project/tracer"
 	"github.com/rainycape/dl"
 )
 
@@ -60,7 +60,7 @@ func main() {
 	}
 	log.WithField("version", version).Debug("running cupti")
 
-  ctx := context.Background()
+	ctx := context.Background()
 
 	defer tracer.Close()
 
@@ -68,7 +68,7 @@ func main() {
 		span, ctx := tracer.StartSpanFromContext(ctx, "vector_add")
 		defer span.Finish()
 
-		cupti, err := cupti.New(cupti.Context(ctx), cupti.Tracer(tracer))
+		cupti, err := cupti.New(cupti.Context(ctx))
 		if err != nil {
 			log.WithError(err).Error("failed to create new cupti context")
 			os.Exit(-1)

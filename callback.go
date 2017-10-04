@@ -110,7 +110,7 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 	if cbInfo.symbolName != nil {
 		tags["symbol_name"] = C.GoString(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "configure_call", tags)
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "configure_call", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -171,7 +171,7 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "launch_kernel", tags)
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "launch_kernel", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -226,7 +226,7 @@ func (c *CUPTI) onCudaDeviceSynchronizeEnter(domain types.CUpti_CallbackDomain, 
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "device_synchronize", tags)
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "device_synchronize", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -284,7 +284,7 @@ func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy_dev", tags)
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cuda_memcpy_dev", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -342,7 +342,7 @@ func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_launch", tags)
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cuda_launch", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -395,7 +395,7 @@ func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid t
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_synchronize", tags)
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cuda_synchronize", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -451,7 +451,7 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := c.tracer.StartSpanFromContext(c.ctx, "cuda_memcpy", tags)
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cuda_memcpy", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
