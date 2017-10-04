@@ -3,14 +3,13 @@
 package cuptigrpc
 
 import (
+	opentracing "github.com/opentracing/opentracing-go"
 	cupti "github.com/rai-project/go-cupti"
-	"github.com/rai-project/tracer"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
-func ServerUnaryInterceptor(tr tracer.Tracer, opts ...cupti.Option) grpc.UnaryServerInterceptor {
-	opts = append([]cupti.Option{cupti.Tracer(tr)}, opts...)
+func ServerUnaryInterceptor(opts ...cupti.Option) grpc.UnaryServerInterceptor {
 	cuptiHandle, err := cupti.New(opts...)
 	if err != nil {
 		//pp.Println("noop unary")
@@ -27,9 +26,12 @@ func ServerUnaryInterceptor(tr tracer.Tracer, opts ...cupti.Option) grpc.UnarySe
 			//	pp.Println("no cupti handle")
 			return handler(ctx, req)
 		}
-		tracer := cuptiHandle.Tracer()
+		parent := opentracing.SpanFromContext(ctx)
+		if parent == nil {
+			return handler(ctx, req)
+		}
+		tracer := parent.Tracer()
 		if tracer == nil {
-			//pp.Println("no cupti trace")
 			return handler(ctx, req)
 		}
 		span, ctx := tracer.StartSpanFromContext(ctx, "cupti")
@@ -40,8 +42,8 @@ func ServerUnaryInterceptor(tr tracer.Tracer, opts ...cupti.Option) grpc.UnarySe
 			//pp.Println("failed to subscribe")
 			return handler(ctx, req)
 		}
-		defer cuptiHandle.Unsubscribe()
 		defer cuptiHandle.Wait()
+		defer cuptiHandle.Unsubscribe()
 		ctx = context.WithValue(ctx, Handle{}, cuptiHandle)
 		return handler(ctx, req)
 	}
