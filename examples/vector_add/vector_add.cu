@@ -58,7 +58,17 @@ extern "C" void VectorAdd(void)
   printf("[Vector addition of %d elements]\n", numElements);
 
   // Allocate the host input vector A
-  float *h_A = (float *)calloc( numElements, sizeof(float));
+  /* float *h_A = (float *)calloc( numElements, sizeof(float)); */
+  float *h_A; 
+  err = cudaHostAlloc(&h_A,  numElements*sizeof(float), cudaHostAllocWriteCombined);
+if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Failed to allocate device vector A (error code %s)!\n",
+            cudaGetErrorString(err));
+    return;
+  }
+
+
 
   // Allocate the host input vector B
   float *h_B = (float *)calloc( numElements, sizeof(float));
@@ -72,6 +82,7 @@ extern "C" void VectorAdd(void)
     fprintf(stderr, "Failed to allocate host vectors!\n");
     return;
   }
+
 
 
   // Allocate the device input vector A
@@ -189,7 +200,7 @@ extern "C" void VectorAdd(void)
   }
 
   // Free host memory
-  free(h_A);
+  cudaFree(h_A);
   free(h_B);
   free(h_C);
 
