@@ -277,7 +277,7 @@ func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
 		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"destination_ptr":   uintptr(params.devPtr),
+		"destination_ptr":   uintptr(unsafe.Pointer(params.devPtr)),
 	}
 	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMalloc", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -318,16 +318,16 @@ func (c *CUPTI) onCudaMallocHostEnter(domain types.CUpti_CallbackDomain, cbid ty
 	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
-	params := (*C.cudaMallocHost_v3020_params_st)(cbInfo.functionParams)
+	params := (*C.cudaMallocHost_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaMalloc",
+		"function_name":     "cudaMallocHost",
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
 		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"destination_ptr":   uintptr(params.devPtr),
+		"destination_ptr":   uintptr(unsafe.Pointer(params.ptr)),
 	}
 	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMallocHost", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -372,12 +372,12 @@ func (c *CUPTI) onCudaHostAllocEnter(domain types.CUpti_CallbackDomain, cbid typ
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaMalloc",
+		"function_name":     "cudaHostAlloc",
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
 		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"host_ptr":          uintptr(params.pHost),
+		"host_ptr":          uintptr(unsafe.Pointer(params.pHost)),
 		"flags":             params.flags,
 	}
 	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaHostAlloc", tags)
@@ -423,12 +423,12 @@ func (c *CUPTI) onCudaMallocManagedEnter(domain types.CUpti_CallbackDomain, cbid
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaMalloc",
+		"function_name":     "cudaMallocManaged",
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
 		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"host_ptr":          uintptr(params.pHost),
+		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 		"flags":             params.flags,
 	}
 	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMallocManaged", tags)
@@ -470,11 +470,11 @@ func (c *CUPTI) onCudaFreeEnter(domain types.CUpti_CallbackDomain, cbid types.CU
 	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
-	params := (*C.cudaFree_v3020_params_st)(cbInfo.functionParams)
+	params := (*C.cudaFree_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaMalloc",
+		"function_name":     "cudaFree",
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"ptr":               uintptr(params.devPtr),
@@ -518,11 +518,11 @@ func (c *CUPTI) onCudaFreeHostEnter(domain types.CUpti_CallbackDomain, cbid type
 	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
-	params := (*C.cudaFree_v3020_params_st)(cbInfo.functionParams)
+	params := (*C.cudaFree_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaMalloc",
+		"function_name":     "cudaFreeHost",
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"ptr":               uintptr(params.devPtr),
@@ -820,22 +820,22 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			types.CUPTI_RUNTIME_TRACE_CBID_cudaStreamSynchronize_v3020:
 			handle.onCudaDeviceSynchronize(domain, cbid, cbInfo)
 			return
-		case CUPTI_RUNTIME_TRACE_CBID_cudaMalloc_v3020:
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMalloc_v3020:
 			handle.onCudaMalloc(domain, cbid, cbInfo)
 			return
-		case CUPTI_RUNTIME_TRACE_CBID_cudaMallocHost_v3020:
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMallocHost_v3020:
 			handle.onCudaMallocHost(domain, cbid, cbInfo)
 			return
-		case CUPTI_RUNTIME_TRACE_CBID_cudaHostAlloc_v3020:
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaHostAlloc_v3020:
 			handle.onCudaHostAlloc(domain, cbid, cbInfo)
 			return
-		case CUPTI_RUNTIME_TRACE_CBID_cudaMallocManaged_v6000:
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMallocManaged_v6000:
 			handle.onCudaMallocManaged(domain, cbid, cbInfo)
 			return
-		case CUPTI_RUNTIME_TRACE_CBID_cudaFree_v3020:
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaFree_v3020:
 			handle.onCudaFree(domain, cbid, cbInfo)
 			return
-		case CUPTI_RUNTIME_TRACE_CBID_cudaFreeHost_v3020:
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaFreeHost_v3020:
 			handle.onCudaFreeHost(domain, cbid, cbInfo)
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020,
