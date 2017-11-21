@@ -15,5 +15,11 @@ var (
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoD_v2",
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoDAsync_v2",
 		"CUPTI_RUNTIME_TRACE_CBID_cudaSetupArgument_v3020",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaMallocManaged_v6000",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaMalloc_v3020",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaMallocArray_v3020",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaMallocHost_v3020",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaFree_v3020",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaFreeHost_v3020",
 	}
 )

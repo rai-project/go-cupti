@@ -263,6 +263,303 @@ func (c *CUPTI) onCudaDeviceSynchronize(domain types.CUpti_CallbackDomain, cbid 
 
 }
 
+func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
+	params := (*C.cudaMalloc_v3020_params)(cbInfo.functionParams)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     "cudaMalloc",
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"byte_count":        uintptr(params.size),
+		"byte_count_human":  humanize.Bytes(uint64(params.size)),
+		"destination_ptr":   uintptr(params.devPtr),
+	}
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMalloc", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onCudaMallocExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+	return nil
+}
+
+func (c *CUPTI) onCudaMalloc(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onCudaMallocEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onCudaMallocExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+
+}
+
+func (c *CUPTI) onCudaMallocHostEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
+	params := (*C.cudaMallocHost_v3020_params_st)(cbInfo.functionParams)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     "cudaMalloc",
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"byte_count":        uintptr(params.size),
+		"byte_count_human":  humanize.Bytes(uint64(params.size)),
+		"destination_ptr":   uintptr(params.devPtr),
+	}
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMallocHost", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onCudaMallocHostExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+	return nil
+}
+
+func (c *CUPTI) onCudaMallocHost(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onCudaMallocHostEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onCudaMallocHostExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+
+}
+
+func (c *CUPTI) onCudaHostAllocEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
+	params := (*C.cudaHostAlloc_v3020_params)(cbInfo.functionParams)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     "cudaMalloc",
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"byte_count":        uintptr(params.size),
+		"byte_count_human":  humanize.Bytes(uint64(params.size)),
+		"host_ptr":          uintptr(params.pHost),
+		"flags":             params.flags,
+	}
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaHostAlloc", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onCudaHostAllocExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+	return nil
+}
+
+func (c *CUPTI) onCudaHostAlloc(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onCudaHostAllocEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onCudaHostAllocExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+
+}
+
+func (c *CUPTI) onCudaMallocManagedEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
+	params := (*C.cudaMallocManaged_v6000_params)(cbInfo.functionParams)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     "cudaMalloc",
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"byte_count":        uintptr(params.size),
+		"byte_count_human":  humanize.Bytes(uint64(params.size)),
+		"host_ptr":          uintptr(params.pHost),
+		"flags":             params.flags,
+	}
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMallocManaged", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onCudaMallocManagedExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+	return nil
+}
+
+func (c *CUPTI) onCudaMallocManaged(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onCudaMallocManagedEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onCudaMallocManagedExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+
+}
+
+func (c *CUPTI) onCudaFreeEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
+	params := (*C.cudaFree_v3020_params_st)(cbInfo.functionParams)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     "cudaMalloc",
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"ptr":               uintptr(params.devPtr),
+	}
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaFree", tags)
+
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onCudaFreeExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+	return nil
+}
+
+func (c *CUPTI) onCudaFree(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onCudaFreeEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onCudaFreeExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+}
+
+func (c *CUPTI) onCudaFreeHostEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+		return errors.Errorf("span %d already exists", correlationId)
+	}
+	params := (*C.cudaFree_v3020_params_st)(cbInfo.functionParams)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     "cudaMalloc",
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"ptr":               uintptr(params.devPtr),
+	}
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaFreeHost", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onCudaFreeHostExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+	return nil
+}
+
+func (c *CUPTI) onCudaFreeHost(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onCudaFreeHostEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onCudaFreeHostExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+}
+
 func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
@@ -522,6 +819,24 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaDeviceSynchronize_v3020,
 			types.CUPTI_RUNTIME_TRACE_CBID_cudaStreamSynchronize_v3020:
 			handle.onCudaDeviceSynchronize(domain, cbid, cbInfo)
+			return
+		case CUPTI_RUNTIME_TRACE_CBID_cudaMalloc_v3020:
+			handle.onCudaMalloc(domain, cbid, cbInfo)
+			return
+		case CUPTI_RUNTIME_TRACE_CBID_cudaMallocHost_v3020:
+			handle.onCudaMallocHost(domain, cbid, cbInfo)
+			return
+		case CUPTI_RUNTIME_TRACE_CBID_cudaHostAlloc_v3020:
+			handle.onCudaHostAlloc(domain, cbid, cbInfo)
+			return
+		case CUPTI_RUNTIME_TRACE_CBID_cudaMallocManaged_v6000:
+			handle.onCudaMallocManaged(domain, cbid, cbInfo)
+			return
+		case CUPTI_RUNTIME_TRACE_CBID_cudaFree_v3020:
+			handle.onCudaFree(domain, cbid, cbInfo)
+			return
+		case CUPTI_RUNTIME_TRACE_CBID_cudaFreeHost_v3020:
+			handle.onCudaFreeHost(domain, cbid, cbInfo)
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020,
 			types.CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyAsync_v3020:

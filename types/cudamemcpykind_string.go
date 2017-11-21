@@ -7,9 +7,9 @@ import (
 	"fmt"
 )
 
-const _CUDAMemcpyKind_name = "CUDAMemcpyHostToHost"
+const _CUDAMemcpyKind_name = "CUDAMemcpyHostToHostCUDAMemcpyHostToDeviceCUDAMemcpyDeviceToHostCUDAMemcpyDeviceToDevice"
 
-var _CUDAMemcpyKind_index = [...]uint8{0, 20}
+var _CUDAMemcpyKind_index = [...]uint8{0, 20, 42, 64, 88}
 
 func (i CUDAMemcpyKind) String() string {
 	if i < 0 || i >= CUDAMemcpyKind(len(_CUDAMemcpyKind_index)-1) {
@@ -19,7 +19,10 @@ func (i CUDAMemcpyKind) String() string {
 }
 
 var _CUDAMemcpyKindNameToValue_map = map[string]CUDAMemcpyKind{
-	_CUDAMemcpyKind_name[0:20]: 0,
+	_CUDAMemcpyKind_name[0:20]:  0,
+	_CUDAMemcpyKind_name[20:42]: 1,
+	_CUDAMemcpyKind_name[42:64]: 2,
+	_CUDAMemcpyKind_name[64:88]: 3,
 }
 
 func CUDAMemcpyKindString(s string) (CUDAMemcpyKind, error) {
