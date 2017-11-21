@@ -277,7 +277,7 @@ func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
 		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"destination_ptr":   uintptr(unsafe.Pointer(*params.devPtr)),
+		"destination_ptr":   uintptr(unsafe.Pointer(params.devPtr)),
 	}
 	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMalloc", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -428,7 +428,7 @@ func (c *CUPTI) onCudaMallocManagedEnter(domain types.CUpti_CallbackDomain, cbid
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
 		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"ptr":               uintptr(unsafe.Pointer(*params.devPtr)),
+		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 		"flags":             params.flags,
 	}
 	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMallocManaged", tags)
@@ -477,7 +477,7 @@ func (c *CUPTI) onCudaMallocPitchEnter(domain types.CUpti_CallbackDomain, cbid t
 		"function_name":     "cudaMallocPitch",
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
-		"ptr":               uintptr(unsafe.Pointer(*params.devPtr)),
+		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 		"pitch":             uintptr(unsafe.Pointer(params.pitch)),
 		"width":             params.width,
 		"height":            params.height,
@@ -528,7 +528,7 @@ func (c *CUPTI) onCudaFreeEnter(domain types.CUpti_CallbackDomain, cbid types.CU
 		"function_name":     "cudaFree",
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
-		"ptr":               uintptr(params.devPtr),
+		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 	}
 	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaFree", tags)
 
@@ -576,7 +576,7 @@ func (c *CUPTI) onCudaFreeHostEnter(domain types.CUpti_CallbackDomain, cbid type
 		"function_name":     "cudaFreeHost",
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
-		"ptr":               uintptr(params.devPtr),
+		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 	}
 	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaFreeHost", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
