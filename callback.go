@@ -263,6 +263,56 @@ func (c *CUPTI) onCudaDeviceSynchronize(domain types.CUpti_CallbackDomain, cbid 
 
 }
 
+func (c *CUPTI) onCudaStreamSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	functionName := demangleName(cbInfo.functionName)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     functionName,
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+	}
+	if cbInfo.symbolName != nil {
+		tags["kernel"] = demangleName(cbInfo.symbolName)
+	}
+	span, _ := opentracing.StartSpanFromContext(c.ctx, "stream_synchronize", tags)
+	if functionName != "" {
+		ext.Component.Set(span, functionName)
+	}
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onCudaStreamSynchronizeExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if cbInfo.functionReturnValue != nil {
+		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
+		span.SetTag("result", types.CUresult(*cuError).String())
+	}
+	span.Finish()
+	return nil
+}
+
+func (c *CUPTI) onCudaStreamSynchronize(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onCudaStreamSynchronizeEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onCudaStreamSynchronizeExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+
+}
+
 func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
@@ -867,9 +917,11 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 	case types.CUPTI_CB_DOMAIN_RUNTIME_API:
 		cbid := types.CUPTI_RUNTIME_TRACE_CBID(cbid0)
 		switch cbid {
-		case types.CUPTI_RUNTIME_TRACE_CBID_cudaDeviceSynchronize_v3020,
-			types.CUPTI_RUNTIME_TRACE_CBID_cudaStreamSynchronize_v3020:
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaDeviceSynchronize_v3020:
 			handle.onCudaDeviceSynchronize(domain, cbid, cbInfo)
+			return
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaStreamSynchronize_v3020:
+			handle.onCudaStreamSynchronize(domain, cbid, cbInfo)
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMalloc_v3020:
 			handle.onCudaMalloc(domain, cbid, cbInfo)

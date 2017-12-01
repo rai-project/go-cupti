@@ -37,7 +37,7 @@ func load() {
 	}
 }
 
-func init() {
+func xinit() {
 	config.AfterInit(func() {
 		nvccPath, err := exec.LookPath("nvcc")
 		if err != nil {
