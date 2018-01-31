@@ -25,5 +25,10 @@ var (
 		"CUPTI_RUNTIME_TRACE_CBID_cudaMallocManaged_v6000",
 		"CUPTI_RUNTIME_TRACE_CBID_cudaMallocPitch_v3020",
 		"CUPTI_RUNTIME_TRACE_CBID_cudaThreadSynchronize_v3020",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaIpcGetEventHandle_v4010",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaIpcOpenEventHandle_v4010",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaIpcGetMemHandle_v4010",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaIpcOpenMemHandle_v4010",
+		"CUPTI_RUNTIME_TRACE_CBID_cudaIpcCloseMemHandle_v4010",
 	}
 )
