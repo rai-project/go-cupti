@@ -940,7 +940,7 @@ func (c *CUPTI) onCudaIpcGetEventHandle(domain types.CUpti_CallbackDomain, cbid 
 
 func (c *CUPTI) onCudaIpcOpenEventHandleEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
-	params := (*C.cudaIpcGetEventHandle_v4010_params)(cbInfo.functionParams)
+	params := (*C.cudaIpcOpenEventHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"context_uid":           uint32(cbInfo.contextUid),
@@ -993,7 +993,7 @@ func (c *CUPTI) onCudaIpcOpenEventHandle(domain types.CUpti_CallbackDomain, cbid
 
 func (c *CUPTI) onCudaIpcGetMemHandleEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
-	params := (*C.cudaIpcGetEventHandle_v4010_params)(cbInfo.functionParams)
+	params := (*C.cudaIpcGetMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
@@ -1046,7 +1046,7 @@ func (c *CUPTI) onCudaIpcGetMemHandle(domain types.CUpti_CallbackDomain, cbid ty
 
 func (c *CUPTI) onCudaIpcOpenMemHandleEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
-	params := (*C.cudaIpcGetEventHandle_v4010_params)(cbInfo.functionParams)
+	params := (*C.cudaIpcOpenMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
@@ -1100,7 +1100,7 @@ func (c *CUPTI) onCudaIpcOpenMemHandle(domain types.CUpti_CallbackDomain, cbid t
 
 func (c *CUPTI) onCudaIpcCloseMemHandleEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
-	params := (*C.cudaIpcGetEventHandle_v4010_params)(cbInfo.functionParams)
+	params := (*C.cudaIpcCloseMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
