@@ -948,7 +948,7 @@ func (c *CUPTI) onCudaIpcOpenEventHandleEnter(domain types.CUpti_CallbackDomain,
 		"function_name":         functionName,
 		"cupti_domain":          domain.String(),
 		"cupti_callback_id":     cbid.String(),
-		"cuda_ipc_event_handle": uintptr(unsafe.Pointer(params.handle)),
+		"cuda_ipc_event_handle": params.handle,
 		"cuda_event":            uintptr(unsafe.Pointer(params.event)),
 	}
 	if cbInfo.symbolName != nil {
@@ -1055,7 +1055,7 @@ func (c *CUPTI) onCudaIpcOpenMemHandleEnter(domain types.CUpti_CallbackDomain, c
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
-		"cuda_ipc_mem_handle": uintptr(unsafe.Pointer(params.handle)),
+		"cuda_ipc_mem_handle": params.handle,
 		"flags":               params.flags,
 	}
 	if cbInfo.symbolName != nil {
