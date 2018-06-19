@@ -25,6 +25,3 @@ import:
   - zipkin
 - package: github.com/rai-project/vipertags
 - package: github.com/rainycape/dl
-- package: golang.org/x/net
-  subpackages:
-  - context
