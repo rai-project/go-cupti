@@ -2,7 +2,7 @@ package: github.com/rai-project/go-cupti
 import:
 - package: github.com/GeertJohan/go-sourcepath
 - package: github.com/Unknwon/com
-  version: ~1.0.0
+  version: ^1.0.0
 - package: github.com/chewxy/cu
 - package: github.com/dustin/go-humanize
 - package: github.com/ianlancetaylor/cgosymbolizer
