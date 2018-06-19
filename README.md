@@ -1,4 +1,4 @@
-# CUPTI bindings in Go
+# CUPTI bindings in Go [![Build Status](https://travis-ci.org/rai-project/go-cupti.svg?branch=master)](https://travis-ci.org/rai-project/go-cupti)
 
 ### Issues
 
