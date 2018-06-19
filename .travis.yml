@@ -11,8 +11,44 @@ addons:
   apt:
     sources:
     - sourceline: ppa:masterminds/glide
+    - sourceline: deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64
+        /
+      key_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
+    - sourceline: deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64
+        /
+    - ubuntu-toolchain-r-test
     packages:
     - glide
+    - gcc-7
+    - g++-7
+    - libopenblas-dev
+    - libgsl0-dev
+    - liblapacke-dev
+    - google-perftools
+    - libgoogle-perftools-dev
+    - graphviz
+    - cmake
+    - libmicrohttpd-dev
+    - libssl-dev
+    - libpci-dev
+    - libhwloc-dev
+    - libnuma-dev
+    - libnccl2
+    - cuda-cudart-dev-9-2
+    - cuda-libraries-dev-9-2
+    - cuda-command-line-tools-9-2
+    - cuda-cublas-dev-9-2
+    - libcudnn7
+    - libcudnn7-dev
+env:
+  global:
+  - CXX_COMPILER=g++-7
+  - CC=gcc-7
+  - CUDACXX=/usr/local/cuda-9.2/bin/nvcc
+  - LD_LIBRARY_PATH=/usr/local/nvidia/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+  - LD_LIBRARY_PATH=/usr/local/cuda-9.2/nvvm/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+  - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+  - PATH=/usr/local/cuda-9.2/bin${PATH:+:${PATH}}
 install:
   - glide install --force
   - rm -fr vendor/github.com/Sirupsen
