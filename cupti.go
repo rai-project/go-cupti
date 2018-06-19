@@ -3,7 +3,7 @@
 package cupti
 
 import (
-	context "golang.org/x/net/context"
+	context "context"
 )
 
 type noopCloser struct{}

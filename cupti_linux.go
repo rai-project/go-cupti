@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
+	context "context"
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
-	context "golang.org/x/net/context"
 
 	_ "github.com/rai-project/tracer/jaeger"
 	_ "github.com/rai-project/tracer/noop"

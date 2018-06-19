@@ -9,13 +9,13 @@ import "C"
 import (
 	"unsafe"
 
+	context "context"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ianlancetaylor/demangle"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
-	context "golang.org/x/net/context"
 )
 
 const (
