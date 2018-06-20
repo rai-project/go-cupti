@@ -19,8 +19,8 @@ addons:
     - ubuntu-toolchain-r-test
     packages:
     - glide
-    - gcc-7
-    - g++-7
+    - gcc-6
+    - g++-6
     - libopenblas-dev
     - libgsl0-dev
     - liblapacke-dev
@@ -42,8 +42,8 @@ addons:
     - libcudnn7-dev
 env:
   global:
-  - CXX_COMPILER=g++-7
-  - CC=gcc-7
+  - CXX_COMPILER=g++-6
+  - CC=gcc-6
   - CUDACXX=/usr/local/cuda-9.2/bin/nvcc
   - LD_LIBRARY_PATH=/usr/local/nvidia/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
   - LD_LIBRARY_PATH=/usr/local/cuda-9.2/nvvm/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
