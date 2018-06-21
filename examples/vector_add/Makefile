@@ -1,4 +1,4 @@
-TARGETS = vector_add
+TARGETS = vector_add.so
 
 all: $(TARGETS)
 
