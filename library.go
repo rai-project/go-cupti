@@ -25,7 +25,7 @@ func load() {
 	if runtime.GOOS == "linux" {
 		libPrefix = "lib"
 	}
-	lib := filepath.Join(DefaultCUPTILibraryPath, libPrefix+"cupti.so") // +dl.LibExt)
+	lib := filepath.Join(DefaultCUPTILibraryPath, libPrefix+"cupti"+dl.LibExt)
 	if !com.IsFile(lib) {
 		log.WithField("lib", lib).Error("unable to find cupti library")
 		return
