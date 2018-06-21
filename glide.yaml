@@ -3,7 +3,7 @@ import:
 - package: github.com/GeertJohan/go-sourcepath
 - package: github.com/Unknwon/com
   version: ^1.0.0
-- package: github.com/chewxy/cu
+- package: gorgonia.org/cu
 - package: github.com/dustin/go-humanize
 - package: github.com/ianlancetaylor/cgosymbolizer
 - package: github.com/ianlancetaylor/demangle

@@ -1,5 +1,5 @@
 package loader
 
 import (
-	_ "github.com/chewxy/cu"
+	_ "gorgonia.org/cu"
 )
