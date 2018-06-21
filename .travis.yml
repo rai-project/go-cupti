@@ -49,8 +49,12 @@ env:
   - LD_LIBRARY_PATH=/usr/local/cuda-9.2/nvvm/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
   - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
   - PATH=/usr/local/cuda-9.2/bin${PATH:+:${PATH}}
+before_install:
+  # setup dependency management tool
+  - curl -L -s https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -o $GOPATH/bin/dep
+  - chmod +x $GOPATH/bin/dep
 install:
-  - glide install --force
+  - dep ensure
   - rm -fr vendor/github.com/Sirupsen
   - find vendor -type f -exec sed -i 's/Sirupsen/sirupsen/g' {} +
   - go build
