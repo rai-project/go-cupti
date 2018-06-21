@@ -5,6 +5,8 @@
 
 The callback functions are publised to a tracing server. You need to have a carml_config.yml and the tracing server running to see the spans. Refer to [CarML Config](https://github.com/rai-project/carml/blob/master/docs/installation.md#carml-configuration) and [Starting Tracer Server](https://github.com/rai-project/carml/blob/master/docs/installation.md#starting-tracer-server)
 
+Make sure `/usr/local/cuda/lib64` and `/usr/local/cuda/extras/CUPTI/lib64` are in your LD_LIBRARY_PATH
+
 ```
 cd examples/vector_add
 make
