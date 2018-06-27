@@ -1,4 +1,6 @@
 language: go
+cache:
+  apt: true
 matrix:
   include:
     - go: 1.10.x
