@@ -41,6 +41,7 @@ addons:
     - cuda-cublas-dev-9-2
     - cuda-misc-headers-9-2
     - cuda-nvml-dev-9-2
+    - cuda-cupti-9-1
     - libcudnn7
     - libcudnn7-dev
 env:
