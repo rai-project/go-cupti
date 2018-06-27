@@ -66,6 +66,7 @@ install:
   - dep ensure -v
   - rm -fr vendor/github.com/Sirupsen
   - find vendor -type f -exec sed -i 's/Sirupsen/sirupsen/g' {} +
+  - sudo find / -name libcupti.*
   - go build
 script:
   - echo "Skip tests..."
