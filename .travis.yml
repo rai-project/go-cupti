@@ -55,6 +55,7 @@ env:
   - LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64/stubs${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
   - LD_LIBRARY_PATH=/usr/local/cuda-9.2/targets/x86_64-linux/lib/stubs/:+:${LD_LIBRARY_PATH}}
   - PATH=/usr/local/cuda-9.2/bin${PATH:+:${PATH}}
+  - CGO_CFLAGS="${CGO_CFLAGS} -I /usr/local/cuda-9.2/include -I/usr/local/cuda-9.2/nvvm/include"
   - CGO_LDFLAGS="${CGO_LDFLAGS} -L /usr/local/cuda-9.2/lib64/stubs"
 before_install:
   # setup dependency management tool
