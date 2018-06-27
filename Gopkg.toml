@@ -89,6 +89,10 @@
   name = "gorgonia.org/cu"
   version = "0.8.0"
 
+[[override]]
+  branch = "master"
+  name = "github.com/apache/thrift"
+
 [prune]
   go-tests = true
   unused-packages = true
