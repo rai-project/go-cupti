@@ -12,7 +12,6 @@ sudo: false
 addons:
   apt:
     sources:
-    - sourceline: ppa:masterminds/glide
     - sourceline: deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64
         /
       key_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
@@ -20,7 +19,6 @@ addons:
         /
     - ubuntu-toolchain-r-test
     packages:
-    - glide
     - gcc-6
     - g++-6
     - libopenblas-dev
@@ -59,16 +57,13 @@ env:
   - CGO_CFLAGS="${CGO_CFLAGS} -I /usr/local/cuda-9.2/include -I/usr/local/cuda-9.2/nvvm/include -I /usr/local/cuda-9.2/extras/CUPTI/include"
   - CGO_LDFLAGS="${CGO_LDFLAGS} -L /usr/local/nvidia/lib64 -L /usr/local/cuda-9.2/nvvm/lib64 -L /usr/local/cuda-9.2/lib64 -L /usr/local/cuda-9.2/lib64/stubs -L /usr/local/cuda-9.2/targets/x86_64-linux/lib/stubs/ -L /usr/local/cuda-9.2/lib64/stubs -L /usr/local/cuda-9.2/extras/CUPTI/lib64"
 before_install:
-  # setup dependency management tool
-  - curl -L -s https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -o $GOPATH/bin/dep
-  - chmod +x $GOPATH/bin/dep
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 install:
-  - go env
-  - dep ensure -v
-  - rm -fr vendor/github.com/Sirupsen
-  - find vendor -type f -exec sed -i 's/Sirupsen/sirupsen/g' {} +
-  - sudo find / -name libcupti.*
-  - go build
+- cd ${TRAVIS_BUILD_DIR}
+- dep ensure -v
+- rm -fr vendor/github.com/Sirupsen
+- find vendor -type f -exec sed -i 's/Sirupsen/sirupsen/g' {} +
+- go build
 script:
   - echo "Skip tests..."
 after_script:
