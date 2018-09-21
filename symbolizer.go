@@ -1,5 +1,5 @@
-// +build linux,cgo
+// +build cgo
 
 package cupti
 
-import _ "github.com/ianlancetaylor/cgosymbolizer"
+import _ "github.com/benesch/cgosymbolizer"
