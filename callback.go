@@ -10,6 +10,7 @@ import (
 	"unsafe"
 
 	context "context"
+
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ianlancetaylor/demangle"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -171,6 +172,19 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
+
+	C.cuCtxSynchronize()
+	var cuCtx C.CUcontext
+	C.cuCtxGetCurrent(&cuCtx)
+	//cuCtx = c.cuCtxs[0]
+	/*
+		if err := checkCUPTIError(C.cuptiSetEventCollectionMode(cuCtx, C.CUPTI_EVENT_COLLECTION_MODE_KERNEL)); err != nil {
+			panic(err)
+		}
+		if err := checkCUPTIError(C.cuptiEventGroupEnable(c.eventGroup)); err != nil {
+			panic(err)
+		}
+	*/
 	span, _ := opentracing.StartSpanFromContext(c.ctx, "launch_kernel", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
@@ -184,17 +198,40 @@ func (c *CUPTI) onCULaunchKernelExit(domain types.CUpti_CallbackDomain, cbid typ
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
+		panic(err)
 		return err
 	}
 
 	if span == nil {
+		panic(err)
 		return errors.New("no span found")
 	}
 	if cbInfo.functionReturnValue != nil {
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
+	C.cuCtxSynchronize()
+	/*
+		length := int(c.domainCount)
+		domainCycles := (*C.uint64_t)(unsafe.Pointer(C.malloc(C.size_t(c.domainCount) * C.size_t(C.uint64_t(0)))))
+		domainCyclesSize := C.size_t(length) * C.size_t(C.uint64_t(0))
+		pp.Println(domainCyclesSize)
+		if err := checkCUPTIError(C.cuptiEventGroupReadEvent(c.eventGroup, C.CUPTI_EVENT_READ_FLAG_NONE, c.eventId, &domainCyclesSize, domainCycles)); err != nil {
+			panic(err)
+		}
+
+		domainCyclesSlice := (*[1 << 30]C.uint64_t)(unsafe.Pointer(domainCycles))[:length:length]
+		total := int64(0)
+		for _, t := range domainCyclesSlice {
+			total += int64(t)
+		}
+
+		span.SetTag("total", total)
+	*/
 	span.Finish()
+	/*
+		C.cuptiEventGroupDisable(c.eventGroup)
+	*/
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
 	return nil
 }
@@ -996,12 +1033,12 @@ func (c *CUPTI) onCudaIpcGetMemHandleEnter(domain types.CUpti_CallbackDomain, cb
 	params := (*C.cudaIpcGetMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
-		"context_uid":       uint32(cbInfo.contextUid),
-		"correlation_id":    correlationId,
-		"function_name":     functionName,
-		"cupti_domain":      domain.String(),
-		"cupti_callback_id": cbid.String(),
-		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
+		"context_uid":         uint32(cbInfo.contextUid),
+		"correlation_id":      correlationId,
+		"function_name":       functionName,
+		"cupti_domain":        domain.String(),
+		"cupti_callback_id":   cbid.String(),
+		"ptr":                 uintptr(unsafe.Pointer(params.devPtr)),
 		"cuda_ipc_mem_handle": uintptr(unsafe.Pointer(params.handle)),
 	}
 	if cbInfo.symbolName != nil {
@@ -1049,12 +1086,12 @@ func (c *CUPTI) onCudaIpcOpenMemHandleEnter(domain types.CUpti_CallbackDomain, c
 	params := (*C.cudaIpcOpenMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
-		"context_uid":       uint32(cbInfo.contextUid),
-		"correlation_id":    correlationId,
-		"function_name":     functionName,
-		"cupti_domain":      domain.String(),
-		"cupti_callback_id": cbid.String(),
-		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
+		"context_uid":         uint32(cbInfo.contextUid),
+		"correlation_id":      correlationId,
+		"function_name":       functionName,
+		"cupti_domain":        domain.String(),
+		"cupti_callback_id":   cbid.String(),
+		"ptr":                 uintptr(unsafe.Pointer(params.devPtr)),
 		"cuda_ipc_mem_handle": params.handle,
 		"flags":               params.flags,
 	}
