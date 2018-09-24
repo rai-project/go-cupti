@@ -9,6 +9,7 @@ import (
 	"time"
 
 	context "context"
+
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
@@ -29,6 +30,7 @@ type CUPTI struct {
 }
 
 func New(opts ...Option) (*CUPTI, error) {
+	return nil, nil
 	nvidiasmi.Wait()
 	if !nvidiasmi.HasGPU {
 		return nil, errors.New("no gpu found while trying to initialize cupti")
@@ -59,6 +61,9 @@ func New(opts ...Option) (*CUPTI, error) {
 }
 
 func (c *CUPTI) SetContext(ctx context.Context) {
+	if c == nil {
+		return
+	}
 	c.Lock()
 	defer c.Unlock()
 	c.ctx = ctx
@@ -74,7 +79,9 @@ func init() {
 }
 
 func (c *CUPTI) init() error {
-
+	if c == nil {
+		return nil
+	}
 	c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
 	for ii, gpu := range nvidiasmi.Info.GPUS {
 		var cuCtx C.CUcontext
@@ -97,7 +104,9 @@ func (c *CUPTI) init() error {
 }
 
 func (c *CUPTI) Subscribe() error {
-
+	if c == nil {
+		return nil
+	}
 	if err := c.cuptiSubscribe(); err != nil {
 		return err
 	}
@@ -123,6 +132,9 @@ func (c *CUPTI) Subscribe() error {
 }
 
 func (c *CUPTI) Unsubscribe() error {
+	if c == nil {
+		return nil
+	}
 	c.Wait()
 
 	if err := c.stopActivies(); err != nil {

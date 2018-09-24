@@ -996,12 +996,12 @@ func (c *CUPTI) onCudaIpcGetMemHandleEnter(domain types.CUpti_CallbackDomain, cb
 	params := (*C.cudaIpcGetMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
-		"context_uid":       uint32(cbInfo.contextUid),
-		"correlation_id":    correlationId,
-		"function_name":     functionName,
-		"cupti_domain":      domain.String(),
-		"cupti_callback_id": cbid.String(),
-		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
+		"context_uid":         uint32(cbInfo.contextUid),
+		"correlation_id":      correlationId,
+		"function_name":       functionName,
+		"cupti_domain":        domain.String(),
+		"cupti_callback_id":   cbid.String(),
+		"ptr":                 uintptr(unsafe.Pointer(params.devPtr)),
 		"cuda_ipc_mem_handle": uintptr(unsafe.Pointer(params.handle)),
 	}
 	if cbInfo.symbolName != nil {
@@ -1049,12 +1049,12 @@ func (c *CUPTI) onCudaIpcOpenMemHandleEnter(domain types.CUpti_CallbackDomain, c
 	params := (*C.cudaIpcOpenMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
-		"context_uid":       uint32(cbInfo.contextUid),
-		"correlation_id":    correlationId,
-		"function_name":     functionName,
-		"cupti_domain":      domain.String(),
-		"cupti_callback_id": cbid.String(),
-		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
+		"context_uid":         uint32(cbInfo.contextUid),
+		"correlation_id":      correlationId,
+		"function_name":       functionName,
+		"cupti_domain":        domain.String(),
+		"cupti_callback_id":   cbid.String(),
+		"ptr":                 uintptr(unsafe.Pointer(params.devPtr)),
 		"cuda_ipc_mem_handle": params.handle,
 		"flags":               params.flags,
 	}
