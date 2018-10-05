@@ -1,2 +1,2 @@
-extern void VectorAdd(void);
+extern "C" void VectorAdd(void);
 int main() { VectorAdd(); }

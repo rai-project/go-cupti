@@ -15,4 +15,4 @@ vector_add.ptx: vector_add.cu
 	$(NVCC) --ptx $(NVCC_FLAGS) $^ -o $@
 
 clean:
-	rm -f *.o vec
+	rm -f *.o *.so vector_add
