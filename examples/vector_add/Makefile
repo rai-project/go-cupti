@@ -5,7 +5,7 @@ all: $(TARGETS)
 NVCC=/usr/local/cuda/bin/nvcc
 NVCC_FLAGS=--cudart=shared -g -O0
 
-vector_add: vector_add.cu
+vector_add: vector_add.cu main.cpp
 	$(NVCC) $(NVCC_FLAGS) $^ -o $@
 
 vector_add.so: vector_add.cu
