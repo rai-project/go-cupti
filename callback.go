@@ -1,4 +1,8 @@
+
+
+/*
 // +build linux,cgo,!arm64
+*/
 
 package cupti
 
@@ -7,9 +11,11 @@ package cupti
 */
 import "C"
 import (
+	"time"
 	"unsafe"
 
 	context "context"
+
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ianlancetaylor/demangle"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -19,7 +25,7 @@ import (
 )
 
 const (
-	BUFFER_SIZE = 32 * 16384
+	BUFFER_SIZE = 32 * 1024 //32 * 16384
 	ALIGN_SIZE  = 8
 )
 
@@ -49,20 +55,73 @@ func (c *CUPTI) addCallback(name string) error {
 	return errors.Errorf("cannot find callback %v by name", name)
 }
 
+
+// round x to the nearest multiple of y, larger or equal to x.
+//
+// from /usr/include/sys/param.h Macros for counting and rounding.
+// #define roundup(x, y)   ((((x)+((y)-1))/(y))*(y))
+func roundup(x, y int) int {
+	return ((x + y - 1) / y) * y
+}
+
 //export bufferRequested
-func bufferRequested(buffer **C.uint8_t, size *C.size_t,
+func (c *CUPTI) bufferRequested(buffer **C.uint8_t, size *C.size_t,
 	maxNumRecords *C.size_t) {
-	*size = BUFFER_SIZE + ALIGN_SIZE
-	*buffer = (*C.uint8_t)(C.calloc(1, *size))
+	*size = roundup(BUFFER_SIZE,  ALIGN_SIZE)
+	*buffer = (*C.uint8_t)(C.aligned_alloc(ALIGN_SIZE, *size))
 	if *buffer == nil {
 		panic("ran out of memory while performing bufferRequested")
 	}
 	*maxNumRecords = 0
 }
 
+func (c *CUPTI) processActivity(record *c.CUpti_Activity) {
+switch types.CUpti_ActivityKind( record.kind) {
+case types.CUPTI_ACTIVITY_KIND_MEMCPY:
+  activity = (*CUpti_ActivityMemcpy )(record);
+	startTime := c.beginTime.Add(time.Unix(0, activity.start - c.startTimeStamp))
+  endTime := c.beginTime.Add(time.Unix(0, activity.end - c.startTimeStamp))
+
+	sp,_ := opentracing.StartSpanFromContext(
+		c.ctx,
+		"memcpy",
+    opentracing.StartTime(time.Unix(0, startTime)),
+    opentracing.Tags{
+      "copy_kind": getMemcpyKindString(activity.copyKind),
+      "stream_id": activity.streamId,
+      "correlation_id": activity.correlationId,
+      "context_id": activity.contextId,
+      "runtimeCorrelation_id": activity.runtimeCorrelationId,
+    },
+  )
+	sp.FinishWithOptions(opentracing.FinishOptions{
+    FinishTime: endTime,
+  })
+}
+
+}
+
 //export bufferCompleted
-func bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
+func (c *CUPTI) bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
 	size C.size_t, validSize C.size_t) {
+
+  var record *c.CUpti_Activity
+  for {
+  err := checkCUPTIError(C.cuptiActivityGetNextRecord(buffer, validSize, &record))
+  switch err.Code {
+  case types.CUPTI_SUCCESS:
+    c.processActivity(record)
+  case types.CUPTI_ERROR_MAX_LIMIT_REACHED:
+    break
+  default:
+    log.WithError(err).Error("failed to get cupti cuptiActivityGetNextRecord")
+  }
+}
+
+    if buffer != nil {
+  C.free(C.unsafe(buffer))
+    }
+    return
 
 }
 
@@ -88,6 +147,15 @@ func spanFromContextCorrelationId(ctx context.Context, correlationId uint) (open
 	return span, nil
 }
 
+func (c * CUPTI) cuptiDeviceGetTimestamp() time.Time {
+  var stamp uint64_t
+  if err := checkCUPTIError(C.cuptiDeviceGetTimestamp(c.ctx, C.uint64_t(unsafe.Pointer(&stampt)))); err != nil {
+    log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
+    return time.Unix(0, 0)
+  }
+  return c.beginTime.Add(time.Unix(0, stamp - c.startTimeStamp))
+}
+
 func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
@@ -110,7 +178,12 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 	if cbInfo.symbolName != nil {
 		tags["symbol_name"] = C.GoString(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "configure_call", tags)
+	span, _ := opentracing.StartSpanFromContext(
+    c.ctx,
+    "configure_call",
+    span.StartTime(c.currentTimeStamp()),
+    tags,
+  )
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -132,7 +205,9 @@ func (c *CUPTI) onCudaConfigureCallExit(domain types.CUpti_CallbackDomain, cbid 
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
-	span.Finish()
+	s.FinishWithOptions(opentracing.FinishOptions{
+    FinishTime: c.currentTimeStamp(),
+  })
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
 	return nil
 }
@@ -996,12 +1071,12 @@ func (c *CUPTI) onCudaIpcGetMemHandleEnter(domain types.CUpti_CallbackDomain, cb
 	params := (*C.cudaIpcGetMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
-		"context_uid":       uint32(cbInfo.contextUid),
-		"correlation_id":    correlationId,
-		"function_name":     functionName,
-		"cupti_domain":      domain.String(),
-		"cupti_callback_id": cbid.String(),
-		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
+		"context_uid":         uint32(cbInfo.contextUid),
+		"correlation_id":      correlationId,
+		"function_name":       functionName,
+		"cupti_domain":        domain.String(),
+		"cupti_callback_id":   cbid.String(),
+		"ptr":                 uintptr(unsafe.Pointer(params.devPtr)),
 		"cuda_ipc_mem_handle": uintptr(unsafe.Pointer(params.handle)),
 	}
 	if cbInfo.symbolName != nil {
@@ -1049,12 +1124,12 @@ func (c *CUPTI) onCudaIpcOpenMemHandleEnter(domain types.CUpti_CallbackDomain, c
 	params := (*C.cudaIpcOpenMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
-		"context_uid":       uint32(cbInfo.contextUid),
-		"correlation_id":    correlationId,
-		"function_name":     functionName,
-		"cupti_domain":      domain.String(),
-		"cupti_callback_id": cbid.String(),
-		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
+		"context_uid":         uint32(cbInfo.contextUid),
+		"correlation_id":      correlationId,
+		"function_name":       functionName,
+		"cupti_domain":        domain.String(),
+		"cupti_callback_id":   cbid.String(),
+		"ptr":                 uintptr(unsafe.Pointer(params.devPtr)),
 		"cuda_ipc_mem_handle": params.handle,
 		"flags":               params.flags,
 	}

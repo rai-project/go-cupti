@@ -9,13 +9,21 @@ import (
 	"github.com/rai-project/go-cupti/types"
 )
 
-func checkCUPTIError(code C.CUptiResult) error {
+type Error struct {
+	Code types.CUptiResult
+}
+
+func (e *Error) Error() string {
+	var errstr *C.char
+	C.cuptiGetResultString(C.CUptiResult(e.Code), &errstr)
+	return errors.Errorf("cupti error code = %s, message = %s", e.Code.String(), C.GoString(errstr))
+}
+
+func checkCUPTIError(code C.CUptiResult) *Error {
 	if code == C.CUPTI_SUCCESS {
 		return nil
 	}
-	var errstr *C.char
-	C.cuptiGetResultString(code, &errstr)
-	return errors.Errorf("cupti error code = %s, message = %s", types.CUptiResult(code).String(), C.GoString(errstr))
+	return &Error{Code: types.CUptiResult(code)}
 }
 
 func checkCUResult(code C.CUresult) error {
