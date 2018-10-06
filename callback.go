@@ -60,11 +60,11 @@ func (c *CUPTI) addCallback(name string) error {
 //
 // from /usr/include/sys/param.h Macros for counting and rounding.
 // #define roundup(x, y)   ((((x)+((y)-1))/(y))*(y))
-func roundup(x, y int) int {
+//export roundup
+func roundup(x, y C.size_t) C.size_t {
 	return ((x + y - 1) / y) * y
 }
 
-//export bufferRequested
 func (c *CUPTI) bufferRequested(buffer **C.uint8_t, size *C.size_t,
 	maxNumRecords *C.size_t) {
 	*size = roundup(BUFFER_SIZE,  ALIGN_SIZE)
@@ -75,19 +75,19 @@ func (c *CUPTI) bufferRequested(buffer **C.uint8_t, size *C.size_t,
 	*maxNumRecords = 0
 }
 
-func (c *CUPTI) processActivity(record *c.CUpti_Activity) {
+func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 switch types.CUpti_ActivityKind( record.kind) {
 case types.CUPTI_ACTIVITY_KIND_MEMCPY:
-  activity = (*CUpti_ActivityMemcpy )(record);
-	startTime := c.beginTime.Add(time.Unix(0, activity.start - c.startTimeStamp))
-  endTime := c.beginTime.Add(time.Unix(0, activity.end - c.startTimeStamp))
+	activity := (*C.CUpti_ActivityMemcpy )(unsafe.Pointer(record))
+	startTime := c.beginTime.Add(time.Duration(uint64(activity.start) - c.startTimeStamp) * time.Nanosecond)
+  endTime := c.beginTime.Add(time.Duration(uint64(activity.end) - c.startTimeStamp) * time.Nanosecond)
 
 	sp,_ := opentracing.StartSpanFromContext(
 		c.ctx,
 		"memcpy",
-    opentracing.StartTime(time.Unix(0, startTime)),
+    opentracing.StartTime(startTime),
     opentracing.Tags{
-      "copy_kind": getMemcpyKindString(activity.copyKind),
+      "copy_kind": getMemcpyKindString(types.CUpti_ActivityMemcpyKind(activity.copyKind)),
       "stream_id": activity.streamId,
       "correlation_id": activity.correlationId,
       "context_id": activity.contextId,
@@ -101,15 +101,17 @@ case types.CUPTI_ACTIVITY_KIND_MEMCPY:
 
 }
 
-//export bufferCompleted
 func (c *CUPTI) bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
 	size C.size_t, validSize C.size_t) {
 
-  var record *c.CUpti_Activity
+  var record *C.CUpti_Activity
   for {
   err := checkCUPTIError(C.cuptiActivityGetNextRecord(buffer, validSize, &record))
   switch err.Code {
   case types.CUPTI_SUCCESS:
+	  if record == nil {
+		  break ;
+	  }
     c.processActivity(record)
   case types.CUPTI_ERROR_MAX_LIMIT_REACHED:
     break
@@ -147,13 +149,25 @@ func spanFromContextCorrelationId(ctx context.Context, correlationId uint) (open
 	return span, nil
 }
 
+/*
 func (c * CUPTI) cuptiDeviceGetTimestamp() time.Time {
-  var stamp uint64_t
-  if err := checkCUPTIError(C.cuptiDeviceGetTimestamp(c.ctx, C.uint64_t(unsafe.Pointer(&stampt)))); err != nil {
+  var stamp uint64
+  if err := checkCUPTIError(C.cuptiDeviceGetTimestamp(c.ctx, C.uint64_t(unsafe.Pointer(&stamp)))); err != nil {
     log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
     return time.Unix(0, 0)
   }
   return c.beginTime.Add(time.Unix(0, stamp - c.startTimeStamp))
+}
+*/
+
+func (c * CUPTI) currentTimeStamp() time.Time {
+	val, err := cuptiGetTimestamp()
+	if err != nil {
+
+    log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
+    return time.Unix(0, 0)
+}
+return time.Unix(0, int64(val))
 }
 
 func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
@@ -181,7 +195,7 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 	span, _ := opentracing.StartSpanFromContext(
     c.ctx,
     "configure_call",
-    span.StartTime(c.currentTimeStamp()),
+    opentracing.StartTime(c.currentTimeStamp()),
     tags,
   )
 	if functionName != "" {
@@ -205,7 +219,7 @@ func (c *CUPTI) onCudaConfigureCallExit(domain types.CUpti_CallbackDomain, cbid 
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
-	s.FinishWithOptions(opentracing.FinishOptions{
+	span.FinishWithOptions(opentracing.FinishOptions{
     FinishTime: c.currentTimeStamp(),
   })
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)

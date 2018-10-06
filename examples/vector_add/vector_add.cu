@@ -48,7 +48,7 @@ extern "C" void VectorAdd(void) {
   // Error code to check return values for CUDA calls
   cudaError_t err = cudaSuccess;
 
-/* cudaSetDevice(0); */
+cudaSetDevice(0);
 
   // Print the vector length to be used, and compute its size
   int numElements = 1024 * 1024;

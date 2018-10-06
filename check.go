@@ -5,6 +5,8 @@ package cupti
 // #include <cupti.h>
 import "C"
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 )
@@ -16,7 +18,7 @@ type Error struct {
 func (e *Error) Error() string {
 	var errstr *C.char
 	C.cuptiGetResultString(C.CUptiResult(e.Code), &errstr)
-	return errors.Errorf("cupti error code = %s, message = %s", e.Code.String(), C.GoString(errstr))
+	return fmt.Sprintf("cupti error code = %s, message = %s", e.Code.String(), C.GoString(errstr))
 }
 
 func checkCUPTIError(code C.CUptiResult) *Error {
