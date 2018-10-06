@@ -119,7 +119,7 @@ func (c *CUPTI) bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.
 }
 
     if buffer != nil {
-  C.free(C.unsafe(buffer))
+  C.free(unsafe.Pointer(buffer))
     }
     return
 
