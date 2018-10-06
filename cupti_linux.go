@@ -9,6 +9,7 @@ import (
 	"time"
 
 	context "context"
+
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
@@ -38,6 +39,7 @@ func New(opts ...Option) (*CUPTI, error) {
 	c := &CUPTI{
 		Options: options,
 	}
+
 	if false {
 		if err := c.init(); err != nil {
 			return nil, err
@@ -74,7 +76,6 @@ func init() {
 }
 
 func (c *CUPTI) init() error {
-
 	c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
 	for ii, gpu := range nvidiasmi.Info.GPUS {
 		var cuCtx C.CUcontext
@@ -97,7 +98,6 @@ func (c *CUPTI) init() error {
 }
 
 func (c *CUPTI) Subscribe() error {
-
 	if err := c.cuptiSubscribe(); err != nil {
 		return err
 	}
