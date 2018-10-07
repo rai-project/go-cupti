@@ -11,7 +11,6 @@ func synchronize() error {
 
 func (c *CUPTI) Wait() {
 	//synchronize()
-
 	if err := cuptiActivityFlushAll(); err != nil {
 		log.WithError(err).Error("failed to flush all activities")
 	}

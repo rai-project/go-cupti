@@ -9,6 +9,7 @@ import (
 	"time"
 
 	context "context"
+
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
@@ -37,11 +38,6 @@ func New(opts ...Option) (*CUPTI, error) {
 	options := NewOptions(opts...)
 	c := &CUPTI{
 		Options: options,
-	}
-	if false {
-		if err := c.init(); err != nil {
-			return nil, err
-		}
 	}
 
 	if err := c.Subscribe(); err != nil {
@@ -73,31 +69,7 @@ func init() {
 	}
 }
 
-func (c *CUPTI) init() error {
-
-	c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
-	for ii, gpu := range nvidiasmi.Info.GPUS {
-		var cuCtx C.CUcontext
-
-		if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, C.CUdevice(ii))); err != nil {
-			log.WithError(err).
-				WithField("device_index", ii).
-				WithField("device_id", gpu.ID).
-				Error("failed to create cuda context")
-			return err
-		}
-		c.cuCtxs[ii] = cuCtx
-	}
-
-	if _, err := c.DeviceReset(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (c *CUPTI) Subscribe() error {
-
 	if err := c.cuptiSubscribe(); err != nil {
 		return err
 	}
