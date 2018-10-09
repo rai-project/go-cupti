@@ -16,6 +16,9 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
+	if e == nil {
+		return ""
+	}
 	var errstr *C.char
 	C.cuptiGetResultString(C.CUptiResult(e.Code), &errstr)
 	return fmt.Sprintf("cupti error code = %s, message = %s", e.Code.String(), C.GoString(errstr))

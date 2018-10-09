@@ -10,6 +10,7 @@ import (
 
 	context "context"
 
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
@@ -29,6 +30,10 @@ type CUPTI struct {
 	beginTime       time.Time
 }
 
+var (
+	currentCUPTI *CUPTI
+)
+
 func New(opts ...Option) (*CUPTI, error) {
 	nvidiasmi.Wait()
 	if !nvidiasmi.HasGPU {
@@ -39,6 +44,8 @@ func New(opts ...Option) (*CUPTI, error) {
 	c := &CUPTI{
 		Options: options,
 	}
+
+	currentCUPTI = c
 
 	if err := c.Subscribe(); err != nil {
 		return nil, c.Close()
@@ -70,11 +77,11 @@ func init() {
 }
 
 func (c *CUPTI) Subscribe() error {
-	if err := c.startActivies(); err != nil {
+	if err := c.cuptiSubscribe(); err != nil {
 		return err
 	}
 
-	if err := c.cuptiSubscribe(); err != nil {
+	if err := c.startActivies(); err != nil {
 		return err
 	}
 
@@ -108,6 +115,7 @@ func (c *CUPTI) Unsubscribe() error {
 }
 
 func (c *CUPTI) Close() error {
+	currentCUPTI = nil
 	if c == nil {
 		return nil
 	}
@@ -118,17 +126,24 @@ func (c *CUPTI) Close() error {
 }
 
 func (c *CUPTI) startActivies() error {
+	pp.Println("startActivies")
 	for _, activityName := range c.activities {
 		activity, err := types.CUpti_ActivityKindString(activityName)
 		if err != nil {
-			return errors.Wrap(err, "unable to start activities")
+			return errors.Wrap(err, "unable to map activityName to activity kind")
 		}
 		err = cuptiActivityEnable(activity)
 		if err != nil {
+			log.WithError(err).
+				WithField("activity", activityName).
+				WithField("activity_enum", int(activity)).
+				Error("unable to enable activity")
+			panic(err)
 			return errors.Wrap(err, "unable to enable activities")
 		}
 	}
 
+	pp.Println("registerCallbacks")
 	err := cuptiActivityRegisterCallbacks()
 	if err != nil {
 		return errors.Wrap(err, "unable to register activity callbacks")

@@ -23,12 +23,17 @@ package cupti
     uint32_t contextId;
     uint32_t streamId;
   } CUpti_ActivityObjectKindId_dcs;
+
+extern void bufferRequested(uint8_t ** buffer, size_t * size, size_t * maxNumRecords);
+  extern void bufferCompleted(CUcontext ctx , uint32_t streamId , uint8_t * buffer ,
+	size_t size , size_t validSize);
 */
 import "C"
 import (
 	"time"
 	"unsafe"
 
+	"github.com/k0kubun/pp"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/rai-project/go-cupti/types"
 )
@@ -166,7 +171,7 @@ func roundup(x, y C.size_t) C.size_t {
 }
 
 //export bufferRequested
-func (c *CUPTI) bufferRequested(buffer **C.uint8_t, size *C.size_t,
+func bufferRequested(buffer **C.uint8_t, size *C.size_t,
 	maxNumRecords *C.size_t) {
 	*size = roundup(BUFFER_SIZE, ALIGN_SIZE)
 	*buffer = (*C.uint8_t)(C.aligned_alloc(ALIGN_SIZE, *size))
@@ -177,6 +182,7 @@ func (c *CUPTI) bufferRequested(buffer **C.uint8_t, size *C.size_t,
 }
 
 func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
+
 	switch types.CUpti_ActivityKind(record.kind) {
 	case types.CUPTI_ACTIVITY_KIND_MEMCPY:
 		activity := (*C.CUpti_ActivityMemcpy)(unsafe.Pointer(record))
@@ -202,38 +208,50 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 }
 
 //export bufferCompleted
-func (c *CUPTI) bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
+func bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
 	size C.size_t, validSize C.size_t) {
-	if validSize > 0 {
-		var record *C.CUpti_Activity
-		for {
-			err := checkCUPTIError(C.cuptiActivityGetNextRecord(buffer, validSize, &record))
-			switch err.Code {
-			case types.CUPTI_SUCCESS:
-				if record == nil {
-					break
-				}
-				c.processActivity(record)
-			case types.CUPTI_ERROR_MAX_LIMIT_REACHED:
+
+	pp.Println("HERE")
+	if currentCUPTI == nil {
+		log.Error("the current cupti instance is not found")
+		return
+	}
+	currentCUPTI.activityBufferCompleted(ctx, streamId, buffer, size, validSize)
+}
+func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
+	size C.size_t, validSize C.size_t) {
+	defer func() {
+		if buffer != nil {
+			C.free(unsafe.Pointer(buffer))
+		}
+	}()
+	if validSize <= 0 {
+		return
+	}
+	var record *C.CUpti_Activity
+	for {
+		err := checkCUPTIError(C.cuptiActivityGetNextRecord(buffer, validSize, &record))
+		if err.Code == types.CUPTI_SUCCESS {
+			if record == nil {
 				break
-			default:
-				log.WithError(err).Error("failed to get cupti cuptiActivityGetNextRecord")
 			}
-		}
-
-		var dropped C.size_t
-		if err := checkCUPTIError(C.cuptiActivityGetNumDroppedRecords(ctx, streamId, &dropped)); err != nil {
-			log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
-			return
-		}
-		if dropped != 0 {
-			log.Infof("Dropped %v activity records", uint(dropped))
+			c.processActivity(record)
+		} else if err.Code == types.CUPTI_ERROR_MAX_LIMIT_REACHED {
+			break
+		} else {
+			log.WithError(err).Error("failed to get cupti cuptiActivityGetNextRecord")
 		}
 	}
 
-	if buffer != nil {
-		C.free(unsafe.Pointer(buffer))
+	var dropped C.size_t
+	if err := checkCUPTIError(C.cuptiActivityGetNumDroppedRecords(ctx, streamId, &dropped)); err != nil {
+		log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
+		return
 	}
+	if dropped != 0 {
+		log.Infof("Dropped %v activity records", uint(dropped))
+	}
+
 }
 
 func cuptiActivityEnable(kind types.CUpti_ActivityKind) error {
@@ -252,11 +270,14 @@ func cuptiActivityConfigurePCSampling(ctx C.CUcontext, conf C.CUpti_ActivityPCSa
 }
 
 func cuptiActivityFlushAll() error {
-	e := C.cuptiActivityFlushAll(0)
+	e := C.cuptiActivityFlushAll(1)
 	return checkCUPTIError(e)
 }
 
 func cuptiActivityRegisterCallbacks() error {
-	e := C.cuptiActivityRegisterCallbacks(bufferRequested, bufferCompleted)
+	e := C.cuptiActivityRegisterCallbacks(
+		(C.CUpti_BuffersCallbackRequestFunc)(unsafe.Pointer(C.bufferRequested)),
+		(C.CUpti_BuffersCallbackCompleteFunc)(unsafe.Pointer(C.bufferCompleted)),
+	)
 	return checkCUPTIError(e)
 }
