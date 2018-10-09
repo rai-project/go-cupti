@@ -33,48 +33,74 @@ import (
 	"time"
 	"unsafe"
 
+	humanize "github.com/dustin/go-humanize"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/rai-project/go-cupti/types"
 )
 
-func getMemcpyKindString(kind types.CUpti_ActivityMemcpyKind) string {
+func getActivityMemcpyKindString(kind types.CUpti_ActivityMemcpyKind) string {
 	switch kind {
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_HTOD:
-		return "HtoD"
+		return "h2d"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_DTOH:
-		return "DtoH"
+		return "d2h"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_HTOA:
-		return "HtoA"
+		return "h2a"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_ATOH:
-		return "AtoH"
+		return "a2h"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_ATOA:
-		return "AtoA"
+		return "a2a"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_ATOD:
-		return "AtoD"
+		return "a2d"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_DTOA:
-		return "DtoA"
+		return "d2a"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_DTOD:
-		return "DtoD"
+		return "d2d"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_HTOH:
-		return "HtoH"
+		return "h2h"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_PTOP:
-		return "PtoP"
+		return "p2p"
 	default:
 		break
 	}
 	return "<unknown>  " + kind.String()
 }
 
+// Maps a MemoryKind enum to a const string.
+func getActivityMemoryKindString(kind types.CUpti_ActivityMemoryKind) string {
+	switch kind {
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_UNKNOWN:
+		return "unknown"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_PAGEABLE:
+		return "pageable"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_PINNED:
+		return "pinned"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_DEVICE:
+		return "device"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_ARRAY:
+		return "array"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_MANAGED:
+		return "managed"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_DEVICE_STATIC:
+		return "device_tatic"
+	case types.CUPTI_ACTIVITY_MEMORY_KIND_MANAGED_STATIC:
+		return "managed_staic"
+	default:
+		break
+	}
+	return "<unknown> " + kind.String()
+}
+
 func getActivityOverheadKindString(kind types.CUpti_ActivityOverheadKind) string {
 	switch kind {
 	case types.CUPTI_ACTIVITY_OVERHEAD_DRIVER_COMPILER:
-		return "COMPILER"
+		return "compiler"
 	case types.CUPTI_ACTIVITY_OVERHEAD_CUPTI_BUFFER_FLUSH:
-		return "BUFFER_FLUSH"
+		return "buffer_flush"
 	case types.CUPTI_ACTIVITY_OVERHEAD_CUPTI_INSTRUMENTATION:
-		return "INSTRUMENTATION"
+		return "instrumentation"
 	case types.CUPTI_ACTIVITY_OVERHEAD_CUPTI_RESOURCE:
-		return "RESOURCE"
+		return "resource"
 	default:
 		break
 	}
@@ -85,38 +111,19 @@ func getActivityOverheadKindString(kind types.CUpti_ActivityOverheadKind) string
 func getActivityObjectKindString(kind types.CUpti_ActivityObjectKind) string {
 	switch kind {
 	case types.CUPTI_ACTIVITY_OBJECT_PROCESS:
-		return "PROCESS"
+		return "process"
 	case types.CUPTI_ACTIVITY_OBJECT_THREAD:
-		return "THREAD"
+		return "thread"
 	case types.CUPTI_ACTIVITY_OBJECT_DEVICE:
-		return "DEVICE"
+		return "device"
 	case types.CUPTI_ACTIVITY_OBJECT_CONTEXT:
-		return "CONTEXT"
+		return "context"
 	case types.CUPTI_ACTIVITY_OBJECT_STREAM:
-		return "STREAM"
+		return "stream"
 	default:
 		break
 	}
 
-	return "<unknown> " + kind.String()
-}
-
-// Maps a MemoryKind enum to a const string.
-func getMemoryKindString(kind types.CUpti_ActivityMemoryKind) string {
-	switch kind {
-	case types.CUPTI_ACTIVITY_MEMORY_KIND_UNKNOWN:
-		return "Unknown"
-	case types.CUPTI_ACTIVITY_MEMORY_KIND_PAGEABLE:
-		return "Pageable"
-	case types.CUPTI_ACTIVITY_MEMORY_KIND_PINNED:
-		return "Pinned"
-	case types.CUPTI_ACTIVITY_MEMORY_KIND_DEVICE:
-		return "Device"
-	case types.CUPTI_ACTIVITY_MEMORY_KIND_ARRAY:
-		return "Array"
-	default:
-		break
-	}
 	return "<unknown> " + kind.String()
 }
 
@@ -180,33 +187,6 @@ func bufferRequested(buffer **C.uint8_t, size *C.size_t,
 	*maxNumRecords = 0
 }
 
-func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
-
-	switch types.CUpti_ActivityKind(record.kind) {
-	case types.CUPTI_ACTIVITY_KIND_MEMCPY:
-		activity := (*C.CUpti_ActivityMemcpy)(unsafe.Pointer(record))
-		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
-		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
-
-		sp, _ := opentracing.StartSpanFromContext(
-			c.ctx,
-			"gpu_memcpy",
-			opentracing.StartTime(startTime),
-			opentracing.Tags{
-				"cupti_type":            "activity",
-				"copy_kind":             getMemcpyKindString(types.CUpti_ActivityMemcpyKind(activity.copyKind)),
-				"stream_id":             activity.streamId,
-				"correlation_id":        activity.correlationId,
-				"context_id":            activity.contextId,
-				"runtimeCorrelation_id": activity.runtimeCorrelationId,
-			},
-		)
-		sp.FinishWithOptions(opentracing.FinishOptions{
-			FinishTime: endTime,
-		})
-	}
-}
-
 //export bufferCompleted
 func bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
 	size C.size_t, validSize C.size_t) {
@@ -217,6 +197,7 @@ func bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
 	}
 	currentCUPTI.activityBufferCompleted(ctx, streamId, buffer, size, validSize)
 }
+
 func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
 	size C.size_t, validSize C.size_t) {
 	defer func() {
@@ -257,6 +238,152 @@ func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, bu
 		log.Infof("Dropped %v activity records", uint(dropped))
 	}
 
+}
+
+func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
+	switch types.CUpti_ActivityKind(record.kind) {
+	case types.CUPTI_ACTIVITY_KIND_DEVICE:
+		activity := (*C.CUpti_ActivityDevice2)(unsafe.Pointer(record))
+		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
+		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
+		sp, _ := opentracing.StartSpanFromContext(
+			c.ctx,
+			"gpu_device",
+			opentracing.StartTime(startTime),
+			opentracing.Tags{
+				"cupti_type":             "activity",
+				"id":                     activity.id,
+				"compute_capability":     activity.computeCapabilityMajor + "." + activity.computeCapabilityMinor,
+				"global_memory_bandwith": activity.globalMemoryBandwidth,
+				"num_multiprocessors":    activity.numMultiprocessors,
+			},
+		)
+		sp.FinishWithOptions(opentracing.FinishOptions{
+			FinishTime: endTime,
+		})
+		// https://docs.nvidia.com/cuda/cupti/index.html#structCUpti__ActivityMemcpy
+	case types.CUPTI_ACTIVITY_KIND_MEMCPY:
+		activity := (*C.CUpti_ActivityMemcpy)(unsafe.Pointer(record))
+		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
+		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
+		sp, _ := opentracing.StartSpanFromContext(
+			c.ctx,
+			"gpu_memcpy",
+			opentracing.StartTime(startTime),
+			opentracing.Tags{
+				"cupti_type":            "activity",
+				"bytes":                 activity.bytes,
+				"bytes_human":           humanize.Bytes(activity.bytes),
+				"copy_kind":             getActivityMemcpyKindString(types.CUpti_ActivityMemcpyKind(activity.copyKind)),
+				"src_kind":              getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.srcKind)),
+				"dst_kind":              getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.dstKind)),
+				"device_id":             activity.deviceId,
+				"context_id":            activity.contextId,
+				"stream_id":             activity.streamId,
+				"correlation_id":        activity.correlationId,
+				"runtimeCorrelation_id": activity.runtimeCorrelationId,
+			},
+		)
+		sp.FinishWithOptions(opentracing.FinishOptions{
+			FinishTime: endTime,
+		})
+	case types.CUPTI_ACTIVITY_KIND_MEMSET:
+		activity := (*C.CUpti_ActivityMemset)(unsafe.Pointer(record))
+		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
+		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
+		sp, _ := opentracing.StartSpanFromContext(
+			c.ctx,
+			"gpu_memset",
+			opentracing.StartTime(startTime),
+			opentracing.Tags{
+				"cupti_type":            "activity",
+				"bytes":                 activity.bytes,
+				"bytes_human":           humanize.Bytes(activity.bytes),
+				"memory_kind":           getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.MemoryKind)),
+				"value":                 activity.value,
+				"device_id":             activity.deviceId,
+				"context_id":            activity.contextId,
+				"stream_id":             activity.streamId,
+				"correlation_id":        activity.correlationId,
+				"runtimeCorrelation_id": activity.runtimeCorrelationId,
+			},
+		)
+		sp.FinishWithOptions(opentracing.FinishOptions{
+			FinishTime: endTime,
+		})
+		// https://docs.nvidia.com/cuda/cupti/index.html#structCUpti__ActivityKernel4
+	case types.CUPTI_ACTIVITY_KIND_KERNEL, types.CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL:
+		activity := (*C.CUpti_ActivityKernel4)(unsafe.Pointer(record))
+		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
+		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
+		sp, _ := opentracing.StartSpanFromContext(
+			c.ctx,
+			"gpu_kernel",
+			opentracing.StartTime(startTime),
+			opentracing.Tags{
+				"cupti_type":           "activity",
+				"name":                 activity.name,
+				"grid_dim":             []int{int(activity.gridX), int(activity.gridY), int(activity.gridZ)},
+				"block_dim":            []int{int(activity.blockX), int(activity.blockY), int(activity.blockZ)},
+				"device_id":            activity.deviceId,
+				"context_id":           activity.contextId,
+				"stream_id":            activity.streamId,
+				"correlation_id":       activity.correlationId,
+				"start":                activity.start,
+				"end":                  activity.completed,
+				"quened":               activity.quened,
+				"submitted":            activity.submitted,
+				"local_mem":            activity.localMemoryTotal,
+				"shared_mem":           activity.sharedMemoryExecuted,
+				"shared_mem_human":     humanize.Bytes(activity.sharedMemoryExecuted),
+				"dynamic_sharedMemory": activity.dynamicSharedMemory,
+				"static_sharedMemory":  activity.staticcSharedMemory,
+			},
+		)
+		sp.FinishWithOptions(opentracing.FinishOptions{
+			FinishTime: endTime,
+		})
+	case types.CUPTI_ACTIVITY_KIND_OVERHEAD:
+		activity := (*C.CUpti_ActivityOverhead)(unsafe.Pointer(record))
+		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
+		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
+		sp, _ := opentracing.StartSpanFromContext(
+			c.ctx,
+			"gpu_overhead",
+			opentracing.StartTime(startTime),
+			opentracing.Tags{
+				"cupti_type":    "activity",
+				"object_id":     activity.objectId,
+				"object_kind":   getActivityObjectKindString(types.CUpti_ActivityObjectKind(activity.objectKind)),
+				"overhead_kind": getActivityOverheadKindString(types.CUpti_ActivityOverheadKind(activity.overheadKind)),
+			},
+		)
+		sp.FinishWithOptions(opentracing.FinishOptions{
+			FinishTime: endTime,
+		})
+	case types.CUPTI_ACTIVITY_KIND_DRIVER, types.CUPTI_ACTIVITY_KIND_RUNTIME:
+		activity := (*C.CUpti_ActivityAPI)(unsafe.Pointer(record))
+		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
+		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
+		sp, _ := opentracing.StartSpanFromContext(
+			c.ctx,
+			"gpu_api",
+			opentracing.StartTime(startTime),
+			opentracing.Tags{
+				"cupti_type":     "activity",
+				"cbid":           int(activity.cbid),
+				"correlation_id": activity.correlationId,
+				"kind":           activity.kind,
+				"process_id":     activity.processId,
+				"thread_id":      activity.threadId,
+			},
+		)
+		sp.FinishWithOptions(opentracing.FinishOptions{
+			FinishTime: endTime,
+		})
+	default:
+		log.Error("can not cast activity kind")
+	}
 }
 
 func cuptiActivityEnable(kind types.CUpti_ActivityKind) error {
