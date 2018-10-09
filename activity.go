@@ -270,7 +270,7 @@ func cuptiActivityConfigurePCSampling(ctx C.CUcontext, conf C.CUpti_ActivityPCSa
 }
 
 func cuptiActivityFlushAll() error {
-	e := C.cuptiActivityFlushAll(1)
+	e := C.cuptiActivityFlushAll(0)
 	return checkCUPTIError(e)
 }
 

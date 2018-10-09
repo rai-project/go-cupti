@@ -10,7 +10,6 @@ import (
 
 	context "context"
 
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
@@ -45,7 +44,7 @@ func New(opts ...Option) (*CUPTI, error) {
 		Options: options,
 	}
 
-	currentCUPTI = c
+	// currentCUPTI = c
 
 	if err := c.Subscribe(); err != nil {
 		return nil, c.Close()
@@ -77,11 +76,10 @@ func init() {
 }
 
 func (c *CUPTI) Subscribe() error {
-	if err := c.cuptiSubscribe(); err != nil {
+	if err := c.startActivies(); err != nil {
 		return err
 	}
-
-	if err := c.startActivies(); err != nil {
+	if err := c.cuptiSubscribe(); err != nil {
 		return err
 	}
 
@@ -104,9 +102,9 @@ func (c *CUPTI) Subscribe() error {
 func (c *CUPTI) Unsubscribe() error {
 	c.Wait()
 
-	if err := c.stopActivies(); err != nil {
-		log.WithError(err).Error("failed to stop activities")
-	}
+	// 	if err := c.stopActivies(); err != nil {
+	// 		log.WithError(err).Error("failed to stop activities")
+	// 	}
 	if c.subscriber != nil {
 		C.cuptiUnsubscribe(c.subscriber)
 	}
@@ -126,7 +124,6 @@ func (c *CUPTI) Close() error {
 }
 
 func (c *CUPTI) startActivies() error {
-	pp.Println("startActivies")
 	for _, activityName := range c.activities {
 		activity, err := types.CUpti_ActivityKindString(activityName)
 		if err != nil {
@@ -143,7 +140,6 @@ func (c *CUPTI) startActivies() error {
 		}
 	}
 
-	pp.Println("registerCallbacks")
 	err := cuptiActivityRegisterCallbacks()
 	if err != nil {
 		return errors.Wrap(err, "unable to register activity callbacks")
