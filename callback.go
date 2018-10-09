@@ -1,5 +1,3 @@
-
-
 /*
 // +build linux,cgo,!arm64
 */
@@ -55,82 +53,6 @@ func (c *CUPTI) addCallback(name string) error {
 	return errors.Errorf("cannot find callback %v by name", name)
 }
 
-
-// round x to the nearest multiple of y, larger or equal to x.
-//
-// from /usr/include/sys/param.h Macros for counting and rounding.
-// #define roundup(x, y)   ((((x)+((y)-1))/(y))*(y))
-//export roundup
-func roundup(x, y C.size_t) C.size_t {
-	return ((x + y - 1) / y) * y
-}
-
-func (c *CUPTI) bufferRequested(buffer **C.uint8_t, size *C.size_t,
-	maxNumRecords *C.size_t) {
-	*size = roundup(BUFFER_SIZE,  ALIGN_SIZE)
-	*buffer = (*C.uint8_t)(C.aligned_alloc(ALIGN_SIZE, *size))
-	if *buffer == nil {
-		panic("ran out of memory while performing bufferRequested")
-	}
-	*maxNumRecords = 0
-}
-
-func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
-switch types.CUpti_ActivityKind( record.kind) {
-case types.CUPTI_ACTIVITY_KIND_MEMCPY:
-	activity := (*C.CUpti_ActivityMemcpy )(unsafe.Pointer(record))
-	startTime := c.beginTime.Add(time.Duration(uint64(activity.start) - c.startTimeStamp) * time.Nanosecond)
-  endTime := c.beginTime.Add(time.Duration(uint64(activity.end) - c.startTimeStamp) * time.Nanosecond)
-
-	sp,_ := opentracing.StartSpanFromContext(
-		c.ctx,
-		"memcpy",
-    opentracing.StartTime(startTime),
-    opentracing.Tags{
-      "copy_kind": getMemcpyKindString(types.CUpti_ActivityMemcpyKind(activity.copyKind)),
-      "stream_id": activity.streamId,
-      "correlation_id": activity.correlationId,
-      "context_id": activity.contextId,
-      "runtimeCorrelation_id": activity.runtimeCorrelationId,
-    },
-  )
-	sp.FinishWithOptions(opentracing.FinishOptions{
-    FinishTime: endTime,
-  })
-}
-
-}
-
-func (c *CUPTI) bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
-	size C.size_t, validSize C.size_t) {
-
-  var record *C.CUpti_Activity
-  for {
-  err := checkCUPTIError(C.cuptiActivityGetNextRecord(buffer, validSize, &record))
-  switch err.Code {
-  case types.CUPTI_SUCCESS:
-	  if record == nil {
-		  break ;
-	  }
-    c.processActivity(record)
-  case types.CUPTI_ERROR_MAX_LIMIT_REACHED:
-    break
-  default:
-    log.WithError(err).Error("failed to get cupti cuptiActivityGetNextRecord")
-  }
-}
-
-    if buffer != nil {
-  C.free(unsafe.Pointer(buffer))
-    }
-    return
-
-}
-
-func (c *CUPTI) addCorrelationData(correlation_id uint32, name string) {
-
-}
-
 type spanCorrelation struct {
 	correlationId uint
 }
@@ -160,14 +82,14 @@ func (c * CUPTI) cuptiDeviceGetTimestamp() time.Time {
 }
 */
 
-func (c * CUPTI) currentTimeStamp() time.Time {
+func (c *CUPTI) currentTimeStamp() time.Time {
 	val, err := cuptiGetTimestamp()
 	if err != nil {
 
-    log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
-    return time.Unix(0, 0)
-}
-return time.Unix(0, int64(val))
+		log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
+		return time.Unix(0, 0)
+	}
+	return time.Unix(0, int64(val))
 }
 
 func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
@@ -193,11 +115,11 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 		tags["symbol_name"] = C.GoString(cbInfo.symbolName)
 	}
 	span, _ := opentracing.StartSpanFromContext(
-    c.ctx,
-    "configure_call",
-    opentracing.StartTime(c.currentTimeStamp()),
-    tags,
-  )
+		c.ctx,
+		"configure_call",
+		opentracing.StartTime(c.currentTimeStamp()),
+		tags,
+	)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -220,8 +142,8 @@ func (c *CUPTI) onCudaConfigureCallExit(domain types.CUpti_CallbackDomain, cbid 
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.FinishWithOptions(opentracing.FinishOptions{
-    FinishTime: c.currentTimeStamp(),
-  })
+		FinishTime: c.currentTimeStamp(),
+	})
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
 	return nil
 }

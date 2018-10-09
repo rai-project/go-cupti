@@ -70,11 +70,11 @@ func init() {
 }
 
 func (c *CUPTI) Subscribe() error {
-	if err := c.cuptiSubscribe(); err != nil {
+	if err := c.startActivies(); err != nil {
 		return err
 	}
 
-	if err := c.startActivies(); err != nil {
+	if err := c.cuptiSubscribe(); err != nil {
 		return err
 	}
 
@@ -128,6 +128,12 @@ func (c *CUPTI) startActivies() error {
 			return errors.Wrap(err, "unable to enable activities")
 		}
 	}
+
+	err = cuptiActivityRegisterCallbacks()
+	if err != nil {
+		return errors.Wrap(err, "unable to register activity callbacks")
+	}
+
 	return nil
 }
 
