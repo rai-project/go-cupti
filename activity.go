@@ -33,7 +33,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/k0kubun/pp"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/rai-project/go-cupti/types"
 )
@@ -194,7 +193,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_memcpy",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
-				"type":                  "activity",
+				"cupti_type":            "activity",
 				"copy_kind":             getMemcpyKindString(types.CUpti_ActivityMemcpyKind(activity.copyKind)),
 				"stream_id":             activity.streamId,
 				"correlation_id":        activity.correlationId,
@@ -212,7 +211,6 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 func bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
 	size C.size_t, validSize C.size_t) {
 
-	pp.Println("HERE")
 	if currentCUPTI == nil {
 		log.Error("the current cupti instance is not found")
 		return
@@ -231,22 +229,23 @@ func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, bu
 	}
 	var record *C.CUpti_Activity
 	for {
-		err, ok := checkCUPTIError(C.cuptiActivityGetNextRecord(buffer, validSize, &record)).(*Error)
-		if err != nil && !ok {
-			pp.Println(err)
-			panic("expecting an *Error")
-			break
-		}
-		if err == nil || err.Code == types.CUPTI_SUCCESS {
+		err0 := checkCUPTIError(C.cuptiActivityGetNextRecord(buffer, validSize, &record))
+		if err0 == nil {
 			if record == nil {
 				break
 			}
 			c.processActivity(record)
-		} else if err.Code == types.CUPTI_ERROR_MAX_LIMIT_REACHED {
-			break
-		} else {
-			log.WithError(err).Error("failed to get cupti cuptiActivityGetNextRecord")
+			continue
 		}
+		err, ok := err0.(*Error)
+		if !ok {
+			panic("invalid error type")
+		}
+		if err.Code == types.CUPTI_ERROR_MAX_LIMIT_REACHED {
+			break
+		}
+
+		log.WithError(err).Error("failed to get cupti cuptiActivityGetNextRecord")
 	}
 
 	var dropped C.size_t

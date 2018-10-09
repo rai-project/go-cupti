@@ -44,10 +44,6 @@ func New(opts ...Option) (*CUPTI, error) {
 		Options: options,
 	}
 
-	// if err := c.init(); err != nil {
-	// 	panic(err)
-	// }
-
 	currentCUPTI = c
 
 	if err := c.Subscribe(); err != nil {
@@ -76,39 +72,12 @@ func init() {
 	}
 }
 
-var cuInitOnce sync.Once
-
-func (c *CUPTI) init() error {
-
-	var devCount C.int
-	C.cudaGetDeviceCount(&devCount)
-	c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
-	for ii, gpu := range nvidiasmi.Info.GPUS {
-		var cuCtx C.CUcontext
-
-		if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, C.CUdevice(ii))); err != nil {
-			log.WithError(err).
-				WithField("device_index", ii).
-				WithField("device_id", gpu.ID).
-				Error("failed to create cuda context")
-			return err
-		}
-		c.cuCtxs[ii] = cuCtx
-	}
-
-	if _, err := c.DeviceReset(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (c *CUPTI) Subscribe() error {
-	if err := c.cuptiSubscribe(); err != nil {
+	if err := c.startActivies(); err != nil {
 		return err
 	}
 
-	if err := c.startActivies(); err != nil {
+	if err := c.cuptiSubscribe(); err != nil {
 		return err
 	}
 
@@ -132,18 +101,17 @@ func (c *CUPTI) Unsubscribe() error {
 	c.Wait()
 
 	if err := c.stopActivies(); err != nil {
-		log.WithError(err).Error("failed to stop activities")
+		return err
 	}
 
-	if c.subscriber != nil {
-		C.cuptiUnsubscribe(c.subscriber)
+	if err := c.cuptiUnsubscribe(); err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (c *CUPTI) Close() error {
-
 	if c == nil {
 		return nil
 	}
@@ -160,7 +128,7 @@ func (c *CUPTI) startActivies() error {
 			return errors.Wrap(err, "unable to map activityName to activity kind")
 		}
 		err = cuptiActivityEnable(activity)
-		if err != nil && err != (*Error)(nil) {
+		if err != nil {
 			log.WithError(err).
 				WithField("activity", activityName).
 				WithField("activity_enum", int(activity)).
@@ -199,5 +167,28 @@ func (c *CUPTI) registerCallbacks() error {
 			return err
 		}
 	}
+	return nil
+}
+
+// NOT USED
+func (c *CUPTI) init() error {
+	c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
+	for ii, gpu := range nvidiasmi.Info.GPUS {
+		var cuCtx C.CUcontext
+
+		if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, C.CUdevice(ii))); err != nil {
+			log.WithError(err).
+				WithField("device_index", ii).
+				WithField("device_id", gpu.ID).
+				Error("failed to create cuda context")
+			return err
+		}
+		c.cuCtxs[ii] = cuCtx
+	}
+
+	if _, err := c.DeviceReset(); err != nil {
+		return err
+	}
+
 	return nil
 }

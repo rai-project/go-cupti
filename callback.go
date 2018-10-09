@@ -16,7 +16,6 @@ import (
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ianlancetaylor/demangle"
-	"github.com/k0kubun/pp"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
@@ -165,7 +164,6 @@ func (c *CUPTI) onCudaConfigureCall(domain types.CUpti_CallbackDomain, cbid type
 }
 
 func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
-	pp.Println("enter launchkernel enter")
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.cuLaunchKernel_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
@@ -796,6 +794,7 @@ func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid t
 	correlationId := uint(cbInfo.correlationId)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -847,6 +846,7 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 	params := (*C.cudaMemcpy_v3020_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,

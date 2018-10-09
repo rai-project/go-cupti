@@ -44,6 +44,14 @@ func (c *CUPTI) cuptiSubscribe() error {
 	return nil
 }
 
-func cuptiUnsubscribe() {
-
+func (c *CUPTI) cuptiUnsubscribe() error {
+	if c.subscriber == nil {
+		return nil
+	}
+	err := checkCUPTIError(C.cuptiUnsubscribe(c.subscriber))
+	if err != nil {
+		return err
+	}
+	c.subscriber = nil
+	return nil
 }
