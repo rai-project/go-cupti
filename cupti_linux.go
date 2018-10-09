@@ -129,7 +129,7 @@ func (c *CUPTI) startActivies() error {
 		}
 	}
 
-	err = cuptiActivityRegisterCallbacks()
+	err := cuptiActivityRegisterCallbacks()
 	if err != nil {
 		return errors.Wrap(err, "unable to register activity callbacks")
 	}
