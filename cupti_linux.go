@@ -44,7 +44,11 @@ func New(opts ...Option) (*CUPTI, error) {
 		Options: options,
 	}
 
-	// currentCUPTI = c
+	// if err := c.init(); err != nil {
+	// 	panic(err)
+	// }
+
+	currentCUPTI = c
 
 	if err := c.Subscribe(); err != nil {
 		return nil, c.Close()
@@ -66,20 +70,44 @@ func (c *CUPTI) SetContext(ctx context.Context) {
 	c.ctx = ctx
 }
 
-var cuInitOnce sync.Once
-
 func init() {
 	if err := checkCUResult(C.cuInit(0)); err != nil {
 		log.WithError(err).Error("failed to perform cuInit")
-		return
 	}
 }
 
-func (c *CUPTI) Subscribe() error {
-	if err := c.startActivies(); err != nil {
+var cuInitOnce sync.Once
+
+func (c *CUPTI) init() error {
+
+	var devCount C.int
+	C.cudaGetDeviceCount(&devCount)
+	c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
+	for ii, gpu := range nvidiasmi.Info.GPUS {
+		var cuCtx C.CUcontext
+
+		if err := checkCUResult(C.cuCtxCreate(&cuCtx, 0, C.CUdevice(ii))); err != nil {
+			log.WithError(err).
+				WithField("device_index", ii).
+				WithField("device_id", gpu.ID).
+				Error("failed to create cuda context")
+			return err
+		}
+		c.cuCtxs[ii] = cuCtx
+	}
+
+	if _, err := c.DeviceReset(); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (c *CUPTI) Subscribe() error {
 	if err := c.cuptiSubscribe(); err != nil {
+		return err
+	}
+	if err := c.startActivies(); err != nil {
 		return err
 	}
 
@@ -102,9 +130,10 @@ func (c *CUPTI) Subscribe() error {
 func (c *CUPTI) Unsubscribe() error {
 	c.Wait()
 
-	// 	if err := c.stopActivies(); err != nil {
-	// 		log.WithError(err).Error("failed to stop activities")
-	// 	}
+	// if err := c.stopActivies(); err != nil {
+	// 	log.WithError(err).Error("failed to stop activities")
+	// }
+
 	if c.subscriber != nil {
 		C.cuptiUnsubscribe(c.subscriber)
 	}
@@ -130,7 +159,7 @@ func (c *CUPTI) startActivies() error {
 			return errors.Wrap(err, "unable to map activityName to activity kind")
 		}
 		err = cuptiActivityEnable(activity)
-		if err != nil {
+		if err != nil && err != (*Error)(nil) {
 			log.WithError(err).
 				WithField("activity", activityName).
 				WithField("activity_enum", int(activity)).
@@ -140,10 +169,10 @@ func (c *CUPTI) startActivies() error {
 		}
 	}
 
-	err := cuptiActivityRegisterCallbacks()
-	if err != nil {
-		return errors.Wrap(err, "unable to register activity callbacks")
-	}
+	// err := cuptiActivityRegisterCallbacks()
+	// if err != nil {
+	// 	return errors.Wrap(err, "unable to register activity callbacks")
+	// }
 
 	return nil
 }

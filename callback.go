@@ -16,6 +16,7 @@ import (
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ianlancetaylor/demangle"
+	"github.com/k0kubun/pp"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
@@ -164,6 +165,7 @@ func (c *CUPTI) onCudaConfigureCall(domain types.CUpti_CallbackDomain, cbid type
 }
 
 func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
+	pp.Println("enter launchkernel enter")
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.cuLaunchKernel_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
