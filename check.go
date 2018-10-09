@@ -24,7 +24,7 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("cupti error code = %s, message = %s", e.Code.String(), C.GoString(errstr))
 }
 
-func checkCUPTIError(code C.CUptiResult) *Error {
+func checkCUPTIError(code C.CUptiResult) error {
 	if code == C.CUPTI_SUCCESS {
 		return nil
 	}
@@ -35,6 +35,7 @@ func checkCUResult(code C.CUresult) error {
 	if code == C.CUDA_SUCCESS {
 		return nil
 	}
+
 	return errors.Errorf("cuda error code = %s", types.CUresult(code).String())
 }
 

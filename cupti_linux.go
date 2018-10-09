@@ -107,6 +107,7 @@ func (c *CUPTI) Subscribe() error {
 	if err := c.cuptiSubscribe(); err != nil {
 		return err
 	}
+
 	if err := c.startActivies(); err != nil {
 		return err
 	}
@@ -130,9 +131,9 @@ func (c *CUPTI) Subscribe() error {
 func (c *CUPTI) Unsubscribe() error {
 	c.Wait()
 
-	// if err := c.stopActivies(); err != nil {
-	// 	log.WithError(err).Error("failed to stop activities")
-	// }
+	if err := c.stopActivies(); err != nil {
+		log.WithError(err).Error("failed to stop activities")
+	}
 
 	if c.subscriber != nil {
 		C.cuptiUnsubscribe(c.subscriber)
@@ -142,13 +143,13 @@ func (c *CUPTI) Unsubscribe() error {
 }
 
 func (c *CUPTI) Close() error {
-	currentCUPTI = nil
+
 	if c == nil {
 		return nil
 	}
-
 	c.Unsubscribe()
 
+	currentCUPTI = nil
 	return nil
 }
 
@@ -169,10 +170,10 @@ func (c *CUPTI) startActivies() error {
 		}
 	}
 
-	// err := cuptiActivityRegisterCallbacks()
-	// if err != nil {
-	// 	return errors.Wrap(err, "unable to register activity callbacks")
-	// }
+	err := cuptiActivityRegisterCallbacks()
+	if err != nil {
+		return errors.Wrap(err, "unable to register activity callbacks")
+	}
 
 	return nil
 }

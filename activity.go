@@ -191,9 +191,10 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 
 		sp, _ := opentracing.StartSpanFromContext(
 			c.ctx,
-			"memcpy",
+			"gpu_memcpy",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
+				"type":                  "activity",
 				"copy_kind":             getMemcpyKindString(types.CUpti_ActivityMemcpyKind(activity.copyKind)),
 				"stream_id":             activity.streamId,
 				"correlation_id":        activity.correlationId,
@@ -230,8 +231,13 @@ func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, bu
 	}
 	var record *C.CUpti_Activity
 	for {
-		err := checkCUPTIError(C.cuptiActivityGetNextRecord(buffer, validSize, &record))
-		if err.Code == types.CUPTI_SUCCESS {
+		err, ok := checkCUPTIError(C.cuptiActivityGetNextRecord(buffer, validSize, &record)).(*Error)
+		if err != nil && !ok {
+			pp.Println(err)
+			panic("expecting an *Error")
+			break
+		}
+		if err == nil || err.Code == types.CUPTI_SUCCESS {
 			if record == nil {
 				break
 			}
