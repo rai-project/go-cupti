@@ -14,15 +14,6 @@ import "unsafe"
 
 type callbackFunction func(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.CUpti_CallbackId, cbInfo *C.CUpti_CallbackData)
 
-func cuptiGetTimestamp() (uint64, error) {
-	var val C.uint64_t
-	err := checkCUPTIError(C.cuptiGetTimestamp(&val))
-	if err != nil {
-		return 0, err
-	}
-	return uint64(val), nil
-}
-
 func cuptiEnableDomain() {
 
 }

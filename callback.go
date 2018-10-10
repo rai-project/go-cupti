@@ -22,11 +22,6 @@ import (
 	"github.com/rai-project/go-cupti/types"
 )
 
-const (
-	BUFFER_SIZE = 32 * 1024 //32 * 16384
-	ALIGN_SIZE  = 8
-)
-
 func demangleName(n *C.char) string {
 	if n == nil {
 		return ""
@@ -38,6 +33,38 @@ func demangleName(n *C.char) string {
 	}
 	return name
 }
+
+func cuptiGetTimestamp() (uint64, error) {
+	var val C.uint64_t
+	err := checkCUPTIError(C.cuptiGetTimestamp(&val))
+	if err != nil {
+		return 0, err
+	}
+	return uint64(val), nil
+}
+
+func (c *CUPTI) currentTimeStamp() time.Time {
+	val, err := cuptiGetTimestamp()
+	if err != nil {
+		log.WithError(err).Error("failed to get cuptiGetTimestamp")
+		return time.Unix(0, 0)
+	}
+	// ret := time.Unix(0, int64(val))
+	ret := c.beginTime.Add(time.Duration(uint64(val)-c.startTimeStamp) * time.Nanosecond)
+	return ret
+}
+
+/*
+// Returns the device timestamp in *timestamp. The timestamp is reported in nanoseconds and indicates the time since the device was last reset.
+func (c * CUPTI) cuptiDeviceGetTimestamp() time.Time {
+  var stamp uint64
+  if err := checkCUPTIError(C.cuptiDeviceGetTimestamp(c.ctx, C.uint64_t(unsafe.Pointer(&stamp)))); err != nil {
+    log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
+    return time.Unix(0, 0)
+  }
+  return c.beginTime.Add(time.Unix(0, stamp - c.startTimeStamp))
+}
+*/
 
 func cuptiEnableCallback(subscriber C.CUpti_SubscriberHandle, domain C.CUpti_CallbackDomain, cbid C.CUpti_CallbackId) error {
 	return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, subscriber, domain, cbid))
@@ -69,27 +96,6 @@ func spanFromContextCorrelationId(ctx context.Context, correlationId uint) (open
 		return nil, errors.Errorf("span for correlationId=%v was not found", correlationId)
 	}
 	return span, nil
-}
-
-/*
-func (c * CUPTI) cuptiDeviceGetTimestamp() time.Time {
-  var stamp uint64
-  if err := checkCUPTIError(C.cuptiDeviceGetTimestamp(c.ctx, C.uint64_t(unsafe.Pointer(&stamp)))); err != nil {
-    log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
-    return time.Unix(0, 0)
-  }
-  return c.beginTime.Add(time.Unix(0, stamp - c.startTimeStamp))
-}
-*/
-
-func (c *CUPTI) currentTimeStamp() time.Time {
-	val, err := cuptiGetTimestamp()
-	if err != nil {
-
-		log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
-		return time.Unix(0, 0)
-	}
-	return time.Unix(0, int64(val))
 }
 
 func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {

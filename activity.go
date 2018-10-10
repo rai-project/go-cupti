@@ -38,28 +38,33 @@ import (
 	"github.com/rai-project/go-cupti/types"
 )
 
+const (
+	BUFFER_SIZE = 32 * 1024
+	ALIGN_SIZE  = 8
+)
+
 func getActivityMemcpyKindString(kind types.CUpti_ActivityMemcpyKind) string {
 	switch kind {
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_HTOD:
-		return "h2d"
+		return "HtoD"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_DTOH:
-		return "d2h"
+		return "DtoH"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_HTOA:
-		return "h2a"
+		return "HtoA"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_ATOH:
-		return "a2h"
+		return "AtoH"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_ATOA:
-		return "a2a"
+		return "AtoA"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_ATOD:
-		return "a2d"
+		return "AtoD"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_DTOA:
-		return "d2a"
+		return "DtoA"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_DTOD:
-		return "d2d"
+		return "DtoD"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_HTOH:
-		return "h2h"
+		return "HtoH"
 	case types.CUPTI_ACTIVITY_MEMCPY_KIND_PTOP:
-		return "p2p"
+		return "PtoP"
 	default:
 		break
 	}
@@ -231,7 +236,7 @@ func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, bu
 
 	var dropped C.size_t
 	if err := checkCUPTIError(C.cuptiActivityGetNumDroppedRecords(ctx, streamId, &dropped)); err != nil {
-		log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
+		log.WithError(err).Error("failed to get cuptiActivityGetNumDroppedRecords")
 		return
 	}
 	if dropped != 0 {
@@ -302,7 +307,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
 				"cupti_type":     "activity",
-				"name":           activity.name,
+				"name":           demangleName(activity.name),
 				"grid_dim":       []int{int(activity.gridX), int(activity.gridY), int(activity.gridZ)},
 				"block_dim":      []int{int(activity.blockX), int(activity.blockY), int(activity.blockZ)},
 				"device_id":      activity.deviceId,
