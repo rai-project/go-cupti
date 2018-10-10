@@ -242,26 +242,7 @@ func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, bu
 
 func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 	switch types.CUpti_ActivityKind(record.kind) {
-	case types.CUPTI_ACTIVITY_KIND_DEVICE:
-		activity := (*C.CUpti_ActivityDevice2)(unsafe.Pointer(record))
-		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
-		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
-		sp, _ := opentracing.StartSpanFromContext(
-			c.ctx,
-			"gpu_device",
-			opentracing.StartTime(startTime),
-			opentracing.Tags{
-				"cupti_type":             "activity",
-				"id":                     activity.id,
-				"compute_capability":     activity.computeCapabilityMajor + "." + activity.computeCapabilityMinor,
-				"global_memory_bandwith": activity.globalMemoryBandwidth,
-				"num_multiprocessors":    activity.numMultiprocessors,
-			},
-		)
-		sp.FinishWithOptions(opentracing.FinishOptions{
-			FinishTime: endTime,
-		})
-		// https://docs.nvidia.com/cuda/cupti/index.html#structCUpti__ActivityMemcpy
+	// https://docs.nvidia.com/cuda/cupti/index.html#structCUpti__ActivityMemcpy
 	case types.CUPTI_ACTIVITY_KIND_MEMCPY:
 		activity := (*C.CUpti_ActivityMemcpy)(unsafe.Pointer(record))
 		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
@@ -273,7 +254,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			opentracing.Tags{
 				"cupti_type":            "activity",
 				"bytes":                 activity.bytes,
-				"bytes_human":           humanize.Bytes(activity.bytes),
+				"bytes_human":           humanize.Bytes(uint64(activity.bytes)),
 				"copy_kind":             getActivityMemcpyKindString(types.CUpti_ActivityMemcpyKind(activity.copyKind)),
 				"src_kind":              getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.srcKind)),
 				"dst_kind":              getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.dstKind)),
@@ -296,16 +277,15 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_memset",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
-				"cupti_type":            "activity",
-				"bytes":                 activity.bytes,
-				"bytes_human":           humanize.Bytes(activity.bytes),
-				"memory_kind":           getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.MemoryKind)),
-				"value":                 activity.value,
-				"device_id":             activity.deviceId,
-				"context_id":            activity.contextId,
-				"stream_id":             activity.streamId,
-				"correlation_id":        activity.correlationId,
-				"runtimeCorrelation_id": activity.runtimeCorrelationId,
+				"cupti_type":     "activity",
+				"bytes":          activity.bytes,
+				"bytes_human":    humanize.Bytes(uint64(activity.bytes)),
+				"memory_kind":    getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.memoryKind)),
+				"value":          activity.value,
+				"device_id":      activity.deviceId,
+				"context_id":     activity.contextId,
+				"stream_id":      activity.streamId,
+				"correlation_id": activity.correlationId,
 			},
 		)
 		sp.FinishWithOptions(opentracing.FinishOptions{
@@ -321,23 +301,23 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_kernel",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
-				"cupti_type":           "activity",
-				"name":                 activity.name,
-				"grid_dim":             []int{int(activity.gridX), int(activity.gridY), int(activity.gridZ)},
-				"block_dim":            []int{int(activity.blockX), int(activity.blockY), int(activity.blockZ)},
-				"device_id":            activity.deviceId,
-				"context_id":           activity.contextId,
-				"stream_id":            activity.streamId,
-				"correlation_id":       activity.correlationId,
-				"start":                activity.start,
-				"end":                  activity.completed,
-				"quened":               activity.quened,
-				"submitted":            activity.submitted,
-				"local_mem":            activity.localMemoryTotal,
-				"shared_mem":           activity.sharedMemoryExecuted,
-				"shared_mem_human":     humanize.Bytes(activity.sharedMemoryExecuted),
-				"dynamic_sharedMemory": activity.dynamicSharedMemory,
-				"static_sharedMemory":  activity.staticcSharedMemory,
+				"cupti_type":                 "activity",
+				"name":                       activity.name,
+				"grid_dim":                   []int{int(activity.gridX), int(activity.gridY), int(activity.gridZ)},
+				"block_dim":                  []int{int(activity.blockX), int(activity.blockY), int(activity.blockZ)},
+				"device_id":                  activity.deviceId,
+				"context_id":                 activity.contextId,
+				"stream_id":                  activity.streamId,
+				"correlation_id":             activity.correlationId,
+				"start":                      activity.start,
+				"end":                        activity.completed,
+				"queued":                     activity.queued,
+				"submitted":                  activity.submitted,
+				"local_mem":                  activity.localMemoryTotal,
+				"dynamic_sharedMemory":       activity.dynamicSharedMemory,
+				"dynamic_sharedMemory_human": humanize.Bytes(uint64(activity.dynamicSharedMemory)),
+				"static_sharedMemory":        activity.staticSharedMemory,
+				"static_sharedMemory_human":  humanize.Bytes(uint64(activity.staticSharedMemory)),
 			},
 		)
 		sp.FinishWithOptions(opentracing.FinishOptions{
