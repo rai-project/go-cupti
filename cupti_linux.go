@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
+	"github.com/rai-project/tracer"
 
 	_ "github.com/rai-project/tracer/jaeger"
 	_ "github.com/rai-project/tracer/noop"
@@ -45,6 +46,9 @@ func New(opts ...Option) (*CUPTI, error) {
 	}
 
 	currentCUPTI = c
+
+	span, _ := tracer.StartSpanFromContext(options.ctx, tracer.FULL_TRACE, "cupti_new")
+	defer span.Finish()
 
 	if err := c.Subscribe(); err != nil {
 		return nil, c.Close()
