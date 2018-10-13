@@ -1,6 +1,4 @@
-/*
 // +build linux,cgo,!arm64
-*/
 
 package cupti
 
