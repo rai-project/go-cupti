@@ -18,6 +18,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
+	tracer "github.com/rai-project/tracer"
 )
 
 func demangleName(n *C.char) string {
@@ -118,8 +119,9 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 	if cbInfo.symbolName != nil {
 		tags["symbol_name"] = C.GoString(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(
+	span, _ := tracer.StartSpanFromContext(
 		c.ctx,
+		tracer.HARDWARE_TRACE,
 		"configure_call",
 		opentracing.StartTime(c.currentTimeStamp()),
 		tags,
@@ -186,7 +188,7 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "launch_kernel", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "launch_kernel", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -240,7 +242,7 @@ func (c *CUPTI) onCudaDeviceSynchronizeEnter(domain types.CUpti_CallbackDomain, 
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "device_synchronize", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "device_synchronize", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -290,7 +292,7 @@ func (c *CUPTI) onCudaStreamSynchronizeEnter(domain types.CUpti_CallbackDomain, 
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "stream_synchronize", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "stream_synchronize", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -343,7 +345,7 @@ func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.
 		"byte_count_human":  humanize.Bytes(uint64(params.size)),
 		"destination_ptr":   uintptr(unsafe.Pointer(params.devPtr)),
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMalloc", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaMalloc", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -393,7 +395,7 @@ func (c *CUPTI) onCudaMallocHostEnter(domain types.CUpti_CallbackDomain, cbid ty
 		"byte_count_human":  humanize.Bytes(uint64(params.size)),
 		"destination_ptr":   uintptr(unsafe.Pointer(*params.ptr)),
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMallocHost", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaMallocHost", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -444,7 +446,7 @@ func (c *CUPTI) onCudaHostAllocEnter(domain types.CUpti_CallbackDomain, cbid typ
 		"host_ptr":          uintptr(unsafe.Pointer(*params.pHost)),
 		"flags":             params.flags,
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaHostAlloc", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaHostAlloc", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -495,7 +497,7 @@ func (c *CUPTI) onCudaMallocManagedEnter(domain types.CUpti_CallbackDomain, cbid
 		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 		"flags":             params.flags,
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMallocManaged", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaMallocManaged", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -546,7 +548,7 @@ func (c *CUPTI) onCudaMallocPitchEnter(domain types.CUpti_CallbackDomain, cbid t
 		"width":             params.width,
 		"height":            params.height,
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaMallocPitch", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaMallocPitch", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -593,7 +595,7 @@ func (c *CUPTI) onCudaFreeEnter(domain types.CUpti_CallbackDomain, cbid types.CU
 		"cupti_callback_id": cbid.String(),
 		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaFree", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaFree", tags)
 
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
@@ -641,7 +643,7 @@ func (c *CUPTI) onCudaFreeHostEnter(domain types.CUpti_CallbackDomain, cbid type
 		"cupti_callback_id": cbid.String(),
 		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaFreeHost", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaFreeHost", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
 	return nil
@@ -696,7 +698,7 @@ func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cuda_memcpy_dev", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cuda_memcpy_dev", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -754,7 +756,7 @@ func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cuda_launch", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cuda_launch", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -808,7 +810,7 @@ func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid t
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cuda_synchronize", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cuda_synchronize", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -865,7 +867,7 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cuda_memcpy", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cuda_memcpy", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -918,7 +920,7 @@ func (c *CUPTI) onCudaIpcGetEventHandleEnter(domain types.CUpti_CallbackDomain, 
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaIpcGetEventHandle", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaIpcGetEventHandle", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -971,7 +973,7 @@ func (c *CUPTI) onCudaIpcOpenEventHandleEnter(domain types.CUpti_CallbackDomain,
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaIpcOpenEventHandle", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaIpcOpenEventHandle", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -1024,7 +1026,7 @@ func (c *CUPTI) onCudaIpcGetMemHandleEnter(domain types.CUpti_CallbackDomain, cb
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaIpcGetMemHandle", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaIpcGetMemHandle", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -1078,7 +1080,7 @@ func (c *CUPTI) onCudaIpcOpenMemHandleEnter(domain types.CUpti_CallbackDomain, c
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaIpcOpenMemHandle", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaIpcOpenMemHandle", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
@@ -1130,7 +1132,7 @@ func (c *CUPTI) onCudaIpcCloseMemHandleEnter(domain types.CUpti_CallbackDomain, 
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
 	}
-	span, _ := opentracing.StartSpanFromContext(c.ctx, "cudaIpcCloseMemHandle", tags)
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaIpcCloseMemHandle", tags)
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}

@@ -36,6 +36,7 @@ import (
 	humanize "github.com/dustin/go-humanize"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/rai-project/go-cupti/types"
+	"github.com/rai-project/tracer"
 )
 
 const (
@@ -252,8 +253,9 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		activity := (*C.CUpti_ActivityMemcpy)(unsafe.Pointer(record))
 		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
-		sp, _ := opentracing.StartSpanFromContext(
+		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
+			tracer.HARDWARE_TRACE,
 			"gpu_memcpy",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
@@ -277,8 +279,9 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		activity := (*C.CUpti_ActivityMemset)(unsafe.Pointer(record))
 		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
-		sp, _ := opentracing.StartSpanFromContext(
+		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
+			tracer.HARDWARE_TRACE,
 			"gpu_memset",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
@@ -301,8 +304,9 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		activity := (*C.CUpti_ActivityKernel4)(unsafe.Pointer(record))
 		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
-		sp, _ := opentracing.StartSpanFromContext(
+		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
+			tracer.HARDWARE_TRACE,
 			"gpu_kernel",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
@@ -332,8 +336,9 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		activity := (*C.CUpti_ActivityOverhead)(unsafe.Pointer(record))
 		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
-		sp, _ := opentracing.StartSpanFromContext(
+		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
+			tracer.HARDWARE_TRACE,
 			"gpu_overhead",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
@@ -350,8 +355,9 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		activity := (*C.CUpti_ActivityAPI)(unsafe.Pointer(record))
 		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
-		sp, _ := opentracing.StartSpanFromContext(
+		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
+			tracer.HARDWARE_TRACE,
 			"gpu_api",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
