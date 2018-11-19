@@ -51,6 +51,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:927f2f9632311e72cc76586aebff836c12c0132150afc2fe251f616e41522595"
+  name = "github.com/benesch/cgosymbolizer"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "70e1ee2b39d3b616a6ab9996820dde224c27f351"
+
+[[projects]]
+  branch = "master"
   digest = "1:4c4c33075b704791d6a7f09dfb55c66769e8a1dc6adf87026292d274fe8ad113"
   name = "github.com/codahale/hdrhistogram"
   packages = ["."]
@@ -439,8 +447,7 @@
   revision = "e67904ef854ae00a55270b7bc2a3a2bd875ee080"
 
 [[projects]]
-  branch = "master"
-  digest = "1:56384bf0250912c274ed440a5a4abae85547a968b36adcf56eead59df485dcf2"
+  digest = "1:a0fdef59ceeae5a592dff7c52280d7eb44bb1eb4c739b86e5a50cf46e67d5740"
   name = "github.com/rai-project/tracer"
   packages = [
     ".",
@@ -452,7 +459,8 @@
     "zipkin",
   ]
   pruneopts = "UT"
-  revision = "65b264e8abcbdf1ba59ca29cc581b0e92ef88d9f"
+  revision = "99de7d4e81ce7fc75f5d12a31cddd5db8f233281"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
@@ -749,8 +757,8 @@
   input-imports = [
     "github.com/GeertJohan/go-sourcepath",
     "github.com/Unknwon/com",
+    "github.com/benesch/cgosymbolizer",
     "github.com/dustin/go-humanize",
-    "github.com/ianlancetaylor/cgosymbolizer",
     "github.com/ianlancetaylor/demangle",
     "github.com/k0kubun/pp",
     "github.com/opentracing/opentracing-go",
