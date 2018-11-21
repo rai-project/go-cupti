@@ -70,8 +70,8 @@
   name = "github.com/rai-project/nvidia-smi"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/rai-project/tracer"
-  version = "0.2.0"
 
 [[constraint]]
   branch = "master"
