@@ -1517,17 +1517,17 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 	case types.CUPTI_CB_DOMAIN_NVTX:
 		cbid := types.CUpti_nvtx_api_trace_cbid(cbid0)
 		switch cbid {
-		case types.CUPTI_CBID_Nvtx_nvtxRangeStartA:
+		case types.CUPTI_CBID_NVTX_nvtxRangeStartA:
 			handle.onNvtxRangeStartA(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_Nvtx_nvtxRangeStartEx:
+		case types.CUPTI_CBID_NVTX_nvtxRangeStartEx:
 			handle.onNvtxRangeStartEx(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_Nvtx_nvtxRangeEnd:
+		case types.CUPTI_CBID_NVTX_nvtxRangeEnd:
 			handle.onNvtxRangeEnd(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_Nvtx_nvtxRangePushA:
+		case types.CUPTI_CBID_NVTX_nvtxRangePushA:
 			handle.onNvtxRangePushA(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_Nvtx_nvtxRangePushEx:
+		case types.CUPTI_CBID_NVTX_nvtxRangePushEx:
 			handle.onNvtxRangePushEx(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_Nvtx_nvtxRangePop:
+		case types.CUPTI_CBID_NVTX_nvtxRangePop:
 			handle.onNvtxRangePop(domain, cbid, cbInfo)
 		default:
 			log.WithField("cbid", cbid.String()).
