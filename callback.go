@@ -343,12 +343,13 @@ func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaMalloc_v3020_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"trace_source":      "cupti",
 		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaMalloc",
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
@@ -395,12 +396,13 @@ func (c *CUPTI) onCudaMallocHostEnter(domain types.CUpti_CallbackDomain, cbid ty
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaMallocHost_v3020_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"trace_source":      "cupti",
 		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaMallocHost",
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
@@ -447,12 +449,13 @@ func (c *CUPTI) onCudaHostAllocEnter(domain types.CUpti_CallbackDomain, cbid typ
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaHostAlloc_v3020_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"trace_source":      "cupti",
 		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaHostAlloc",
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
@@ -500,12 +503,13 @@ func (c *CUPTI) onCudaMallocManagedEnter(domain types.CUpti_CallbackDomain, cbid
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaMallocManaged_v6000_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"trace_source":      "cupti",
 		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaMallocManaged",
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
@@ -553,12 +557,13 @@ func (c *CUPTI) onCudaMallocPitchEnter(domain types.CUpti_CallbackDomain, cbid t
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaMallocPitch_v3020_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"trace_source":      "cupti",
 		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaMallocPitch",
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
@@ -605,12 +610,13 @@ func (c *CUPTI) onCudaFreeEnter(domain types.CUpti_CallbackDomain, cbid types.CU
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaFree_v3020_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"trace_source":      "cupti",
 		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaFree",
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
@@ -655,12 +661,13 @@ func (c *CUPTI) onCudaFreeHostEnter(domain types.CUpti_CallbackDomain, cbid type
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaFree_v3020_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"trace_source":      "cupti",
 		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
-		"function_name":     "cudaFreeHost",
+		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
@@ -1225,7 +1232,7 @@ func (c *CUPTI) onNvtxRangeStartAEnter(domain types.CUpti_CallbackDomain, cbid t
 		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
-		"message":           C.GoString(unsafe.Pointer(params.message)),
+		"message":           C.GoString(params.message),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "nvtxRangeStartA", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -1261,17 +1268,242 @@ func (c *CUPTI) onNvtxRangeStartA(domain types.CUpti_CallbackDomain, cbid types.
 	return nil
 }
 
-// handle.onNvtxRangeStartA(domain, cbid, cbInfo)
-// case types.CUPTI_CBID_Nvtx_nvtxRangeStartEx:
-//   handle.onNvtxRangeStartEx(domain, cbid, cbInfo)
-// case types.CUPTI_CBID_Nvtx_nvtxRangeEnd:
-//   handle.onnvtxRangeEnd(domain, cbid, cbInfo)
-// case types.CUPTI_CBID_Nvtx_nvtxRangePushA:
-//   handle.onnvtxRangePushA(domain, cbid, cbInfo)
-// case types.CUPTI_CBID_Nvtx_nvtxRangePushEx:
-//   handle.onnvtxRangePushEx(domain, cbid, cbInfo)
-// case types.CUPTI_CBID_Nvtx_nvtxRangePop:
-//   handle.onnvtxRangePop(domain, cbid, cbInfo)
+func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	params := (*C.nvtxRangeStartEx_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     functionName,
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"message":           C.GoString(params.eventAttrib.message.ascii),
+	}
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "nvtxRangeStartEx", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangeStartExExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	if cbInfo.functionReturnValue != nil {
+		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
+		span.SetTag("result", types.CUresult(*cuError).String())
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangeStartEx(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onNvtxRangeStartExEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onNvtxRangeStartExExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangeEndEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     functionName,
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"nvtx_range_id":     uint64(params.id),
+	}
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "nvtxRangeEnd", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangeEndExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangeEnd(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onNvtxRangeEndEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onNvtxRangeEndExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangePushAEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     functionName,
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"message":           C.GoString(params.message),
+	}
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "nvtxRangePushA", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangePushAExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangePushA(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onNvtxRangePushAEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onNvtxRangePushAExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	params := (*C.nvtxRangeStartEx_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     functionName,
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+		"message":           C.GoString(params.eventAttrib.message.ascii),
+	}
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "nvtxRangePushEx", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangePushExExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	if cbInfo.functionReturnValue != nil {
+		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
+		span.SetTag("result", types.CUresult(*cuError).String())
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangePushEx(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onNvtxRangePushExEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onNvtxRangePushExExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangePopEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
+	functionName := demangleName(cbInfo.functionName)
+	tags := opentracing.Tags{
+		"context_uid":       uint32(cbInfo.contextUid),
+		"correlation_id":    correlationId,
+		"function_name":     functionName,
+		"cupti_domain":      domain.String(),
+		"cupti_callback_id": cbid.String(),
+	}
+	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "nvtxRangePop", tags)
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangePopExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("no span found")
+	}
+	span.Finish()
+	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangePop(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onNvtxRangePopEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onNvtxRangePopExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+}
 
 //export callback
 func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.CUpti_CallbackId, cbInfo *C.CUpti_CallbackData) {
@@ -1290,13 +1522,13 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		case types.CUPTI_CBID_Nvtx_nvtxRangeStartEx:
 			handle.onNvtxRangeStartEx(domain, cbid, cbInfo)
 		case types.CUPTI_CBID_Nvtx_nvtxRangeEnd:
-			handle.onnvtxRangeEnd(domain, cbid, cbInfo)
+			handle.onNvtxRangeEnd(domain, cbid, cbInfo)
 		case types.CUPTI_CBID_Nvtx_nvtxRangePushA:
-			handle.onnvtxRangePushA(domain, cbid, cbInfo)
+			handle.onNvtxRangePushA(domain, cbid, cbInfo)
 		case types.CUPTI_CBID_Nvtx_nvtxRangePushEx:
-			handle.onnvtxRangePushEx(domain, cbid, cbInfo)
+			handle.onNvtxRangePushEx(domain, cbid, cbInfo)
 		case types.CUPTI_CBID_Nvtx_nvtxRangePop:
-			handle.onnvtxRangePop(domain, cbid, cbInfo)
+			handle.onNvtxRangePop(domain, cbid, cbInfo)
 		default:
 			log.WithField("cbid", cbid.String()).
 				WithField("function_name", demangleName(cbInfo.functionName)).
