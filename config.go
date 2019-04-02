@@ -7,7 +7,7 @@ import (
 )
 
 type cuptiConfig struct {
-	SamplingPeriod int           `json:"sampling_period" config:"cupti.sampling_period" default:5`
+	SamplingPeriod int           `json:"sampling_period" config:"cupti.sampling_period"`
 	Activities     []string      `json:"activities" config:"cupti.activities"`
 	Domains        []string      `json:"domains" config:"cupti.domains"`
 	Callbacks      []string      `json:"callbacks" config:"cupti.callbacks"`

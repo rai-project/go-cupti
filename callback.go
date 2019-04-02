@@ -107,6 +107,8 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 	params := (*C.cudaConfigureCall_v3020_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -174,6 +176,8 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 	params := (*C.cuLaunchKernel_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -233,6 +237,8 @@ func (c *CUPTI) onCudaDeviceSynchronizeEnter(domain types.CUpti_CallbackDomain, 
 	correlationId := uint(cbInfo.correlationId)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -283,6 +289,8 @@ func (c *CUPTI) onCudaStreamSynchronizeEnter(domain types.CUpti_CallbackDomain, 
 	correlationId := uint(cbInfo.correlationId)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -336,6 +344,8 @@ func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.
 	}
 	params := (*C.cudaMalloc_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     "cudaMalloc",
@@ -386,6 +396,8 @@ func (c *CUPTI) onCudaMallocHostEnter(domain types.CUpti_CallbackDomain, cbid ty
 	}
 	params := (*C.cudaMallocHost_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     "cudaMallocHost",
@@ -436,6 +448,8 @@ func (c *CUPTI) onCudaHostAllocEnter(domain types.CUpti_CallbackDomain, cbid typ
 	}
 	params := (*C.cudaHostAlloc_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     "cudaHostAlloc",
@@ -487,6 +501,8 @@ func (c *CUPTI) onCudaMallocManagedEnter(domain types.CUpti_CallbackDomain, cbid
 	}
 	params := (*C.cudaMallocManaged_v6000_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     "cudaMallocManaged",
@@ -538,6 +554,8 @@ func (c *CUPTI) onCudaMallocPitchEnter(domain types.CUpti_CallbackDomain, cbid t
 	}
 	params := (*C.cudaMallocPitch_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     "cudaMallocPitch",
@@ -588,6 +606,8 @@ func (c *CUPTI) onCudaFreeEnter(domain types.CUpti_CallbackDomain, cbid types.CU
 	}
 	params := (*C.cudaFree_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     "cudaFree",
@@ -636,6 +656,8 @@ func (c *CUPTI) onCudaFreeHostEnter(domain types.CUpti_CallbackDomain, cbid type
 	}
 	params := (*C.cudaFree_v3020_params)(cbInfo.functionParams)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     "cudaFreeHost",
@@ -685,6 +707,8 @@ func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid
 	params := (*C.cuMemcpyHtoD_v2_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -747,6 +771,8 @@ func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.
 	correlationId := uint(cbInfo.correlationId)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -801,6 +827,7 @@ func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid t
 	correlationId := uint(cbInfo.correlationId)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
 		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
@@ -854,6 +881,7 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 	params := (*C.cudaMemcpy_v3020_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
 		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
@@ -912,6 +940,8 @@ func (c *CUPTI) onCudaIpcGetEventHandleEnter(domain types.CUpti_CallbackDomain, 
 	params := (*C.cudaIpcGetEventHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":          "cupti",
+		"cupti_type":            "callback",
 		"context_uid":           uint32(cbInfo.contextUid),
 		"correlation_id":        correlationId,
 		"function_name":         functionName,
@@ -966,6 +996,8 @@ func (c *CUPTI) onCudaIpcOpenEventHandleEnter(domain types.CUpti_CallbackDomain,
 	params := (*C.cudaIpcOpenEventHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":          "cupti",
+		"cupti_type":            "callback",
 		"context_uid":           uint32(cbInfo.contextUid),
 		"correlation_id":        correlationId,
 		"function_name":         functionName,
@@ -1020,6 +1052,8 @@ func (c *CUPTI) onCudaIpcGetMemHandleEnter(domain types.CUpti_CallbackDomain, cb
 	params := (*C.cudaIpcGetMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":        "cupti",
+		"cupti_type":          "callback",
 		"context_uid":         uint32(cbInfo.contextUid),
 		"correlation_id":      correlationId,
 		"function_name":       functionName,
@@ -1074,6 +1108,8 @@ func (c *CUPTI) onCudaIpcOpenMemHandleEnter(domain types.CUpti_CallbackDomain, c
 	params := (*C.cudaIpcOpenMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":        "cupti",
+		"cupti_type":          "callback",
 		"context_uid":         uint32(cbInfo.contextUid),
 		"correlation_id":      correlationId,
 		"function_name":       functionName,
@@ -1129,6 +1165,8 @@ func (c *CUPTI) onCudaIpcCloseMemHandleEnter(domain types.CUpti_CallbackDomain, 
 	params := (*C.cudaIpcCloseMemHandle_v4010_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+		"trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,

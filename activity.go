@@ -250,6 +250,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_memcpy",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
+				"trace_source":          "cupti",
 				"cupti_type":            "activity",
 				"bytes":                 activity.bytes,
 				"bytes_human":           humanize.Bytes(uint64(activity.bytes)),
@@ -276,6 +277,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_memset",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
+				"trace_source":   "cupti",
 				"cupti_type":     "activity",
 				"bytes":          activity.bytes,
 				"bytes_human":    humanize.Bytes(uint64(activity.bytes)),
@@ -333,6 +335,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_overhead",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
+				"trace_source":  "cupti",
 				"cupti_type":    "activity",
 				"object_id":     activity.objectId,
 				"object_kind":   getActivityObjectKindString(types.CUpti_ActivityObjectKind(activity.objectKind)),
@@ -352,6 +355,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_api",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
+				"trace_source":   "cupti",
 				"cupti_type":     "activity",
 				"cbid":           int(activity.cbid),
 				"correlation_id": activity.correlationId,
