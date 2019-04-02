@@ -4,10 +4,15 @@ package cupti
 
 /*
 #include <cupti.h>
+#include <nvToolsExt.h>
+#include <nvToolsExtSync.h>
+#include <generated_nvtx_meta.h>
 */
 import "C"
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"time"
 	"unsafe"
 
@@ -16,6 +21,7 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
+
 	"github.com/rai-project/go-cupti/types"
 	tracer "github.com/rai-project/tracer"
 )
@@ -1222,7 +1228,7 @@ func (c *CUPTI) onCudaIpcCloseMemHandle(domain types.CUpti_CallbackDomain, cbid 
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartAEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartAEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
@@ -1240,7 +1246,7 @@ func (c *CUPTI) onNvtxRangeStartAEnter(domain types.CUpti_CallbackDomain, cbid t
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartAExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartAExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1255,7 +1261,7 @@ func (c *CUPTI) onNvtxRangeStartAExit(domain types.CUpti_CallbackDomain, cbid ty
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartA(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartA(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangeStartAEnter(domain, cbid, cbInfo)
@@ -1268,7 +1274,17 @@ func (c *CUPTI) onNvtxRangeStartA(domain types.CUpti_CallbackDomain, cbid types.
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func union_to_ascii_ptr(cbytes [8]byte) (result *C.char) {
+	buf := bytes.NewBuffer(cbytes[:])
+	var ptr uint64
+	if err := binary.Read(buf, binary.LittleEndian, &ptr); err == nil {
+		uptr := uintptr(ptr)
+		return (*C.char)(unsafe.Pointer(uptr))
+	}
+	return nil
+}
+
+func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.nvtxRangeStartEx_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
@@ -1278,7 +1294,7 @@ func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid 
 		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
-		"message":           C.GoString(params.eventAttrib.message.ascii),
+		"message":           C.GoString(union_to_ascii_ptr(params.eventAttrib.message)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "nvtxRangeStartEx", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -1286,7 +1302,7 @@ func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid 
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartExExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartExExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1305,7 +1321,7 @@ func (c *CUPTI) onNvtxRangeStartExExit(domain types.CUpti_CallbackDomain, cbid t
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartEx(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartEx(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangeStartExEnter(domain, cbid, cbInfo)
@@ -1318,9 +1334,9 @@ func (c *CUPTI) onNvtxRangeStartEx(domain types.CUpti_CallbackDomain, cbid types
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeEndEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeEndEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
-	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
+	params := (*C.nvtxRangeEnd_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
@@ -1336,7 +1352,7 @@ func (c *CUPTI) onNvtxRangeEndEnter(domain types.CUpti_CallbackDomain, cbid type
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeEndExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeEndExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1351,7 +1367,7 @@ func (c *CUPTI) onNvtxRangeEndExit(domain types.CUpti_CallbackDomain, cbid types
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeEnd(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeEnd(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangeEndEnter(domain, cbid, cbInfo)
@@ -1364,9 +1380,9 @@ func (c *CUPTI) onNvtxRangeEnd(domain types.CUpti_CallbackDomain, cbid types.CUP
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushAEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushAEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
-	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
+	params := (*C.nvtxRangePushA_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
@@ -1382,7 +1398,7 @@ func (c *CUPTI) onNvtxRangePushAEnter(domain types.CUpti_CallbackDomain, cbid ty
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushAExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushAExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1397,7 +1413,7 @@ func (c *CUPTI) onNvtxRangePushAExit(domain types.CUpti_CallbackDomain, cbid typ
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushA(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushA(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangePushAEnter(domain, cbid, cbInfo)
@@ -1410,9 +1426,9 @@ func (c *CUPTI) onNvtxRangePushA(domain types.CUpti_CallbackDomain, cbid types.C
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
-	params := (*C.nvtxRangeStartEx_params)(cbInfo.functionParams)
+	params := (*C.nvtxRangePushEx_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
@@ -1420,7 +1436,7 @@ func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid t
 		"function_name":     functionName,
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
-		"message":           C.GoString(params.eventAttrib.message.ascii),
+		"message":           C.GoString(union_to_ascii_ptr(params.eventAttrib.message)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "nvtxRangePushEx", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -1428,7 +1444,7 @@ func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid t
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushExExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushExExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1447,7 +1463,7 @@ func (c *CUPTI) onNvtxRangePushExExit(domain types.CUpti_CallbackDomain, cbid ty
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushEx(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushEx(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangePushExEnter(domain, cbid, cbInfo)
@@ -1460,9 +1476,8 @@ func (c *CUPTI) onNvtxRangePushEx(domain types.CUpti_CallbackDomain, cbid types.
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePopEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePopEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
-	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
 		"context_uid":       uint32(cbInfo.contextUid),
@@ -1477,7 +1492,7 @@ func (c *CUPTI) onNvtxRangePopEnter(domain types.CUpti_CallbackDomain, cbid type
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePopExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePopExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1492,7 +1507,7 @@ func (c *CUPTI) onNvtxRangePopExit(domain types.CUpti_CallbackDomain, cbid types
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePop(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePop(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangePopEnter(domain, cbid, cbInfo)
