@@ -9,11 +9,10 @@ import (
 	"time"
 
 	context "context"
-
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
-	"github.com/rai-project/tracer"
+  "github.com/rai-project/tracer"
 
 	_ "github.com/rai-project/tracer/jaeger"
 	_ "github.com/rai-project/tracer/noop"
@@ -103,15 +102,12 @@ func (c *CUPTI) Subscribe() error {
 
 func (c *CUPTI) Unsubscribe() error {
 	c.Wait()
-
 	if err := c.stopActivies(); err != nil {
 		return err
 	}
-
 	if err := c.cuptiUnsubscribe(); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -129,7 +125,7 @@ func (c *CUPTI) startActivies() error {
 	for _, activityName := range c.activities {
 		activity, err := types.CUpti_ActivityKindString(activityName)
 		if err != nil {
-			return errors.Wrap(err, "unable to map activityName to activity kind")
+			return errors.Wrapf(err, "unable to map %v to activity kind", activityName)
 		}
 		err = cuptiActivityEnable(activity)
 		if err != nil {
@@ -138,9 +134,9 @@ func (c *CUPTI) startActivies() error {
 				WithField("activity_enum", int(activity)).
 				Error("unable to enable activity")
 			panic(err)
-			return errors.Wrap(err, "unable to enable activities")
+			return errors.Wrapf(err, "unable to enable activitiy %v", activityName)
 		}
-	}
+  }
 
 	err := cuptiActivityRegisterCallbacks()
 	if err != nil {
@@ -154,11 +150,11 @@ func (c *CUPTI) stopActivies() error {
 	for _, activityName := range c.activities {
 		activity, err := types.CUpti_ActivityKindString(activityName)
 		if err != nil {
-			return errors.Wrap(err, "unable to stop activities")
+			return errors.Wrapf(err, "unable to map %v to activity kind", activityName
 		}
 		err = cuptiActivityDisable(activity)
 		if err != nil {
-			return errors.Wrap(err, "unable to disable activities")
+			return errors.Wrapf(err, "unable to disable activity %v", activityName)
 		}
 	}
 	return nil

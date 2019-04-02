@@ -110,7 +110,6 @@ func getActivityOverheadKindString(kind types.CUpti_ActivityOverheadKind) string
 	default:
 		break
 	}
-
 	return "<unknown> " + kind.String()
 }
 
@@ -129,7 +128,6 @@ func getActivityObjectKindString(kind types.CUpti_ActivityObjectKind) string {
 	default:
 		break
 	}
-
 	return "<unknown> " + kind.String()
 }
 
@@ -156,7 +154,6 @@ func getActivityObjectKindId(kind types.CUpti_ActivityObjectKind, id *C.CUpti_Ac
 	default:
 		break
 	}
-
 	return 0xffffffff
 }
 
@@ -169,7 +166,6 @@ func getComputeApiKindString(kind types.CUpti_ActivityComputeApiKind) string {
 	default:
 		break
 	}
-
 	return "<unknown> " + kind.String()
 }
 
@@ -194,9 +190,7 @@ func bufferRequested(buffer **C.uint8_t, size *C.size_t,
 }
 
 //export bufferCompleted
-func bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
-	size C.size_t, validSize C.size_t) {
-
+func bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 	if currentCUPTI == nil {
 		log.Error("the current cupti instance is not found")
 		return
@@ -204,8 +198,7 @@ func bufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
 	currentCUPTI.activityBufferCompleted(ctx, streamId, buffer, size, validSize)
 }
 
-func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t,
-	size C.size_t, validSize C.size_t) {
+func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, buffer *C.uint8_t, size C.size_t, validSize C.size_t) {
 	defer func() {
 		if buffer != nil {
 			C.free(unsafe.Pointer(buffer))
@@ -231,7 +224,6 @@ func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, bu
 		if err.Code == types.CUPTI_ERROR_MAX_LIMIT_REACHED {
 			break
 		}
-
 		log.WithError(err).Error("failed to get cupti cuptiActivityGetNextRecord")
 	}
 
@@ -243,7 +235,6 @@ func (c *CUPTI) activityBufferCompleted(ctx C.CUcontext, streamId C.uint32_t, bu
 	if dropped != 0 {
 		log.Infof("Dropped %v activity records", uint(dropped))
 	}
-
 }
 
 func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
@@ -310,18 +301,18 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_kernel",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
-				"cupti_type":     "activity",
-				"name":           demangleName(activity.name),
-				"grid_dim":       []int{int(activity.gridX), int(activity.gridY), int(activity.gridZ)},
-				"block_dim":      []int{int(activity.blockX), int(activity.blockY), int(activity.blockZ)},
-				"device_id":      activity.deviceId,
-				"context_id":     activity.contextId,
-				"stream_id":      activity.streamId,
-				"correlation_id": activity.correlationId,
-				// "start":                      activity.start,
-				// "end":                        activity.completed,
-				// "queued":                     activity.queued,
-				// "submitted":                  activity.submitted,
+				"cupti_type":                 "activity",
+				"name":                       demangleName(activity.name),
+				"grid_dim":                   []int{int(activity.gridX), int(activity.gridY), int(activity.gridZ)},
+				"block_dim":                  []int{int(activity.blockX), int(activity.blockY), int(activity.blockZ)},
+				"device_id":                  activity.deviceId,
+				"context_id":                 activity.contextId,
+				"stream_id":                  activity.streamId,
+				"correlation_id":             activity.correlationId,
+				"start":                      activity.start,
+				"end":                        activity.completed,
+				"queued":                     activity.queued,
+				"submitted":                  activity.submitted,
 				"local_mem":                  activity.localMemoryTotal,
 				"dynamic_sharedMemory":       activity.dynamicSharedMemory,
 				"dynamic_sharedMemory_human": humanize.Bytes(uint64(activity.dynamicSharedMemory)),

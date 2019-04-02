@@ -7,10 +7,9 @@ package cupti
 */
 import "C"
 import (
+	"context"
 	"time"
 	"unsafe"
-
-	context "context"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ianlancetaylor/demangle"
@@ -42,13 +41,13 @@ func cuptiGetTimestamp() (uint64, error) {
 	return uint64(val), nil
 }
 
+// Returns a timestamp normalized to correspond with the start and end timestamps reported in the CUPTI activity records. The timestamp is reported in nanoseconds.
 func (c *CUPTI) currentTimeStamp() time.Time {
 	val, err := cuptiGetTimestamp()
 	if err != nil {
 		log.WithError(err).Error("failed to get cuptiGetTimestamp")
 		return time.Unix(0, 0)
 	}
-	// ret := time.Unix(0, int64(val))
 	ret := c.beginTime.Add(time.Duration(uint64(val)-c.startTimeStamp) * time.Nanosecond)
 	return ret
 }
@@ -75,6 +74,9 @@ func (c *CUPTI) addCallback(name string) error {
 	}
 	if cbid, err := types.CUPTI_RUNTIME_TRACE_CBIDString(name); err == nil {
 		return cuptiEnableCallback(c.subscriber, C.CUPTI_CB_DOMAIN_RUNTIME_API, C.CUpti_CallbackId(cbid))
+	}
+	if cbid, err := types.CUpti_nvtx_api_trace_cbidString(name); err == nil {
+		return cuptiEnableCallback(c.subscriber, C.CUPTI_CB_DOMAIN_NVTX, C.CUpti_CallbackId(cbid))
 	}
 	return errors.Errorf("cannot find callback %v by name", name)
 }
@@ -155,7 +157,6 @@ func (c *CUPTI) onCudaConfigureCallExit(domain types.CUpti_CallbackDomain, cbid 
 }
 
 func (c *CUPTI) onCudaConfigureCall(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onCudaConfigureCallEnter(domain, cbid, cbInfo)
@@ -166,7 +167,6 @@ func (c *CUPTI) onCudaConfigureCall(domain types.CUpti_CallbackDomain, cbid type
 	}
 
 	return nil
-
 }
 
 func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
