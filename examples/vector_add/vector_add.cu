@@ -21,6 +21,7 @@
 
 // For the CUDA runtime routines (prefixed with "cuda_")
 #include <cuda_runtime.h>
+#include <nvToolsExtCuda.h>
 
 /**
  * CUDA Kernel Device code
@@ -48,7 +49,7 @@ extern "C" void VectorAdd(void) {
   // Error code to check return values for CUDA calls
   cudaError_t err = cudaSuccess;
 
-cudaSetDevice(0);
+  cudaSetDevice(0);
 
   // Print the vector length to be used, and compute its size
   int numElements = 1024 * 1024;
@@ -111,14 +112,15 @@ cudaSetDevice(0);
   // Copy the host input vectors A and B in host memory to the device input
   // vectors in device memory
   printf("Copy input data from the host memory to the CUDA device\n");
+  nvtxRangeId_t id1 = nvtxRangeStartA("cudaMemcpy");
   err = cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
-
   if (err != cudaSuccess) {
     fprintf(stderr,
             "Failed to copy vector A from host to device (error code %s)!\n",
             cudaGetErrorString(err));
     return;
   }
+  nvtxRangeEnd(id1);
 
   err = cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
 

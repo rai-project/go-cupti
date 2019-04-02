@@ -76,7 +76,7 @@ func (c *CUPTI) addCallback(name string) error {
 		return cuptiEnableCallback(c.subscriber, C.CUPTI_CB_DOMAIN_RUNTIME_API, C.CUpti_CallbackId(cbid))
 	}
 	if cbid, err := types.CUpti_nvtx_api_trace_cbidString(name); err == nil {
-		return cuptiEnableCallback(c.subscriber, C.CUPTI_CB_DOMAIN_Nvtx, C.CUpti_CallbackId(cbid))
+		return cuptiEnableCallback(c.subscriber, C.CUPTI_CB_DOMAIN_NVTX, C.CUpti_CallbackId(cbid))
 	}
 	return errors.Errorf("cannot find callback %v by name", name)
 }
@@ -1222,7 +1222,7 @@ func (c *CUPTI) onCudaIpcCloseMemHandle(domain types.CUpti_CallbackDomain, cbid 
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartAEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartAEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
@@ -1240,7 +1240,7 @@ func (c *CUPTI) onNvtxRangeStartAEnter(domain types.CUpti_CallbackDomain, cbid t
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartAExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartAExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1255,7 +1255,7 @@ func (c *CUPTI) onNvtxRangeStartAExit(domain types.CUpti_CallbackDomain, cbid ty
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartA(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartA(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangeStartAEnter(domain, cbid, cbInfo)
@@ -1268,7 +1268,7 @@ func (c *CUPTI) onNvtxRangeStartA(domain types.CUpti_CallbackDomain, cbid types.
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.nvtxRangeStartEx_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
@@ -1286,7 +1286,7 @@ func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid 
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartExExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartExExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1305,7 +1305,7 @@ func (c *CUPTI) onNvtxRangeStartExExit(domain types.CUpti_CallbackDomain, cbid t
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeStartEx(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeStartEx(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangeStartExEnter(domain, cbid, cbInfo)
@@ -1318,7 +1318,7 @@ func (c *CUPTI) onNvtxRangeStartEx(domain types.CUpti_CallbackDomain, cbid types
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeEndEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeEndEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
@@ -1336,7 +1336,7 @@ func (c *CUPTI) onNvtxRangeEndEnter(domain types.CUpti_CallbackDomain, cbid type
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeEndExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeEndExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1351,7 +1351,7 @@ func (c *CUPTI) onNvtxRangeEndExit(domain types.CUpti_CallbackDomain, cbid types
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangeEnd(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangeEnd(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangeEndEnter(domain, cbid, cbInfo)
@@ -1364,7 +1364,7 @@ func (c *CUPTI) onNvtxRangeEnd(domain types.CUpti_CallbackDomain, cbid types.CUP
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushAEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushAEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
@@ -1382,7 +1382,7 @@ func (c *CUPTI) onNvtxRangePushAEnter(domain types.CUpti_CallbackDomain, cbid ty
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushAExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushAExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1397,7 +1397,7 @@ func (c *CUPTI) onNvtxRangePushAExit(domain types.CUpti_CallbackDomain, cbid typ
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushA(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushA(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangePushAEnter(domain, cbid, cbInfo)
@@ -1410,7 +1410,7 @@ func (c *CUPTI) onNvtxRangePushA(domain types.CUpti_CallbackDomain, cbid types.C
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.nvtxRangeStartEx_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
@@ -1428,7 +1428,7 @@ func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid t
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushExExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushExExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1447,7 +1447,7 @@ func (c *CUPTI) onNvtxRangePushExExit(domain types.CUpti_CallbackDomain, cbid ty
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePushEx(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePushEx(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangePushExEnter(domain, cbid, cbInfo)
@@ -1460,7 +1460,7 @@ func (c *CUPTI) onNvtxRangePushEx(domain types.CUpti_CallbackDomain, cbid types.
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePopEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePopEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
@@ -1477,7 +1477,7 @@ func (c *CUPTI) onNvtxRangePopEnter(domain types.CUpti_CallbackDomain, cbid type
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePopExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePopExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -1492,7 +1492,7 @@ func (c *CUPTI) onNvtxRangePopExit(domain types.CUpti_CallbackDomain, cbid types
 	return nil
 }
 
-func (c *CUPTI) onNvtxRangePop(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onNvtxRangePop(domain types.CUpti_CallbackDomain, cbid types.CUPTI_CB_DOMAIN_NVTX, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		return c.onNvtxRangePopEnter(domain, cbid, cbInfo)
@@ -1514,7 +1514,7 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 	}
 	domain := types.CUpti_CallbackDomain(domain0)
 	switch domain {
-	case types.CUPTI_CB_DOMAIN_Nvtx:
+	case types.CUPTI_CB_DOMAIN_NVTX:
 		cbid := types.CUpti_nvtx_api_trace_cbid(cbid0)
 		switch cbid {
 		case types.CUPTI_CBID_Nvtx_nvtxRangeStartA:
