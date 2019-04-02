@@ -89,12 +89,14 @@ func (c *CUPTI) Subscribe() error {
 		return err
 	}
 
-	for ii, cuCtx := range c.cuCtxs {
-		var samplingConfig C.CUpti_ActivityPCSamplingConfig
-		samplingConfig.samplingPeriod = C.CUpti_ActivityPCSamplingPeriod(c.samplingPeriod)
-		if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
-			log.WithError(err).WithField("device_id", ii).Error("failed to set cupti sampling period")
-			return err
+	if c.samplingPeriod != 0 {
+		for ii, cuCtx := range c.cuCtxs {
+			var samplingConfig C.CUpti_ActivityPCSamplingConfig
+			samplingConfig.samplingPeriod = C.CUpti_ActivityPCSamplingPeriod(c.samplingPeriod)
+			if err := cuptiActivityConfigurePCSampling(cuCtx, samplingConfig); err != nil {
+				log.WithError(err).WithField("device_id", ii).Error("failed to set cupti sampling period")
+				return err
+			}
 		}
 	}
 
