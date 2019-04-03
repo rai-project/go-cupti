@@ -36,29 +36,29 @@ addons:
       - libhwloc-dev
       - libnuma-dev
       - libnccl2
-      - cuda-cudart-dev-10-1
-      - cuda-libraries-dev-10-1
-      - cuda-cublas-dev-10-1
-      - cuda-misc-headers-10-1
-      - cuda-nvml-dev-10-1
-      - cuda-cupti-10-1
+      - cuda-cudart-dev-10-0
+      - cuda-libraries-dev-10-0
+      - cuda-cublas-dev-10-0
+      - cuda-misc-headers-10-0
+      - cuda-nvml-dev-10-0
+      - cuda-cupti-10-0
       - libcudnn7
       - libcudnn7-dev
 env:
   global:
     - CXX=g++-6
     - CC=gcc-6
-    - CUDACXX=/usr/local/cuda-10.1/bin/nvcc
+    - CUDACXX=/usr/local/cuda-10.0/bin/nvcc
     - LD_LIBRARY_PATH=/usr/local/nvidia/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-    - LD_LIBRARY_PATH=/usr/local/cuda-10.1/nvvm/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-    - LD_LIBRARY_PATH=/usr/local/cuda-10.1/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-    - LD_LIBRARY_PATH=/usr/local/cuda-10.1/lib64/stubs${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-    - LD_LIBRARY_PATH=/usr/local/cuda-10.1/targets/x86_64-linux/lib/stubs/:+:${LD_LIBRARY_PATH}}
-    - LD_LIBRARY_PATH=/usr/local/cuda-10.1/extras/CUPTI/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-    - PATH=/usr/local/cuda-10.1/bin${PATH:+:${PATH}}
+    - LD_LIBRARY_PATH=/usr/local/cuda-10.0/nvvm/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+    - LD_LIBRARY_PATH=/usr/local/cuda-10.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+    - LD_LIBRARY_PATH=/usr/local/cuda-10.0/lib64/stubs${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+    - LD_LIBRARY_PATH=/usr/local/cuda-10.0/targets/x86_64-linux/lib/stubs/:+:${LD_LIBRARY_PATH}}
+    - LD_LIBRARY_PATH=/usr/local/cuda-10.0/extras/CUPTI/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+    - PATH=/usr/local/cuda-10.0/bin${PATH:+:${PATH}}
     - GODEBUG=cgocheck=0
-    - CGO_CFLAGS="${CGO_CFLAGS} -I /usr/local/cuda-10.1/include -I/usr/local/cuda-10.1/nvvm/include -I /usr/local/cuda-10.1/extras/CUPTI/include"
-    - CGO_LDFLAGS="${CGO_LDFLAGS} -L /usr/local/nvidia/lib64 -L /usr/local/cuda-10.1/nvvm/lib64 -L /usr/local/cuda-10.1/lib64 -L /usr/local/cuda-10.1/lib64/stubs -L /usr/local/cuda-10.1/targets/x86_64-linux/lib/stubs/ -L /usr/local/cuda-10.1/lib64/stubs -L /usr/local/cuda-10.1/extras/CUPTI/lib64"
+    - CGO_CFLAGS="${CGO_CFLAGS} -I /usr/local/cuda-10.0/include -I/usr/local/cuda-10.0/nvvm/include -I /usr/local/cuda-10.0/extras/CUPTI/include"
+    - CGO_LDFLAGS="${CGO_LDFLAGS} -L /usr/local/nvidia/lib64 -L /usr/local/cuda-10.0/nvvm/lib64 -L /usr/local/cuda-10.0/lib64 -L /usr/local/cuda-10.0/lib64/stubs -L /usr/local/cuda-10.0/targets/x86_64-linux/lib/stubs/ -L /usr/local/cuda-10.0/lib64/stubs -L /usr/local/cuda-10.0/extras/CUPTI/lib64"
 before_install:
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 install:
