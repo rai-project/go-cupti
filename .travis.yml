@@ -41,6 +41,7 @@ addons:
       - cuda-cublas-dev-10-0
       - cuda-misc-headers-10-0
       - cuda-nvml-dev-10-0
+      - cuda-nvtx-dev-10-0
       - cuda-cupti-10-0
       - libcudnn7
       - libcudnn7-dev
