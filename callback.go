@@ -38,6 +38,7 @@ func demangleName(n *C.char) string {
 	return name
 }
 
+// Returns a timestamp normalized to correspond with the start and end timestamps reported in the CUPTI activity records. The timestamp is reported in nanoseconds.
 func cuptiGetTimestamp() (uint64, error) {
 	var val C.uint64_t
 	err := checkCUPTIError(C.cuptiGetTimestamp(&val))

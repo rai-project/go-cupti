@@ -241,7 +241,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 	switch types.CUpti_ActivityKind(record.kind) {
 	// https://docs.nvidia.com/cuda/cupti/index.html#structCUpti__ActivityMemcpy
 	case types.CUPTI_ACTIVITY_KIND_MEMCPY:
-		activity := (*C.CUpti_ActivityMemcpy)(unsafe.Pointer(record))
+		activity := (*C.CUpti_ActivityMemcpy2)(unsafe.Pointer(record))
 		startTime := c.beginTime.Add(time.Duration(uint64(activity.start)-c.startTimeStamp) * time.Nanosecond)
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
 		sp, _ := tracer.StartSpanFromContext(
