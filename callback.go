@@ -1234,6 +1234,8 @@ func (c *CUPTI) onNvtxRangeStartAEnter(domain types.CUpti_CallbackDomain, cbid t
 	params := (*C.nvtxRangeStartA_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+    "trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -1290,6 +1292,8 @@ func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid 
 	params := (*C.nvtxRangeStartEx_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+    "trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -1340,6 +1344,8 @@ func (c *CUPTI) onNvtxRangeEndEnter(domain types.CUpti_CallbackDomain, cbid type
 	params := (*C.nvtxRangeEnd_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+    "trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -1386,6 +1392,8 @@ func (c *CUPTI) onNvtxRangePushAEnter(domain types.CUpti_CallbackDomain, cbid ty
 	params := (*C.nvtxRangePushA_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+    "trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -1432,6 +1440,8 @@ func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid t
 	params := (*C.nvtxRangePushEx_params)(cbInfo.functionParams)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+    "trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
@@ -1481,6 +1491,8 @@ func (c *CUPTI) onNvtxRangePopEnter(domain types.CUpti_CallbackDomain, cbid type
 	correlationId := uint(cbInfo.correlationId)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
+    "trace_source":      "cupti",
+		"cupti_type":        "callback",
 		"context_uid":       uint32(cbInfo.contextUid),
 		"correlation_id":    correlationId,
 		"function_name":     functionName,
