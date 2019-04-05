@@ -2,7 +2,7 @@ package cupti
 
 var DefaultActivities = []string{
 	"CUPTI_ACTIVITY_KIND_MEMCPY", // A host<->host, host<->device, or device<->device memory copy.
-	"CUPTI_ACTIVITY_KIND_MEMSET",
+	// "CUPTI_ACTIVITY_KIND_MEMSET",
 	"CUPTI_ACTIVITY_KIND_KERNEL",
 	// "CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL", // "CUPTI_ERROR_NOT_COMPATIBLE" error
 	//"CUPTI_ACTIVITY_KIND_DRIVER",
