@@ -318,6 +318,8 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 				"queued":                     activity.queued,
 				"submitted":                  activity.submitted,
 				"local_mem":                  activity.localMemoryTotal,
+				"local_memory_per_thread":    activity.localMemoryPerThread,
+				"registers_per_thread":       activity.registersPerThread,
 				"dynamic_sharedMemory":       activity.dynamicSharedMemory,
 				"dynamic_sharedMemory_human": humanize.Bytes(uint64(activity.dynamicSharedMemory)),
 				"static_sharedMemory":        activity.staticSharedMemory,
