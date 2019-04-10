@@ -304,7 +304,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_kernel",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
-				"trace_source":   "cupti",
+				"trace_source":               "cupti",
 				"cupti_type":                 "activity",
 				"name":                       demangleName(activity.name),
 				"grid_dim":                   []int{int(activity.gridX), int(activity.gridY), int(activity.gridZ)},
