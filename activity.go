@@ -33,7 +33,8 @@ import (
 	"time"
 	"unsafe"
 
-	humanize "github.com/dustin/go-humanize"
+	//humanize "github.com/dustin/go-humanize"
+
 	opentracing "github.com/opentracing/opentracing-go"
 
 	"github.com/rai-project/go-cupti/types"
@@ -251,10 +252,10 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_memcpy",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
-				"trace_source":          "cupti",
-				"cupti_type":            "activity",
-				"bytes":                 activity.bytes,
-				"bytes_human":           humanize.Bytes(uint64(activity.bytes)),
+				"trace_source": "cupti",
+				"cupti_type":   "activity",
+				"bytes":        activity.bytes,
+				// "bytes_human":           humanize.Bytes(uint64(activity.bytes)),
 				"copy_kind":             getActivityMemcpyKindString(types.CUpti_ActivityMemcpyKind(activity.copyKind)),
 				"src_kind":              getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.srcKind)),
 				"dst_kind":              getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.dstKind)),
@@ -278,10 +279,10 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_memset",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
-				"trace_source":   "cupti",
-				"cupti_type":     "activity",
-				"bytes":          activity.bytes,
-				"bytes_human":    humanize.Bytes(uint64(activity.bytes)),
+				"trace_source": "cupti",
+				"cupti_type":   "activity",
+				"bytes":        activity.bytes,
+				// "bytes_human":    humanize.Bytes(uint64(activity.bytes)),
 				"memory_kind":    getActivityMemoryKindString(types.CUpti_ActivityMemoryKind(activity.memoryKind)),
 				"value":          activity.value,
 				"device_id":      activity.deviceId,
@@ -304,26 +305,26 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 			"gpu_kernel",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
-				"trace_source":               "cupti",
-				"cupti_type":                 "activity",
-				"name":                       demangleName(activity.name),
-				"grid_dim":                   []int{int(activity.gridX), int(activity.gridY), int(activity.gridZ)},
-				"block_dim":                  []int{int(activity.blockX), int(activity.blockY), int(activity.blockZ)},
-				"device_id":                  activity.deviceId,
-				"context_id":                 activity.contextId,
-				"stream_id":                  activity.streamId,
-				"correlation_id":             activity.correlationId,
-				"start":                      activity.start,
-				"end":                        activity.completed,
-				"queued":                     activity.queued,
-				"submitted":                  activity.submitted,
-				"local_mem":                  activity.localMemoryTotal,
-				"local_memory_per_thread":    activity.localMemoryPerThread,
-				"registers_per_thread":       activity.registersPerThread,
-				"dynamic_sharedMemory":       activity.dynamicSharedMemory,
-				"dynamic_sharedMemory_human": humanize.Bytes(uint64(activity.dynamicSharedMemory)),
-				"static_sharedMemory":        activity.staticSharedMemory,
-				"static_sharedMemory_human":  humanize.Bytes(uint64(activity.staticSharedMemory)),
+				"trace_source":            "cupti",
+				"cupti_type":              "activity",
+				"name":                    demangleName(activity.name),
+				"grid_dim":                []int{int(activity.gridX), int(activity.gridY), int(activity.gridZ)},
+				"block_dim":               []int{int(activity.blockX), int(activity.blockY), int(activity.blockZ)},
+				"device_id":               activity.deviceId,
+				"context_id":              activity.contextId,
+				"stream_id":               activity.streamId,
+				"correlation_id":          activity.correlationId,
+				"start":                   activity.start,
+				"end":                     activity.completed,
+				"queued":                  activity.queued,
+				"submitted":               activity.submitted,
+				"local_mem":               activity.localMemoryTotal,
+				"local_memory_per_thread": activity.localMemoryPerThread,
+				"registers_per_thread":    activity.registersPerThread,
+				"dynamic_sharedMemory":    activity.dynamicSharedMemory,
+				// "dynamic_sharedMemory_human": humanize.Bytes(uint64(activity.dynamicSharedMemory)),
+				"static_sharedMemory": activity.staticSharedMemory,
+				// "static_sharedMemory_human":  humanize.Bytes(uint64(activity.staticSharedMemory)),
 			},
 		)
 		sp.FinishWithOptions(opentracing.FinishOptions{

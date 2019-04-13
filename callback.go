@@ -16,8 +16,7 @@ import (
 	"time"
 	"unsafe"
 
-	humanize "github.com/dustin/go-humanize"
-	"github.com/ianlancetaylor/demangle"
+	//humanize "github.com/dustin/go-humanize"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
@@ -31,11 +30,12 @@ func demangleName(n *C.char) string {
 		return ""
 	}
 	mangledName := C.GoString(n)
-	name, err := demangle.ToString(mangledName)
-	if err != nil {
-		return mangledName
-	}
-	return name
+	return mangledName
+	// name, err := demangle.ToString(mangledName)
+	// if err != nil {
+	// 	return mangledName
+	// }
+	// return name
 }
 
 // Returns a timestamp normalized to correspond with the start and end timestamps reported in the CUPTI activity records. The timestamp is reported in nanoseconds.
@@ -124,8 +124,8 @@ func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid
 		"grid_dim":          []int{int(params.gridDim.x), int(params.gridDim.y), int(params.gridDim.z)},
 		"block_dim":         []int{int(params.blockDim.x), int(params.blockDim.y), int(params.blockDim.z)},
 		"shared_mem":        uint64(params.sharedMem),
-		"shared_mem_human":  humanize.Bytes(uint64(params.sharedMem)),
-		"stream":            uintptr(unsafe.Pointer(params.stream)),
+		// "shared_mem_human":  humanize.Bytes(uint64(params.sharedMem)),
+		"stream": uintptr(unsafe.Pointer(params.stream)),
 	}
 	if cbInfo.symbolName != nil {
 		tags["symbol_name"] = C.GoString(cbInfo.symbolName)
@@ -194,7 +194,7 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 		"grid_dim":          []int{int(params.gridDimX), int(params.gridDimY), int(params.gridDimZ)},
 		"block_dim":         []int{int(params.blockDimX), int(params.blockDimY), int(params.blockDimZ)},
 		"shared_mem":        uint64(params.sharedMemBytes),
-		"shared_mem_human":  humanize.Bytes(uint64(params.sharedMemBytes)),
+		// "shared_mem_human":  humanize.Bytes(uint64(params.sharedMemBytes)),
 	}
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
@@ -360,8 +360,8 @@ func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
-		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"destination_ptr":   uintptr(unsafe.Pointer(params.devPtr)),
+		// "byte_count_human":  humanize.Bytes(uint64(params.size)),
+		"destination_ptr": uintptr(unsafe.Pointer(params.devPtr)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaMalloc", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -413,8 +413,8 @@ func (c *CUPTI) onCudaMallocHostEnter(domain types.CUpti_CallbackDomain, cbid ty
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
-		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"destination_ptr":   uintptr(unsafe.Pointer(*params.ptr)),
+		// "byte_count_human":  humanize.Bytes(uint64(params.size)),
+		"destination_ptr": uintptr(unsafe.Pointer(*params.ptr)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaMallocHost", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -466,9 +466,9 @@ func (c *CUPTI) onCudaHostAllocEnter(domain types.CUpti_CallbackDomain, cbid typ
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
-		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"host_ptr":          uintptr(unsafe.Pointer(*params.pHost)),
-		"flags":             params.flags,
+		// "byte_count_human":  humanize.Bytes(uint64(params.size)),
+		"host_ptr": uintptr(unsafe.Pointer(*params.pHost)),
+		"flags":    params.flags,
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaHostAlloc", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -520,9 +520,9 @@ func (c *CUPTI) onCudaMallocManagedEnter(domain types.CUpti_CallbackDomain, cbid
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.size),
-		"byte_count_human":  humanize.Bytes(uint64(params.size)),
-		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
-		"flags":             params.flags,
+		// "byte_count_human":  humanize.Bytes(uint64(params.size)),
+		"ptr":   uintptr(unsafe.Pointer(params.devPtr)),
+		"flags": params.flags,
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.HARDWARE_TRACE, "cudaMallocManaged", tags)
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
@@ -729,9 +729,9 @@ func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uintptr(params.ByteCount),
-		"byte_count_human":  humanize.Bytes(uint64(params.ByteCount)),
-		"destination_ptr":   uintptr(params.dstDevice),
-		"source_ptr":        uintptr(unsafe.Pointer(params.srcHost)),
+		// "byte_count_human":  humanize.Bytes(uint64(params.ByteCount)),
+		"destination_ptr": uintptr(params.dstDevice),
+		"source_ptr":      uintptr(unsafe.Pointer(params.srcHost)),
 	}
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
@@ -903,10 +903,10 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 		"cupti_domain":      domain.String(),
 		"cupti_callback_id": cbid.String(),
 		"byte_count":        uint64(params.count),
-		"byte_count_human":  humanize.Bytes(uint64(params.count)),
-		"destination_ptr":   uintptr(unsafe.Pointer(params.dst)),
-		"source_ptr":        uintptr(unsafe.Pointer(params.src)),
-		"kind":              types.CUDAMemcpyKind(params.kind).String(),
+		// "byte_count_human":  humanize.Bytes(uint64(params.count)),
+		"destination_ptr": uintptr(unsafe.Pointer(params.dst)),
+		"source_ptr":      uintptr(unsafe.Pointer(params.src)),
+		"kind":            types.CUDAMemcpyKind(params.kind).String(),
 	}
 	if cbInfo.symbolName != nil {
 		tags["kernel"] = demangleName(cbInfo.symbolName)
