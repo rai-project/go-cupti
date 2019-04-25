@@ -106,77 +106,77 @@ func spanFromContextCorrelationId(ctx context.Context, correlationId uint) (open
 	return span, nil
 }
 
-func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-	correlationId := uint(cbInfo.correlationId)
-	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
-		return errors.Errorf("span %d already exists", correlationId)
-	}
-	params := (*C.cudaConfigureCall_v3020_params)(cbInfo.functionParams)
-	functionName := demangleName(cbInfo.functionName)
-	tags := opentracing.Tags{
-		"trace_source":      "cupti",
-		"cupti_type":        "callback",
-		"context_uid":       uint32(cbInfo.contextUid),
-		"correlation_id":    correlationId,
-		"function_name":     functionName,
-		"cupti_domain":      domain.String(),
-		"cupti_callback_id": cbid.String(),
-		"grid_dim":          []int{int(params.gridDim.x), int(params.gridDim.y), int(params.gridDim.z)},
-		"block_dim":         []int{int(params.blockDim.x), int(params.blockDim.y), int(params.blockDim.z)},
-		"shared_mem":        uint64(params.sharedMem),
-		// "shared_mem_human":  humanize.Bytes(uint64(params.sharedMem)),
-		"stream": uintptr(unsafe.Pointer(params.stream)),
-	}
-	if cbInfo.symbolName != nil {
-		tags["symbol_name"] = C.GoString(cbInfo.symbolName)
-	}
-	span, _ := tracer.StartSpanFromContext(
-		c.ctx,
-		tracer.SYSTEM_LIBRARY_TRACE,
-		"configure_call",
-		opentracing.StartTime(c.currentTimeStamp()),
-		tags,
-	)
-	if functionName != "" {
-		ext.Component.Set(span, functionName)
-	}
-	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+// func (c *CUPTI) onCudaConfigureCallEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+// 	correlationId := uint(cbInfo.correlationId)
+// 	if _, err := spanFromContextCorrelationId(c.ctx, correlationId); err == nil {
+// 		return errors.Errorf("span %d already exists", correlationId)
+// 	}
+// 	params := (*C.cudaConfigureCall_v3020_params)(cbInfo.functionParams)
+// 	functionName := demangleName(cbInfo.functionName)
+// 	tags := opentracing.Tags{
+// 		"trace_source":      "cupti",
+// 		"cupti_type":        "callback",
+// 		"context_uid":       uint32(cbInfo.contextUid),
+// 		"correlation_id":    correlationId,
+// 		"function_name":     functionName,
+// 		"cupti_domain":      domain.String(),
+// 		"cupti_callback_id": cbid.String(),
+// 		"grid_dim":          []int{int(params.gridDim.x), int(params.gridDim.y), int(params.gridDim.z)},
+// 		"block_dim":         []int{int(params.blockDim.x), int(params.blockDim.y), int(params.blockDim.z)},
+// 		"shared_mem":        uint64(params.sharedMem),
+// 		// "shared_mem_human":  humanize.Bytes(uint64(params.sharedMem)),
+// 		"stream": uintptr(unsafe.Pointer(params.stream)),
+// 	}
+// 	if cbInfo.symbolName != nil {
+// 		tags["symbol_name"] = C.GoString(cbInfo.symbolName)
+// 	}
+// 	span, _ := tracer.StartSpanFromContext(
+// 		c.ctx,
+// 		tracer.SYSTEM_LIBRARY_TRACE,
+// 		"configure_call",
+// 		opentracing.StartTime(c.currentTimeStamp()),
+// 		tags,
+// 	)
+// 	if functionName != "" {
+// 		ext.Component.Set(span, functionName)
+// 	}
+// 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
 
-	return nil
-}
+// 	return nil
+// }
 
-func (c *CUPTI) onCudaConfigureCallExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-	correlationId := uint(cbInfo.correlationId)
-	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
-	if err != nil {
-		return err
-	}
-	if span == nil {
-		return errors.New("no span found")
-	}
-	if cbInfo.functionReturnValue != nil {
-		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
-		span.SetTag("result", types.CUresult(*cuError).String())
-	}
-	span.FinishWithOptions(opentracing.FinishOptions{
-		FinishTime: c.currentTimeStamp(),
-	})
-	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
-	return nil
-}
+// func (c *CUPTI) onCudaConfigureCallExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+// 	correlationId := uint(cbInfo.correlationId)
+// 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if span == nil {
+// 		return errors.New("no span found")
+// 	}
+// 	if cbInfo.functionReturnValue != nil {
+// 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
+// 		span.SetTag("result", types.CUresult(*cuError).String())
+// 	}
+// 	span.FinishWithOptions(opentracing.FinishOptions{
+// 		FinishTime: c.currentTimeStamp(),
+// 	})
+// 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, nil)
+// 	return nil
+// }
 
-func (c *CUPTI) onCudaConfigureCall(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-	switch cbInfo.callbackSite {
-	case C.CUPTI_API_ENTER:
-		return c.onCudaConfigureCallEnter(domain, cbid, cbInfo)
-	case C.CUPTI_API_EXIT:
-		return c.onCudaConfigureCallExit(domain, cbid, cbInfo)
-	default:
-		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
-	}
+// func (c *CUPTI) onCudaConfigureCall(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+// 	switch cbInfo.callbackSite {
+// 	case C.CUPTI_API_ENTER:
+// 		return c.onCudaConfigureCallEnter(domain, cbid, cbInfo)
+// 	case C.CUPTI_API_EXIT:
+// 		return c.onCudaConfigureCallExit(domain, cbid, cbInfo)
+// 	default:
+// 		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint(cbInfo.correlationId)
@@ -1611,9 +1611,9 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaThreadSynchronize_v3020:
 			handle.onCudaSynchronize(domain, cbid, cbInfo)
 			return
-		case types.CUPTI_RUNTIME_TRACE_CBID_cudaConfigureCall_v3020:
-			handle.onCudaConfigureCall(domain, cbid, cbInfo)
-			return
+		// case types.CUPTI_RUNTIME_TRACE_CBID_cudaConfigureCall_v3020:
+		// 	handle.onCudaConfigureCall(domain, cbid, cbInfo)
+		// return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaSetupArgument_v3020:
 			handle.onCudaSetupArgument(domain, cbid, cbInfo)
 			return
