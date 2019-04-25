@@ -40,6 +40,8 @@ func New(opts ...Option) (*CUPTI, error) {
 		return nil, errors.New("no gpu found while trying to initialize cupti")
 	}
 
+	runInit()
+
 	options := NewOptions(opts...)
 	c := &CUPTI{
 		Options: options,
@@ -70,7 +72,7 @@ func (c *CUPTI) SetContext(ctx context.Context) {
 	c.ctx = ctx
 }
 
-func init() {
+func runInit() {
 	if err := checkCUResult(C.cuInit(0)); err != nil {
 		log.WithError(err).Error("failed to perform cuInit")
 	}
