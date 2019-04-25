@@ -248,7 +248,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
 		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
-			tracer.HARDWARE_TRACE,
+			tracer.SYSTEM_LIBRARY_TRACE,
 			"gpu_memcpy",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
@@ -275,7 +275,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
 		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
-			tracer.HARDWARE_TRACE,
+			tracer.SYSTEM_LIBRARY_TRACE,
 			"gpu_memset",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
@@ -301,7 +301,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
 		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
-			tracer.HARDWARE_TRACE,
+			tracer.SYSTEM_LIBRARY_TRACE,
 			"gpu_kernel",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
@@ -336,7 +336,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
 		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
-			tracer.HARDWARE_TRACE,
+			tracer.SYSTEM_LIBRARY_TRACE,
 			"gpu_overhead",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
@@ -356,7 +356,7 @@ func (c *CUPTI) processActivity(record *C.CUpti_Activity) {
 		endTime := c.beginTime.Add(time.Duration(uint64(activity.end)-c.startTimeStamp) * time.Nanosecond)
 		sp, _ := tracer.StartSpanFromContext(
 			c.ctx,
-			tracer.HARDWARE_TRACE,
+			tracer.SYSTEM_LIBRARY_TRACE,
 			"gpu_api",
 			opentracing.StartTime(startTime),
 			opentracing.Tags{
