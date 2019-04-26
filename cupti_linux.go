@@ -10,6 +10,7 @@ import (
 
 	context "context"
 
+	// "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
@@ -36,6 +37,7 @@ var (
 
 func New(opts ...Option) (*CUPTI, error) {
 	nvidiasmi.Wait()
+	// pp.Println(nvidiasmi.Info)
 	if !nvidiasmi.HasGPU {
 		return nil, errors.New("no gpu found while trying to initialize cupti")
 	}
