@@ -4,6 +4,7 @@ package cupti
 
 /*
 #cgo CFLAGS: -I${SRCDIR}/cbits -O3 -Wall -g
+#cgo CFLAGS: -std=c11
 #cgo CXXFLAGS: -std=c++11
 #cgo CFLAGS: -I .
 #cgo CFLAGS: -I /usr/local/cuda/include
