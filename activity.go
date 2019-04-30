@@ -4,6 +4,7 @@ package cupti
 
 /*
 #include <cupti.h>
+#include <stdlib.h>
 //
 // A process object requires that we identify the process ID. A
 // thread object requires that we identify both the process and
