@@ -20,7 +20,6 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
-
 	"github.com/rai-project/go-cupti/types"
 	tracer "github.com/rai-project/tracer"
 )

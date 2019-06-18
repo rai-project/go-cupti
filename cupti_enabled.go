@@ -6,16 +6,13 @@ package cupti
 import "C"
 import (
 	"sync"
-	"time"
-
-	context "context"
-
-	// "github.com/k0kubun/pp"
-	"github.com/pkg/errors"
+  "time"
+  "context"
+  
+  "github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
 	"github.com/rai-project/tracer"
-
 	_ "github.com/rai-project/tracer/jaeger"
 	_ "github.com/rai-project/tracer/noop"
 	_ "github.com/rai-project/tracer/zipkin"
@@ -37,11 +34,13 @@ var (
 
 func New(opts ...Option) (*CUPTI, error) {
 	nvidiasmi.Wait()
-	// pp.Println(nvidiasmi.Info)
 	if !nvidiasmi.HasGPU {
 		return nil, errors.New("no gpu found while trying to initialize cupti")
 	}
 
+  span, _ := tracer.StartSpanFromContext(options.ctx, tracer.FULL_TRACE, "cupti_new")
+  defer span.Finish()
+  
 	runInit()
 
 	options := NewOptions(opts...)
@@ -50,9 +49,6 @@ func New(opts ...Option) (*CUPTI, error) {
 	}
 
 	currentCUPTI = c
-
-	span, _ := tracer.StartSpanFromContext(options.ctx, tracer.FULL_TRACE, "cupti_new")
-	defer span.Finish()
 
 	if err := c.Subscribe(); err != nil {
 		return nil, c.Close()

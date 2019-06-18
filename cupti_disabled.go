@@ -3,7 +3,7 @@
 package cupti
 
 import (
-	context "context"
+	"context"
 )
 
 type noopCloser struct{}
