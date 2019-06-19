@@ -7,12 +7,12 @@ package cupti
 
 extern void CUPTIAPI callback(void *userdata, CUpti_CallbackDomain domain,
                        CUpti_CallbackId cbid,
-                       const CUpti_CallbackData *cbInfo);
+                       const void *cbInfo);
 */
 import "C"
 import "unsafe"
 
-type callbackFunction func(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.CUpti_CallbackId, cbInfo *C.CUpti_CallbackData)
+type callbackFunction func(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.CUpti_CallbackId, cbInfo unsafe.Pointer)
 
 func cuptiEnableDomain() {
 

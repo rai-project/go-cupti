@@ -17,6 +17,7 @@ import (
 	"unsafe"
 
 	//humanize "github.com/dustin/go-humanize"
+	"github.com/k0kubun/pp"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	spanlog "github.com/opentracing/opentracing-go/log"
@@ -73,6 +74,9 @@ func (c *CUPTI) enableCallback(name string) error {
 	if cbid, err := types.CUpti_nvtx_api_trace_cbidString(name); err == nil {
 		return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_NVTX, C.CUpti_CallbackId(cbid)))
 	}
+	if cbid, err := types.CUpti_CallbackIdResourceString(name); err == nil {
+		return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_RESOURCE, C.CUpti_CallbackId(cbid)))
+	}
 	return errors.Errorf("cannot find callback %v by name", name)
 }
 
@@ -89,6 +93,7 @@ func spanFromContextCorrelationId(ctx context.Context, correlationId uint) (open
 	key := spanCorrelation{correlationId: correlationId}
 	span, ok := ctx.Value(key).(opentracing.Span)
 	if !ok {
+		log.WithField("correlation_id", correlationId).Error("span not found")
 		return nil, errors.Errorf("span for correlationId=%v was not found", correlationId)
 	}
 	return span, nil
@@ -218,8 +223,15 @@ func (c *CUPTI) onCULaunchKernelExit(domain types.CUpti_CallbackDomain, cbid typ
 func (c *CUPTI) onCULaunchKernel(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
-		return c.onCULaunchKernelEnter(domain, cbid, cbInfo)
+		res := c.onCULaunchKernelEnter(domain, cbid, cbInfo)
+		if res == nil && len(c.events) != 0 {
+			c.onCudaLaunchCaptureEventsEnter(domain, cbInfo)
+		}
+		return res
 	case C.CUPTI_API_EXIT:
+		if len(c.events) != 0 {
+			c.onCudaLaunchCaptureEventsExit(domain, cbInfo)
+		}
 		return c.onCULaunchKernelExit(domain, cbid, cbInfo)
 	default:
 		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
@@ -770,6 +782,7 @@ func (c *CUPTI) onCudaSetupArgument(domain types.CUpti_CallbackDomain, cbid type
 }
 
 func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	pp.Println("onCudaLaunch Enter")
 	correlationId := uint(cbInfo.correlationId)
 	functionName := demangleName(cbInfo.functionName)
 	tags := opentracing.Tags{
@@ -788,12 +801,16 @@ func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
+
 	c.ctx = setSpanContextCorrelationId(c.ctx, correlationId, span)
+
+	pp.Println("onCudaLaunchEnter correlationId = ", int(correlationId))
 
 	return nil
 }
 
 func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	pp.Println("onCudaLaunch Exit")
 	correlationId := uint(cbInfo.correlationId)
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
@@ -812,9 +829,8 @@ func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.C
 	return nil
 }
 
-func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-
-	eventData, err := c.findEventDataByCuCtxId(uint32(cbInfo.contextUid))
+func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain, cbInfo *C.CUpti_CallbackData) error {
+	eventData, err := c.findEventDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
 		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find event data")
 		return err
@@ -842,9 +858,9 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 	return nil
 }
 
-func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-
-	eventData, err := c.findEventDataByCuCtxId(uint32(cbInfo.contextUid))
+func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain, cbInfo *C.CUpti_CallbackData) error {
+	pp.Println("onCudaLaunchCaptureEventsExit")
+	eventData, err := c.findEventDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
 		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find event data")
 		return err
@@ -870,15 +886,18 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 	}
 
 	correlationId := uint(cbInfo.correlationId)
+	pp.Println("onCudaLaunchCaptureEventsExit correlationId = ", int(correlationId))
 	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
 		return err
 	}
 	if span == nil {
-		return errors.New("no span found")
+		return errors.New("nil span found")
 	}
 
 	C.cudaDeviceSynchronize()
+
+	pp.Println(len(eventIDs))
 
 	for eventName, eventId := range eventIDs {
 		values := make([]C.size_t, int(numInstances))
@@ -900,6 +919,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 			eventVal += int64(values[ii])
 		}
 
+		pp.Println(eventName, "  ", eventVal)
 		span.LogFields(spanlog.Int64(eventName, eventVal))
 	}
 
@@ -913,16 +933,20 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 }
 
 func (c *CUPTI) onCudaLaunch(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		res := c.onCudaLaunchEnter(domain, cbid, cbInfo)
-		if len(c.events) != 0 {
-			c.onCudaLaunchCaptureEventsEnter(domain, cbid, cbInfo)
+		if res == nil && len(c.events) != 0 {
+			c.onCudaLaunchCaptureEventsEnter(domain, cbInfo)
 		}
 		return res
 	case C.CUPTI_API_EXIT:
 		if len(c.events) != 0 {
-			c.onCudaLaunchCaptureEventsExit(domain, cbid, cbInfo)
+			err := c.onCudaLaunchCaptureEventsExit(domain, cbInfo)
+			if err != nil {
+				panic(err)
+			}
 		}
 		return c.onCudaLaunchExit(domain, cbid, cbInfo)
 	default:
@@ -1628,12 +1652,33 @@ func (c *CUPTI) onNvtxRangePop(domain types.CUpti_CallbackDomain, cbid types.CUp
 	return nil
 }
 
-func (c *CUPTI) onResourceContextCreated(domain types.CUpti_CallbackDomain, cbid types.CUpti_CallbackIdResource, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onCUCtxCreateEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
+	return c.onContextCreate(domain, cbInfo.context)
+}
+
+func (c *CUPTI) onCUCtxCreateExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
+	return c.onContextDestroy(domain, cbInfo.context)
+}
+
+func (c *CUPTI) onCUCtxCreate(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
+	switch cbInfo.callbackSite {
+	case C.CUPTI_API_ENTER:
+		return c.onCUCtxCreateEnter(domain, cbid, cbInfo)
+	case C.CUPTI_API_EXIT:
+		return c.onCUCtxCreateExit(domain, cbid, cbInfo)
+	default:
+		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
+	}
+
+	return nil
+}
+
+func (c *CUPTI) onContextCreate(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
 	if len(c.events) == 0 {
 		return nil
 	}
 
-	cuCtx := cbInfo.context
+	pp.Println("onResourceContextCreated")
 
 	deviceId := uint32(0)
 	err := checkCUPTIError(C.cuptiGetDeviceId(cuCtx, (*C.uint32_t)(&deviceId)))
@@ -1655,12 +1700,12 @@ func (c *CUPTI) onResourceContextCreated(domain types.CUpti_CallbackDomain, cbid
 	return nil
 }
 
-func (c *CUPTI) onResourceContextDestroyStarting(domain types.CUpti_CallbackDomain, cbid types.CUpti_CallbackIdResource, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onContextDestroy(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
 	if len(c.events) == 0 {
 		return nil
 	}
 
-	cuCtx := cbInfo.context
+	pp.Println("onContextDestroy")
 
 	deviceId := uint32(0)
 	err := checkCUPTIError(C.cuptiGetDeviceId(cuCtx, (*C.uint32_t)(&deviceId)))
@@ -1681,8 +1726,21 @@ func (c *CUPTI) onResourceContextDestroyStarting(domain types.CUpti_CallbackDoma
 	return nil
 }
 
+func (c *CUPTI) onResourceContextCreated(domain types.CUpti_CallbackDomain, cbid types.CUpti_CallbackIdResource, cbInfo *C.CUpti_ResourceData) error {
+	err := c.onContextCreate(domain, cbInfo.context)
+	if err != nil {
+		pp.Println("onResourceContextCreated error = ", err)
+	}
+	pp.Println("onResourceContextCreated no error")
+	return err
+}
+
+func (c *CUPTI) onResourceContextDestroyStarting(domain types.CUpti_CallbackDomain, cbid types.CUpti_CallbackIdResource, cbInfo *C.CUpti_ResourceData) error {
+	return c.onContextDestroy(domain, cbInfo.context)
+}
+
 //export callback
-func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.CUpti_CallbackId, cbInfo *C.CUpti_CallbackData) {
+func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.CUpti_CallbackId, cbInfo0 unsafe.Pointer) {
 	handle := (*CUPTI)(unsafe.Pointer(userData))
 	if handle == nil {
 		log.Debug("expecting a cupti handle, but got nil")
@@ -1692,7 +1750,11 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 	switch domain {
 	case types.CUPTI_CB_DOMAIN_DRIVER_API:
 		cbid := types.CUpti_driver_api_trace_cbid(cbid0)
+		cbInfo := (*C.CUpti_CallbackData)(cbInfo0)
 		switch cbid {
+		// case types.CUPTI_DRIVER_TRACE_CBID_cuCtxCreate, types.CUPTI_DRIVER_TRACE_CBID_cuCtxCreate_v2:
+		// 	handle.onCUCtxCreate(domain, cbid, cbInfo)
+		// 	return
 		case types.CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel:
 			handle.onCULaunchKernel(domain, cbid, cbInfo)
 			return
@@ -1712,6 +1774,7 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		}
 	case types.CUPTI_CB_DOMAIN_RUNTIME_API:
 		cbid := types.CUPTI_RUNTIME_TRACE_CBID(cbid0)
+		cbInfo := (*C.CUpti_CallbackData)(cbInfo0)
 		switch cbid {
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaDeviceSynchronize_v3020:
 			handle.onCudaDeviceSynchronize(domain, cbid, cbInfo)
@@ -1779,6 +1842,7 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		}
 	case types.CUPTI_CB_DOMAIN_NVTX:
 		cbid := types.CUpti_nvtx_api_trace_cbid(cbid0)
+		cbInfo := (*C.CUpti_CallbackData)(cbInfo0)
 		switch cbid {
 		case types.CUPTI_CBID_NVTX_nvtxRangeStartA:
 			handle.onNvtxRangeStartA(domain, cbid, cbInfo)
@@ -1800,6 +1864,7 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		}
 	case types.CUPTI_CB_DOMAIN_RESOURCE:
 		cbid := types.CUpti_CallbackIdResource(cbid0)
+		cbInfo := (*C.CUpti_ResourceData)(cbInfo0)
 		switch cbid {
 		case types.CUPTI_CBID_RESOURCE_CONTEXT_CREATED:
 			handle.onResourceContextCreated(domain, cbid, cbInfo)

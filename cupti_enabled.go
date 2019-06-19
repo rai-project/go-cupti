@@ -32,7 +32,7 @@ type CUPTI struct {
 
 type eventData struct {
 	cuCtx      C.CUcontext
-	cuCtxId    uint32
+	cuCtxID    uint32
 	deviceId   uint32
 	eventGroup C.CUpti_EventGroup
 	eventIds   map[string]C.CUpti_EventID
@@ -52,7 +52,8 @@ func New(opts ...Option) (*CUPTI, error) {
 
 	options := NewOptions(opts...)
 	c := &CUPTI{
-		Options: options,
+		Options:   options,
+		eventData: []*eventData{},
 	}
 
 	span, _ := tracer.StartSpanFromContext(options.ctx, tracer.FULL_TRACE, "cupti_new")
@@ -229,12 +230,12 @@ func (c *CUPTI) init() error {
 	return nil
 }
 
-func (c *CUPTI) addEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uint32) error {
+func (c *CUPTI) addEventGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32) error {
 	if len(c.events) == 0 {
 		return nil
 	}
 
-	eventData, err := c.createEventGroup(cuCtx, cuCtxId, deviceId)
+	eventData, err := c.createEventGroup(cuCtx, cuCtxID, deviceId)
 	if err != nil {
 		err := errors.Wrapf(err, "cannot create event group for device %d", deviceId)
 		log.WithError(err).Error("cannot create event group for device %d", deviceId)
@@ -245,24 +246,24 @@ func (c *CUPTI) addEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uint32
 	return nil
 }
 
-func (c *CUPTI) findEventDataByCuCtxId(cuCtxId uint32) (*eventData, error) {
+func (c *CUPTI) findEventDataByCUCtxID(cuCtxID uint32) (*eventData, error) {
 	for _, eventDataItem := range c.eventData {
 		if eventDataItem == nil {
 			continue
 		}
-		if eventDataItem.cuCtxId == cuCtxId {
+		if eventDataItem.cuCtxID == cuCtxID {
 			return eventDataItem, nil
 		}
 	}
-	return nil, errors.Errorf("cannot find event group for cutxid = %d", cuCtxId)
+	return nil, errors.Errorf("cannot find event group for cutxid = %d", cuCtxID)
 }
 
-func (c *CUPTI) removeEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uint32) error {
+func (c *CUPTI) removeEventGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32) error {
 	for ii, eventDataItem := range c.eventData {
 		if eventDataItem == nil {
 			continue
 		}
-		if eventDataItem.cuCtxId == cuCtxId && eventDataItem.deviceId == deviceId {
+		if eventDataItem.cuCtxID == cuCtxID && eventDataItem.deviceId == deviceId {
 			c.deleteEventGroup(eventDataItem)
 			c.eventData[ii] = nil
 		}
@@ -270,7 +271,7 @@ func (c *CUPTI) removeEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uin
 	return nil
 }
 
-func (c *CUPTI) createEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uint32) (*eventData, error) {
+func (c *CUPTI) createEventGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32) (*eventData, error) {
 	if len(c.events) == 0 {
 		return nil, nil
 	}
@@ -284,12 +285,14 @@ func (c *CUPTI) createEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uin
 
 	eventIds := map[string]C.CUpti_EventID{}
 	for _, userEventName := range c.events {
-		eventName, err := FindEventByName(userEventName)
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot find event %v", userEventName)
+		eventName := userEventName
+		eventInfo, err := FindEventByName(userEventName)
+		if err == nil {
+			eventName = eventInfo.Name
 		}
+
 		var eventId C.CUpti_EventID
-		cEventName := C.CString(eventName.Name)
+		cEventName := C.CString(eventName)
 
 		err = checkCUPTIError(C.cuptiEventGetIdFromName(C.CUdevice(deviceId), cEventName, &eventId))
 		C.free(unsafe.Pointer(cEventName))
@@ -320,7 +323,7 @@ func (c *CUPTI) createEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uin
 
 	return &eventData{
 		cuCtx:      cuCtx,
-		cuCtxId:    cuCtxId,
+		cuCtxID:    cuCtxID,
 		deviceId:   deviceId,
 		eventGroup: eventGroup,
 		eventIds:   eventIds,
@@ -340,10 +343,11 @@ func (c *CUPTI) deleteEventGroup(eventDataItem *eventData) error {
 		return nil
 	}
 	eventGroup := eventDataItem.eventGroup
-	for _, eventId := range eventDataItem.eventIds {
+	for eventName, eventId := range eventDataItem.eventIds {
 		err := checkCUPTIError(C.cuptiEventGroupRemoveEvent(eventGroup, eventId))
 		if err != nil {
-			log.WithError(err).Error("unable to remove event from event group")
+			panic(err)
+			log.WithError(err).WithField("event_name", eventName).Error("unable to remove event from event group")
 		}
 	}
 	err := checkCUPTIError(C.cuptiEventGroupDestroy(eventGroup))
