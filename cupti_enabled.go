@@ -36,10 +36,7 @@ func New(opts ...Option) (*CUPTI, error) {
 	nvidiasmi.Wait()
 	if !nvidiasmi.HasGPU {
 		return nil, errors.New("no gpu found while trying to initialize cupti")
-	}
-
-  span, _ := tracer.StartSpanFromContext(options.ctx, tracer.FULL_TRACE, "cupti_new")
-  defer span.Finish()
+  }
   
 	runInit()
 
@@ -48,6 +45,9 @@ func New(opts ...Option) (*CUPTI, error) {
 		Options: options,
 	}
 
+  span, _ := tracer.StartSpanFromContext(options.ctx, tracer.FULL_TRACE, "cupti_new")
+  defer span.Finish()
+  
 	currentCUPTI = c
 
 	if err := c.Subscribe(); err != nil {
@@ -71,7 +71,7 @@ func (c *CUPTI) SetContext(ctx context.Context) {
 }
 
 func runInit() {
-  initEvents()
+  initAvailableEvents()
 
 	if err := checkCUResult(C.cuInit(0)); err != nil {
 		log.WithError(err).Error("failed to perform cuInit")
