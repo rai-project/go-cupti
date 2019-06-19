@@ -21,13 +21,14 @@ import (
 
 type CUPTI struct {
 	*Options
-	sync.Mutex
+	sync.RWMutex
 	cuCtxs          []C.CUcontext
 	subscriber      C.CUpti_SubscriberHandle
 	deviceResetTime time.Time
 	startTimeStamp  uint64
 	beginTime       time.Time
-	eventData       []*eventData
+  eventData       []*eventData
+  spans sync.Map
 }
 
 type eventData struct {

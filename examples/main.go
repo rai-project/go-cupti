@@ -83,8 +83,9 @@ func main() {
 				vectorAdd()
 			}()
 		}
+		time.Sleep(5 * time.Second)
 		wg.Wait()
 
 	}()
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 }
