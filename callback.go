@@ -18,8 +18,8 @@ import (
 
 	//humanize "github.com/dustin/go-humanize"
 	opentracing "github.com/opentracing/opentracing-go"
-	spanlog "github.com/opentracing/opentracing-go/log"
 	"github.com/opentracing/opentracing-go/ext"
+	spanlog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	tracer "github.com/rai-project/tracer"
@@ -813,15 +813,14 @@ func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.C
 }
 
 func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-  
-  eventData, err := c.findEventDataByCuCtxId(uint32(cbInfo.contextUid))
-  if err != nil {
+
+	eventData, err := c.findEventDataByCuCtxId(uint32(cbInfo.contextUid))
+	if err != nil {
 		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find event data")
 		return err
 	}
 
-   eventGroup := eventData.eventGroup
-eventIDs := eventData.eventIds
+	eventGroup := eventData.eventGroup
 
 	C.cudaDeviceSynchronize()
 
@@ -844,65 +843,65 @@ eventIDs := eventData.eventIds
 }
 
 func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-	
-  eventData, err := c.findEventDataByCuCtxId(uint32(cbInfo.contextUid))
-  if err != nil {
+
+	eventData, err := c.findEventDataByCuCtxId(uint32(cbInfo.contextUid))
+	if err != nil {
 		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find event data")
 		return err
 	}
 
-   eventGroup := eventData.eventGroup
-eventIDs := eventData.eventIds
+	eventGroup := eventData.eventGroup
+	eventIDs := eventData.eventIds
 
-	var eventVal uint64 = 0
 	var numInstances C.size_t
+	numInstancesByteCount := (C.size_t)(unsafe.Sizeof(numInstances))
 
 	err = checkCUPTIError(
-    C.cuptiEventGroupGetAttribute(
-      eventGroup,
-      C.CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT,
-      C.size_t(&numInstances),
-      unsafe.Sizeof(numInstances),
-    ),
-    )
+		C.cuptiEventGroupGetAttribute(
+			eventGroup,
+			C.CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT,
+			&numInstancesByteCount,
+			unsafe.Pointer(&numInstances),
+		),
+	)
 	if err != nil {
 		log.WithError(err).Error("failed to cuptiEventGroupGetAttribute")
 		return err
 	}
 
-  span, err := spanFromContextCorrelationId(c.ctx, correlationId)
+	correlationId := uint(cbInfo.correlationId)
+	span, err := spanFromContextCorrelationId(c.ctx, correlationId)
 	if err != nil {
 		return err
 	}
 	if span == nil {
 		return errors.New("no span found")
-  }
-  
-   
+	}
+
 	C.cudaDeviceSynchronize()
 
-  for eventName, eventId := range eventIDs {
-   values := make([]C.size_t, int( numInstances))
-   valuesByteCount := C.size_t(C.sizeof_size_t * numInstances)
+	for eventName, eventId := range eventIDs {
+		values := make([]C.size_t, int(numInstances))
+		valuesByteCount := C.size_t(C.sizeof_size_t * numInstances)
 
-    err = checkCUPTIError(
-      C.cuptiEventGroupReadEvent(
-        eventGroup, C.CUPTI_EVENT_READ_FLAG_NONE,
-        eventId, 
-        &valuesByteCount,
-        &values[0],
-        ))
-    if err != nil {
-      log.WithError(err).Error("failed to cuptiEventGroupReadEvent")
-      return err
-    }
-    eventVal := int64(0)
-	for ii := 0; ii < int(numInstances); ii++ {
-		eventVal += values[ii]
-  }
-  
-  span.LogFields(spanlog.Int(eventName, eventVal))
-  }
+		err = checkCUPTIError(
+			C.cuptiEventGroupReadEvent(
+				eventGroup, C.CUPTI_EVENT_READ_FLAG_NONE,
+				eventId,
+				&valuesByteCount,
+				&values[0],
+			))
+		if err != nil {
+			log.WithError(err).Error("failed to cuptiEventGroupReadEvent")
+			return err
+		}
+		eventVal := int64(0)
+		for ii := 0; ii < int(numInstances); ii++ {
+			eventVal += int64(values[ii])
+		}
+
+		span.LogFields(spanlog.Int64(eventName, eventVal))
+	}
 
 	err = checkCUPTIError(C.cuptiEventGroupDisable(eventGroup))
 	if err != nil {
@@ -915,16 +914,16 @@ eventIDs := eventData.eventIds
 
 func (c *CUPTI) onCudaLaunch(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	switch cbInfo.callbackSite {
-  case C.CUPTI_API_ENTER:
-    res := c.onCudaLaunchEnter(domain, cbid, cbInfo)
-    if len(c.events ) != 0 {
-      c.onCudaLaunchCaptureEventsEnter(domain, cbid, cbInfo)
-    }
-    return res
+	case C.CUPTI_API_ENTER:
+		res := c.onCudaLaunchEnter(domain, cbid, cbInfo)
+		if len(c.events) != 0 {
+			c.onCudaLaunchCaptureEventsEnter(domain, cbid, cbInfo)
+		}
+		return res
 	case C.CUPTI_API_EXIT:
-    if len(c.events ) != 0 {
-      c.onCudaLaunchCaptureEventsExit(domain, cbid, cbInfo)
-    }
+		if len(c.events) != 0 {
+			c.onCudaLaunchCaptureEventsExit(domain, cbid, cbInfo)
+		}
 		return c.onCudaLaunchExit(domain, cbid, cbInfo)
 	default:
 		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
@@ -1630,54 +1629,56 @@ func (c *CUPTI) onNvtxRangePop(domain types.CUpti_CallbackDomain, cbid types.CUp
 }
 
 func (c *CUPTI) onResourceContextCreated(domain types.CUpti_CallbackDomain, cbid types.CUpti_CallbackIdResource, cbInfo *C.CUpti_CallbackData) error {
-  if len(c.events) == 0 {
-    return nil
-  }
-  
-  deviceId := uint32(0)
+	if len(c.events) == 0 {
+		return nil
+	}
 
-  cuCtx := cbInfo.context
-  err := checkCUPTIError(C.cuptiGetDeviceId(ctx, &deviceId))
-  if err != nil {
-    return errors.Wrap(err, "unable to get device id when creating resource context")
-  }
+	cuCtx := cbInfo.context
 
-  ctxId := uint32(0)
-    err := checkCUPTIError(C.cuptiGetContextId(ctx, &ctxId))
-    if err != nil {
-      return errors.Wrap(err, "unable to get device id when creating resource context")
-    }
+	deviceId := uint32(0)
+	err := checkCUPTIError(C.cuptiGetDeviceId(cuCtx, (*C.uint32_t)(&deviceId)))
+	if err != nil {
+		return errors.Wrap(err, "unable to get device id when creating resource context")
+	}
 
-  err = c.addEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
-  if err != nil {
-    return errors.Wrap(err, "cannot add event group")
-  }
+	ctxId := uint32(0)
+	err = checkCUPTIError(C.cuptiGetContextId(cuCtx, (*C.uint32_t)(&ctxId)))
+	if err != nil {
+		return errors.Wrap(err, "unable to get device id when creating resource context")
+	}
+
+	err = c.addEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
+	if err != nil {
+		return errors.Wrap(err, "cannot add event group")
+	}
+
+	return nil
 }
 
-
 func (c *CUPTI) onResourceContextDestroyStarting(domain types.CUpti_CallbackDomain, cbid types.CUpti_CallbackIdResource, cbInfo *C.CUpti_CallbackData) error {
-  if len(c.events) == 0 {
-    return nil
-  }
-  
-  deviceId := uint32(0)
+	if len(c.events) == 0 {
+		return nil
+	}
 
-  cuCtx := cbInfo.context
-  err := checkCUPTIError(C.cuptiGetDeviceId(ctx, &deviceId))
-  if err != nil {
-    return errors.Wrap(err, "unable to get device id when creating resource context")
-  }
+	cuCtx := cbInfo.context
 
-ctxId := uint32(0)
-  err := checkCUPTIError(C.cuptiGetContextId(ctx, &ctxId))
-  if err != nil {
-    return errors.Wrap(err, "unable to get device id when creating resource context")
-  }
+	deviceId := uint32(0)
+	err := checkCUPTIError(C.cuptiGetDeviceId(cuCtx, (*C.uint32_t)(&deviceId)))
+	if err != nil {
+		return errors.Wrap(err, "unable to get device id when creating resource context")
+	}
 
-  err = c.removeEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
-  if err != nil {
-    return errors.Wrap(err, "cannot remove event group")
-  }
+	ctxId := uint32(0)
+	err = checkCUPTIError(C.cuptiGetContextId(cuCtx, (*C.uint32_t)(&ctxId)))
+	if err != nil {
+		return errors.Wrap(err, "unable to get device id when creating resource context")
+	}
+
+	err = c.removeEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
+	if err != nil {
+		return errors.Wrap(err, "cannot remove event group")
+	}
+	return nil
 }
 
 //export callback
@@ -1743,8 +1744,7 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			types.CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyAsync_v3020:
 			handle.onCudaMemCopy(domain, cbid, cbInfo)
 			return
-    case types.CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020,
-    CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000:
+		case types.CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020, types.CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000:
 			handle.onCudaLaunch(domain, cbid, cbInfo)
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaThreadSynchronize_v3020:
@@ -1797,18 +1797,18 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 				WithField("function_name", demangleName(cbInfo.functionName)).
 				Info("skipping nvtx marker")
 			return
-    }
-  case types.CUPTI_CB_DOMAIN_RESOURCE:
-    cbid := types.CUpti_CallbackIdResource(cbid0)
-    switch cbid {
-    case types.CUPTI_CBID_RESOURCE_CONTEXT_CREATED:
-      handle.onResourceContextCreated(domain, cbid, cbInfo)
-    case types.CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING:
-      handle.onResourceContextDestroyStarting(domain, cbid, cbInfo)
+		}
+	case types.CUPTI_CB_DOMAIN_RESOURCE:
+		cbid := types.CUpti_CallbackIdResource(cbid0)
+		switch cbid {
+		case types.CUPTI_CBID_RESOURCE_CONTEXT_CREATED:
+			handle.onResourceContextCreated(domain, cbid, cbInfo)
+		case types.CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING:
+			handle.onResourceContextDestroyStarting(domain, cbid, cbInfo)
 		default:
 			log.WithField("cbid", cbid.String()).
 				Info("skipping resource domain event")
 			return
-    }
+		}
 	}
 }
