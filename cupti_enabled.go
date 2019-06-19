@@ -5,11 +5,11 @@ package cupti
 // #include <cupti.h>
 import "C"
 import (
+	"context"
 	"sync"
-  "time"
-  "context"
-  
-  "github.com/pkg/errors"
+	"time"
+
+	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
 	"github.com/rai-project/tracer"
@@ -36,8 +36,8 @@ func New(opts ...Option) (*CUPTI, error) {
 	nvidiasmi.Wait()
 	if !nvidiasmi.HasGPU {
 		return nil, errors.New("no gpu found while trying to initialize cupti")
-  }
-  
+	}
+
 	runInit()
 
 	options := NewOptions(opts...)
@@ -45,9 +45,9 @@ func New(opts ...Option) (*CUPTI, error) {
 		Options: options,
 	}
 
-  span, _ := tracer.StartSpanFromContext(options.ctx, tracer.FULL_TRACE, "cupti_new")
-  defer span.Finish()
-  
+	span, _ := tracer.StartSpanFromContext(options.ctx, tracer.FULL_TRACE, "cupti_new")
+	defer span.Finish()
+
 	currentCUPTI = c
 
 	if err := c.Subscribe(); err != nil {
@@ -71,7 +71,7 @@ func (c *CUPTI) SetContext(ctx context.Context) {
 }
 
 func runInit() {
-  initAvailableEvents()
+	initAvailableEvents()
 
 	if err := checkCUResult(C.cuInit(0)); err != nil {
 		log.WithError(err).Error("failed to perform cuInit")
