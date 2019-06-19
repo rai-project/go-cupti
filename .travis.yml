@@ -37,7 +37,6 @@ addons:
       - libnccl2
       - cuda-cudart-dev-10-1
       - cuda-libraries-dev-10-1
-      - cuda-cublas-dev-10-1
       - cuda-misc-headers-10-1
       - cuda-nvml-dev-10-1
       - cuda-nvtx-10-1
