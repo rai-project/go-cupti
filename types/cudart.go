@@ -1,4 +1,3 @@
-//go:generate enumer -type=CUDAError -json
 package types
 
 type CUDAError int

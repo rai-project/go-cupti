@@ -1,8 +1,3 @@
-//go:generate enumer -type=CUpti_ApiCallbackSite -json
-//go:generate enumer -type=CUpti_CallbackDomain -json
-//go:generate enumer -type=CUpti_CallbackIdResource -json
-//go:generate enumer -type=CUpti_CallbackIdSync -json
-
 package types
 
 type CUpti_ApiCallbackSite int

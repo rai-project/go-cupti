@@ -1,5 +1,3 @@
-//go:generate enumer -type=CUpti_driver_api_trace_cbid -json
-
 package types
 
 type CUpti_driver_api_trace_cbid int

@@ -1,4 +1,3 @@
-//go:generate enumer -type=CUDAMemcpyKind -json
 package types
 
 type CUDAMemcpyKind int

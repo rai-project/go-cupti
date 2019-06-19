@@ -1,13 +1,3 @@
-//go:generate enumer -type=CUpti_DeviceAttributeDeviceClass -json
-//go:generate enumer -type=CUpti_DeviceAttribute -json
-//go:generate enumer -type=CUpti_EventDomainAttribute -json
-//go:generate enumer -type=CUpti_EventCollectionMethod -json
-//go:generate enumer -type=CUpti_EventGroupAttribute -json
-//go:generate enumer -type=CUpti_EventAttribute -json
-//go:generate enumer -type=CUpti_EventCollectionMode -json
-//go:generate enumer -type=CUpti_EventCategory -json
-//go:generate enumer -type=CUpti_ReadEventFlags -json
-
 package types
 
 type CUpti_DeviceAttributeDeviceClass int

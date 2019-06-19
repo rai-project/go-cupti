@@ -1,11 +1,3 @@
-//go:generate enumer -type=CUpti_MetricCategory -json
-//go:generate enumer -type=CUpti_MetricEvaluationMode -json
-//go:generate enumer -type=CUpti_MetricValueKind -json
-//go:generate enumer -type=CUpti_MetricValueUtilizationLevel -json
-//go:generate enumer -type=CUpti_MetricAttribute -json
-//go:generate enumer -type=CUpti_MetricPropertyDeviceClass -json
-//go:generate enumer -type=CUpti_MetricPropertyID -json
-
 package types
 
 type CUpti_MetricCategory int

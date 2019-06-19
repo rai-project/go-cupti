@@ -1,6 +1,3 @@
-//go:generate enumer -type=CUdevice_attribute -json
-//go:generate enumer -type=CUresult -json
-
 package types
 
 type CUdevice_attribute int

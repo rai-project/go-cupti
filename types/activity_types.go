@@ -1,29 +1,3 @@
-//go:generate enumer -type=CUpti_ActivityKind -json
-//go:generate enumer -type=CUpti_ActivityObjectKind -json
-//go:generate enumer -type=CUpti_ActivityOverheadKind -json
-//go:generate enumer -type=CUpti_ActivityComputeApiKind -json
-//go:generate enumer -type=CUpti_ActivityFlag -json
-//go:generate enumer -type=CUpti_ActivityPCSamplingStallReason -json
-//go:generate enumer -type=CUpti_ActivityPCSamplingPeriod -json
-//go:generate enumer -type=CUpti_ActivityMemcpyKind -json
-//go:generate enumer -type=CUpti_ActivityMemoryKind -json
-//go:generate enumer -type=CUpti_ActivityPreemptionKind -json
-//go:generate enumer -type=CUpti_ActivityEnvironmentKind -json
-//go:generate enumer -type=CUpti_EnvironmentClocksThrottleReason -json
-//go:generate enumer -type=CUpti_ActivityUnifiedMemoryCounterScope -json
-//go:generate enumer -type=CUpti_ActivityUnifiedMemoryCounterKind -json
-//go:generate enumer -type=CUpti_ActivityUnifiedMemoryAccessType -json
-//go:generate enumer -type=CUpti_ActivityUnifiedMemoryMigrationCause -json
-//go:generate enumer -type=CUpti_ActivityUnifiedMemoryRemoteMapCause -json
-//go:generate enumer -type=CUpti_ActivityInstructionClass -json
-//go:generate enumer -type=CUpti_ActivityPartitionedGlobalCacheConfig -json
-//go:generate enumer -type=CUpti_ActivitySynchronizationType -json
-//go:generate enumer -type=CUpti_ActivityStreamFlag -json
-//go:generate enumer -type=CUpti_LinkFlag -json
-//go:generate enumer -type=CUpti_DevType -json
-//go:generate enumer -type=CUpti_ActivityAttribute -json
-//go:generate enumer -type=CUpti_ActivityThreadIdType -json
-
 package types
 
 type CUpti_ActivityKind int32

@@ -1,5 +1,3 @@
-//go:generate enumer -type=CUptiResult -json
-
 package types
 
 type CUptiResult int

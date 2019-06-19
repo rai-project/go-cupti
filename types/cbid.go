@@ -1,4 +1,3 @@
-//go:generate enumer -type=CUPTI_RUNTIME_TRACE_CBID -json
 package types
 
 type CUPTI_RUNTIME_TRACE_CBID int
