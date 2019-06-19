@@ -85,7 +85,7 @@ func (c *CUPTI) Subscribe() error {
 		return err
 	}
 
-	if err := c.registerCallbacks(); err != nil {
+	if err := c.enableCallbacks(); err != nil {
 		return err
 	}
 
@@ -163,9 +163,9 @@ func (c *CUPTI) stopActivies() error {
 	return nil
 }
 
-func (c *CUPTI) registerCallbacks() error {
+func (c *CUPTI) enableCallbacks() error {
 	for _, callback := range c.callbacks {
-		err := c.addCallback(callback)
+		err := c.enableCallback(callback)
 		if err != nil {
 			return err
 		}
