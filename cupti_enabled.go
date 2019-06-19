@@ -71,6 +71,8 @@ func (c *CUPTI) SetContext(ctx context.Context) {
 }
 
 func runInit() {
+  GetEvents()
+  
 	if err := checkCUResult(C.cuInit(0)); err != nil {
 		log.WithError(err).Error("failed to perform cuInit")
 	}
