@@ -25,7 +25,16 @@ type CUPTI struct {
 	subscriber      C.CUpti_SubscriberHandle
 	deviceResetTime time.Time
 	startTimeStamp  uint64
-	beginTime       time.Time
+  beginTime       time.Time
+  eventData []*eventData
+}
+
+type eventData struct {
+  cuCtx C.CUcontext
+  cuCtxId uint32
+  deviceId uint32
+  eventGroup C.CUpti_EventGroup
+  eventIds map[string]C.CUpti_EventID
 }
 
 var (
@@ -43,7 +52,7 @@ func New(opts ...Option) (*CUPTI, error) {
 	options := NewOptions(opts...)
 	c := &CUPTI{
 		Options: options,
-	}
+  }
 
 	span, _ := tracer.StartSpanFromContext(options.ctx, tracer.FULL_TRACE, "cupti_new")
 	defer span.Finish()
@@ -109,7 +118,10 @@ func (c *CUPTI) Unsubscribe() error {
 	c.Wait()
 	if err := c.stopActivies(); err != nil {
 		return err
-	}
+  }
+  if err :=c.deleteEventGroups(); err != nil {
+    return err
+  }
 	if err := c.cuptiUnsubscribe(); err != nil {
 		return err
 	}
@@ -175,9 +187,13 @@ func (c *CUPTI) enableCallbacks() error {
 	return nil
 }
 
-// NOT USED
+// not used
 func (c *CUPTI) init() error {
-	c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
+  hasEvents := len(c.events) != 0
+  c.cuCtxs = make([]C.CUcontext, len(nvidiasmi.Info.GPUS))
+  if hasEvents != 0 {
+  c.eventData = make([]*eventData, len(nvidiasmi.Info.GPUS))
+  }
 	for ii, gpu := range nvidiasmi.Info.GPUS {
 		var cuCtx C.CUcontext
 
@@ -188,7 +204,15 @@ func (c *CUPTI) init() error {
 				Error("failed to create cuda context")
 			return err
 		}
-		c.cuCtxs[ii] = cuCtx
+    c.cuCtxs[ii] = cuCtx
+    
+    if hasEvents {
+    eventData, err := c.createEventGroup(cuCtx, ii)
+    if err != nil {
+      return errors.Errorf("cannot create event group for device %d", ii)
+    }
+    c.eventData[ii] = eventData
+  }
 	}
 
 	if _, err := c.DeviceReset(); err != nil {
@@ -196,4 +220,125 @@ func (c *CUPTI) init() error {
 	}
 
 	return nil
+}
+
+
+func  (c *CUPTI) addEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uint32)  error {
+  if len(c.events) == 0 {
+    return nil
+  }
+
+  eventData, err := createEventGroup(cuCtx, cuCtxId, deviceId)
+  if err != nil {
+    err := errors.Wrapf(err, "cannot create event group for device %d", deviceId)
+     log.WithError(err).Error("cannot create event group for device %d", deviceId)
+    return err
+  }
+
+  c.eventData = append(c.eventData, eventData)
+  return nil
+}
+
+func  (c *CUPTI) findEventDataByCuCtxId(cuCtxId uint32) (*eventData, error) {
+  for _, eventDataItem := range c.eventData {
+    if eventDataItem.cuCtxId == cuCtxId {
+    return eventDataItem, nil
+    }
+  }
+  return nil, errors.Errorf("cannot find event group for cutxid = %d", cuCtxId) 
+}
+
+
+func  (c *CUPTI) removeEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uint32) error {
+  for _, eventDataItem := range c.eventData {
+    if eventDataItem.cuCtxId == cuCtxId && eventDataItem.deviceId == deviceId {
+    deleteEventGroups(eventDataItem)
+    }
+  }
+  return nil 
+}
+
+
+func  (c *CUPTI) createEventGroup(cuCtx C.CUcontext, cuCtxId uint32, deviceId uint32) (*eventData, error) {
+if len(c.events) == 0 {
+  return nil
+}
+
+var eventGroup C.CUpti_EventGroup
+
+err := checkCUPTIError(C.cuptiEventGroupCreate(cuCtx, &eventGroup, 0))
+if err != nil {
+  return nil, errors.Wrapf(err, "cannot create event group")
+}
+
+eventIds := map[string]C.CUpti_EventID{}
+for _, userEventName := range c.events {
+  eventName, err := FindEventByName(userEventName)
+  if err != nil {
+  return nil, errors.Wrapf(err, "cannot find event %v", userEventName)
+  }
+  var eventId C.CUpti_EventID 
+   cEventName := C.CString(eventName)
+
+  err = checkCUPTIError(C.cuptiEventGetIdFromName( C.CUdevice(deviceId), cEventName, &eventId))
+  C.free(unsafe.Pointer(cEventName))
+  if err != nil {
+    return nil, errors.Wrapf(err, "cannot find event id %v", userEventName)
+    }
+
+    err = checkCUPTIError( cuptiEventGroupAddEvent(eventGroup, eventId))
+    if err != nil {
+      return nil, errors.Wrapf(err, "cannot add event %v to event group", userEventName)
+      }
+
+
+  eventIds[userEventName] = eventId
+
+}
+
+ profileAll := uint32(1)
+
+err := checkCUPTIError(cuptiEventGroupSetAttribute(
+  eventGroup, 
+  C.CUpti_EventGroupAttribute(types.CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES),
+  unsafe.SizeOf(profileAll),
+&C.uint32_t(profileAll),
+  ))
+  if err != nil {
+    return nil, errors.Wrap(err, "cannot set event group attribute")
+    }
+
+    return &eventData{
+      cuCtx: cuCtx,
+      cuCtxId: cuCtxId,
+      deviceId: deviceId,
+      eventGroup: eventGroup,
+      eventIds: eventIds,
+    }, nil
+}
+
+
+func  (c *CUPTI) deleteEventGroups() error {
+  for _, eventDataItem := range c.eventData {
+    deleteEventGroups(eventDataItem)
+  }
+  return nil 
+}
+
+func  (c *CUPTI) deleteEventGroup(eventDataItem *eventData) error {
+  if eventDataItem == nil {
+      return nil 
+    }
+    eventGroup := eventDataItem.eventGroup
+for _, eventId := range eventDataItem.eventIds {
+  err := checkCUPTIError(C.cuptiEventGroupRemoveEvent(eventGroup, eventId))
+  if err != nil {
+    log.WithError(err).Error("unable to remove event from event group")
+  }
+}
+err := checkCUPTIError(C.cuptiEventGroupDestroy(eventGroup))
+  if err != nil {
+    log.WithError(err).Error("unable to remove event group")
+  }
+  return nil 
 }
