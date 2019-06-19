@@ -24,6 +24,7 @@ import (
 	tracer "github.com/rai-project/tracer"
 )
 
+// demangling names adds overhead
 func demangleName(n *C.char) string {
 	if n == nil {
 		return ""
@@ -37,52 +38,51 @@ func demangleName(n *C.char) string {
 	// return name
 }
 
-// Returns a timestamp normalized to correspond with the start and end timestamps reported in the CUPTI activity records. The timestamp is reported in nanoseconds.
+// Returns the device timestamp in *timestamp.
+// The timestamp is reported in nanoseconds and indicates the time since the device was last reset.
+func (c * CUPTI) cuptiDeviceGetTimestamp() (uint64, error) {
+  var val C.uint64_t
+  err := checkCUPTIError(C.cuptiDeviceGetTimestamp(c.ctx, &val))
+  if err != nil {
+    log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
+    return 0, err
+	}
+  return uint64(val), nil
+}
+
+// Returns a timestamp normalized to correspond with the start and end timestamps reported in the CUPTI activity records.
+// The timestamp is reported in nanoseconds.
 func cuptiGetTimestamp() (uint64, error) {
 	var val C.uint64_t
 	err := checkCUPTIError(C.cuptiGetTimestamp(&val))
 	if err != nil {
+		log.WithError(err).Error("failed to get cuptiGetTimestamp")
 		return 0, err
 	}
 	return uint64(val), nil
 }
 
-// Returns a timestamp normalized to correspond with the start and end timestamps reported in the CUPTI activity records. The timestamp is reported in nanoseconds.
+// Returns a timestamp corresponds to the tracer begin time.
+// The timestamp is reported in nanoseconds.
 func (c *CUPTI) currentTimeStamp() time.Time {
 	val, err := cuptiGetTimestamp()
-	if err != nil {
-		log.WithError(err).Error("failed to get cuptiGetTimestamp")
+	if err != nil 
+    log.WithError(err).Error("failed to get currentTimeStamp")
 		return time.Unix(0, 0)
 	}
 	ret := c.beginTime.Add(time.Duration(uint64(val)-c.startTimeStamp) * time.Nanosecond)
 	return ret
 }
 
-/*
-// Returns the device timestamp in *timestamp. The timestamp is reported in nanoseconds and indicates the time since the device was last reset.
-func (c * CUPTI) cuptiDeviceGetTimestamp() time.Time {
-  var stamp uint64
-  if err := checkCUPTIError(C.cuptiDeviceGetTimestamp(c.ctx, C.uint64_t(unsafe.Pointer(&stamp)))); err != nil {
-    log.WithError(err).Error("failed to get cuptiDeviceGetTimestamp")
-    return time.Unix(0, 0)
-  }
-  return c.beginTime.Add(time.Unix(0, stamp - c.startTimeStamp))
-}
-*/
-
-func cuptiEnableCallback(subscriber C.CUpti_SubscriberHandle, domain C.CUpti_CallbackDomain, cbid C.CUpti_CallbackId) error {
-	return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, subscriber, domain, cbid))
-}
-
-func (c *CUPTI) addCallback(name string) error {
+func (c *CUPTI) enableCallback(name string) error {
 	if cbid, err := types.CUpti_driver_api_trace_cbidString(name); err == nil {
-		return cuptiEnableCallback(c.subscriber, C.CUPTI_CB_DOMAIN_DRIVER_API, C.CUpti_CallbackId(cbid))
+    return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_DRIVER_API, C.CUpti_CallbackId(cbid)))
 	}
 	if cbid, err := types.CUPTI_RUNTIME_TRACE_CBIDString(name); err == nil {
-		return cuptiEnableCallback(c.subscriber, C.CUPTI_CB_DOMAIN_RUNTIME_API, C.CUpti_CallbackId(cbid))
+    return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_RUNTIME_API, C.CUpti_CallbackId(cbid)))
 	}
 	if cbid, err := types.CUpti_nvtx_api_trace_cbidString(name); err == nil {
-		return cuptiEnableCallback(c.subscriber, C.CUPTI_CB_DOMAIN_NVTX, C.CUpti_CallbackId(cbid))
+    return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_NVTX, C.CUpti_CallbackId(cbid)))
 	}
 	return errors.Errorf("cannot find callback %v by name", name)
 }
@@ -1541,27 +1541,6 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 	}
 	domain := types.CUpti_CallbackDomain(domain0)
 	switch domain {
-	case types.CUPTI_CB_DOMAIN_NVTX:
-		cbid := types.CUpti_nvtx_api_trace_cbid(cbid0)
-		switch cbid {
-		case types.CUPTI_CBID_NVTX_nvtxRangeStartA:
-			handle.onNvtxRangeStartA(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_NVTX_nvtxRangeStartEx:
-			handle.onNvtxRangeStartEx(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_NVTX_nvtxRangeEnd:
-			handle.onNvtxRangeEnd(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_NVTX_nvtxRangePushA:
-			handle.onNvtxRangePushA(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_NVTX_nvtxRangePushEx:
-			handle.onNvtxRangePushEx(domain, cbid, cbInfo)
-		case types.CUPTI_CBID_NVTX_nvtxRangePop:
-			handle.onNvtxRangePop(domain, cbid, cbInfo)
-		default:
-			log.WithField("cbid", cbid.String()).
-				WithField("function_name", demangleName(cbInfo.functionName)).
-				Info("skipping nvtx marker")
-			return
-		}
 	case types.CUPTI_CB_DOMAIN_DRIVER_API:
 		cbid := types.CUpti_driver_api_trace_cbid(cbid0)
 		switch cbid {
@@ -1647,6 +1626,27 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			log.WithField("cbid", cbid.String()).
 				WithField("function_name", demangleName(cbInfo.functionName)).
 				Info("skipping runtime call")
+			return
+    }
+  case types.CUPTI_CB_DOMAIN_NVTX:
+		cbid := types.CUpti_nvtx_api_trace_cbid(cbid0)
+		switch cbid {
+		case types.CUPTI_CBID_NVTX_nvtxRangeStartA:
+			handle.onNvtxRangeStartA(domain, cbid, cbInfo)
+		case types.CUPTI_CBID_NVTX_nvtxRangeStartEx:
+			handle.onNvtxRangeStartEx(domain, cbid, cbInfo)
+		case types.CUPTI_CBID_NVTX_nvtxRangeEnd:
+			handle.onNvtxRangeEnd(domain, cbid, cbInfo)
+		case types.CUPTI_CBID_NVTX_nvtxRangePushA:
+			handle.onNvtxRangePushA(domain, cbid, cbInfo)
+		case types.CUPTI_CBID_NVTX_nvtxRangePushEx:
+			handle.onNvtxRangePushEx(domain, cbid, cbInfo)
+		case types.CUPTI_CBID_NVTX_nvtxRangePop:
+			handle.onNvtxRangePop(domain, cbid, cbInfo)
+		default:
+			log.WithField("cbid", cbid.String()).
+				WithField("function_name", demangleName(cbInfo.functionName)).
+				Info("skipping nvtx marker")
 			return
 		}
 	}
