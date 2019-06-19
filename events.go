@@ -3,6 +3,9 @@ package cupti
 import (
 	"encoding/json"
 	"sync"
+
+	"github.com/iancoleman/strcase"
+	"github.com/pkg/errors"
 )
 
 type Event struct {
@@ -32,7 +35,22 @@ func loadEvents() {
 	Events = &res
 }
 
-func GetEvents() {
+func initEvents() {
 	var once sync.Once
 	once.Do(loadEvents)
+}
+
+func GetEvents() Events {
+	initEvents()
+	return Events
+}
+
+func FindEventByName(s0 string) (Event, error) {
+	s := strcase.ToSnake(s0)
+	for _, event := range Events {
+		if event.Name == s {
+			return event
+		}
+	}
+	return Event{}, errors.Errorf("cannot find event with name %s", s0)
 }
