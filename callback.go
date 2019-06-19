@@ -66,7 +66,7 @@ func cuptiGetTimestamp() (uint64, error) {
 // The timestamp is reported in nanoseconds.
 func (c *CUPTI) currentTimeStamp() time.Time {
 	val, err := cuptiGetTimestamp()
-	if err != nil 
+	if err != nil {
     log.WithError(err).Error("failed to get currentTimeStamp")
 		return time.Unix(0, 0)
 	}
