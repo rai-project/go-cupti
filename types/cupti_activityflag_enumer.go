@@ -97,8 +97,13 @@ func CUpti_ActivityFlagValues() []CUpti_ActivityFlag {
 
 // IsACUpti_ActivityFlag returns "true" if the value is listed in the enum definition. "false" otherwise
 func (i CUpti_ActivityFlag) IsACUpti_ActivityFlag() bool {
-	_, ok := _CUpti_ActivityFlagMap[i]
-	return ok
+
+	for _, v := range _CUpti_ActivityFlagValues {
+		if i == v {
+			return true
+		}
+	}
+	return false
 }
 
 // MarshalJSON implements the json.Marshaler interface for CUpti_ActivityFlag
