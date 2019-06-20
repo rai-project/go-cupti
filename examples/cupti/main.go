@@ -14,6 +14,9 @@ import (
 	"github.com/rai-project/go-cupti"
 	"github.com/rai-project/logger"
 	"github.com/rai-project/tracer"
+	_ "github.com/rai-project/tracer/jaeger"
+	_ "github.com/rai-project/tracer/noop"
+	_ "github.com/rai-project/tracer/zipkin"
 	"github.com/rainycape/dl"
 )
 
@@ -84,12 +87,14 @@ func main() {
 			}),
 			cupti.Metrics(
 				[]string{
-					"flop_count_sp",
+					// "flop_count_sp",
+					"dram_read_transactions",
+					// "dram_write_transactions",
 				},
 			),
 			cupti.Events(
 				[]string{
-					"inst_executed",
+					// "inst_executed",
 					// "inst_executed_fma_pipe_s0",
 					// "inst_executed_fma_pipe_s1",
 					// "inst_executed_fma_pipe_s2",

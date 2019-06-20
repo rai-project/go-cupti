@@ -5,6 +5,7 @@ package cupti
 // #include <cupti.h>
 import "C"
 import (
+	"github.com/k0kubun/pp"
 	"context"
 	"sync"
 	"time"
@@ -14,9 +15,6 @@ import (
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
 	"github.com/rai-project/tracer"
-	_ "github.com/rai-project/tracer/jaeger"
-	_ "github.com/rai-project/tracer/noop"
-	_ "github.com/rai-project/tracer/zipkin"
 )
 
 type CUPTI struct {
@@ -245,7 +243,7 @@ func (c *CUPTI) addMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint3
 	if len(c.metrics) == 0 {
 		return nil
 	}
-
+	
 	metricData, err := c.createMetricGroup(cuCtx, cuCtxID, deviceId)
 	if err != nil {
 		err := errors.Wrapf(err, "cannot create metric group for device %d", deviceId)
@@ -499,4 +497,8 @@ func (c *CUPTI) deleteEventGroup(eventDataItem *eventData) error {
 		log.WithError(err).Error("unable to remove event group")
 	}
 	return nil
+}
+
+func dummy() {
+	pp.Println("")
 }

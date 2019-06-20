@@ -14,9 +14,9 @@ import (
 	"encoding/binary"
 	"time"
 	"unsafe"
+	"github.com/k0kubun/pp"
 
 	//humanize "github.com/dustin/go-humanize"
-	"github.com/k0kubun/pp"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	spanlog "github.com/opentracing/opentracing-go/log"
@@ -885,7 +885,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 
 	err = checkCUPTIError(C.cuptiEventGroupEnable(eventData.eventGroup))
 	if err != nil {
-		log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiEventGroupSetEnable")
+		log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiEventGroupEnable")
 		return err
 	}
 
@@ -893,9 +893,6 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 }
 
 func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
-	if len(c.events) != 0 {
-		return nil
-	}
 	metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
 		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find metric data")
@@ -1022,7 +1019,7 @@ func (c *CUPTI) onCudaLaunchCaptureMetricsExit(domain types.CUpti_CallbackDomain
 					eventGroup,
 					C.CUPTI_EVENT_GROUP_ATTR_EVENTS,
 					&eventIdsSize,
-					unsafe.Pointer(&eventIds),
+					unsafe.Pointer(&eventIds[0]),
 				),
 			)
 			if err != nil {
@@ -1974,7 +1971,7 @@ func (c *CUPTI) onCUCtxCreate(domain types.CUpti_CallbackDomain, cbid types.CUpt
 }
 
 func (c *CUPTI) onContextCreate(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
-	if len(c.events) == 0 {
+	if len(c.events) == 0 && len(c.metrics) == 0 {
 		return nil
 	}
 
@@ -1992,21 +1989,25 @@ func (c *CUPTI) onContextCreate(domain types.CUpti_CallbackDomain, cuCtx C.CUcon
 		return errors.Wrap(err, "unable to get device id when creating resource context")
 	}
 
+	if len(c.metrics) != 0 {
 	err = c.addMetricGroup(cuCtx, uint32(ctxId), uint32(deviceId))
 	if err != nil {
 		return errors.Wrap(err, "cannot add metric group")
 	}
+}
 
+	if len(c.events) != 0 {
 	err = c.addEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
 	if err != nil {
 		return errors.Wrap(err, "cannot add event group")
 	}
+}
 
 	return nil
 }
 
 func (c *CUPTI) onContextDestroy(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
-	if len(c.events) == 0 {
+	if len(c.events) == 0 && len(c.metrics) == 0 {
 		return nil
 	}
 
@@ -2024,15 +2025,19 @@ func (c *CUPTI) onContextDestroy(domain types.CUpti_CallbackDomain, cuCtx C.CUco
 		return errors.Wrap(err, "unable to get device id when creating resource context")
 	}
 
+	if len(c.events) != 0 {
 	err = c.removeEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
 	if err != nil {
 		return errors.Wrap(err, "cannot remove event group")
 	}
+}
 
+	if len(c.metrics) != 0 {
 	err = c.removeMetricGroup(cuCtx, uint32(ctxId), uint32(deviceId))
 	if err != nil {
 		return errors.Wrap(err, "cannot remove metric group")
 	}
+}
 
 	return nil
 }
