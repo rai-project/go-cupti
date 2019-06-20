@@ -239,7 +239,7 @@ func (c *CUPTI) addEventGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32
 	eventData, err := c.createEventGroup(cuCtx, cuCtxID, deviceId)
 	if err != nil {
 		err := errors.Wrapf(err, "cannot create event group for device %d", deviceId)
-		log.WithError(err).Error("cannot create event group for device %d", deviceId)
+		log.WithError(err).WithField("device_id", deviceId).Error("cannot create event group")
 		return err
 	}
 

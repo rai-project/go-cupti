@@ -1,738 +1,738 @@
 [
-{
-	"event": 1,
-	"id"       : 100663390,
-	"domain_id"       : 20971522,
-	"name":       "active_cycles_pm",
-	"short_description": "active cycles pm",
-	"long_description": "Number of cycles a multiprocessor has at least one active warp.",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 2,
-	"id"       : 100663391,
-	"domain_id"       : 20971522,
-	"name":       "active_warps_pm",
-	"short_description": "active warps pm",
-	"long_description": "Accumulated number of active warps per cycle. For every cycle it increments by the number of active warps in the cycle which can be in the range 0 to 64.",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 3,
-	"id"       : 100663385,
-	"domain_id"       : 20971522,
-	"name":       "shared_ld_transactions",
-	"short_description": "shared_ld_transactions",
-	"long_description": "Number of transactions for shared load accesses. Maximum transaction size in volta is 128 bytes, any warp accessing more than 128 bytes will cause multiple transactions for a shared load instruction. This also includes extra transactions caused by shared bank conflicts.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 4,
-	"id"       : 100663386,
-	"domain_id"       : 20971522,
-	"name":       "shared_st_transactions",
-	"short_description": "shared_st_transactions",
-	"long_description": "Number of transactions for shared store accesses. Maximum transaction size in volta is 128 bytes, any warp accessing more than 128 bytes will cause multiple transactions for a shared store instruction. This also includes extra transactions caused by shared bank conflicts.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 5,
-	"id"       : 100663345,
-	"domain_id"       : 20971522,
-	"name":       "elapsed_cycles_sm",
-	"short_description": "elapsed clocks",
-	"long_description": "elapsed clocks",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 6,
-	"id"       : 100663392,
-	"domain_id"       : 20971522,
-	"name":       "elapsed_cycles_pm",
-	"short_description": "elapsed clocks on SM",
-	"long_description": "elapsed clocks on SM",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 7,
-	"id"       : 100663393,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fp16_pipe_s0",
-	"short_description": "inst_executed_fp16_pipe_s0",
-	"long_description": "Number of warp instructions executed by fp16 pipe on SM sub-partition 0.",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 8,
-	"id"       : 100663394,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fp16_pipe_s1",
-	"short_description": "inst_executed_fp16_pipe_s1",
-	"long_description": "Number of warp instructions executed by fp16 pipe on SM sub-partition 1",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 9,
-	"id"       : 100663395,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fp16_pipe_s2",
-	"short_description": "inst_executed_fp16_pipe_s2",
-	"long_description": "Number of warp instructions executed by fp16 pipe on SM sub-partition 2",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 10,
-	"id"       : 100663396,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fp16_pipe_s3",
-	"short_description": "inst_executed_fp16_pipe_s3",
-	"long_description": "Number of warp instructions executed by fp16 pipe on SM sub-partition 3",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 11,
-	"id"       : 100663397,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fp64_pipe_s0",
-	"short_description": "inst_executed_fp64_pipe_s0",
-	"long_description": "Number of warp instructions executed by fp64 pipe on SM sub-partition 0",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 12,
-	"id"       : 100663398,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fp64_pipe_s1",
-	"short_description": "inst_executed_fp64_pipe_s1",
-	"long_description": "Number of warp instructions executed by fp64 pipe on SM sub-partition 1",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 13,
-	"id"       : 100663399,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fp64_pipe_s2",
-	"short_description": "inst_executed_fp64_pipe_s2",
-	"long_description": "Number of warp instructions executed by fp64 pipe on SM sub-partition 2",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 14,
-	"id"       : 100663400,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fp64_pipe_s3",
-	"short_description": "inst_executed_fp64_pipe_s3",
-	"long_description": "Number of warp instructions executed by fp64 pipe on SM sub-partition 3",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 15,
-	"id"       : 100663401,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fma_pipe_s0",
-	"short_description": "inst_executed_fma_pipe_s0",
-	"long_description": "Number of warp instructions executed by fma pipe on SM sub-partition 0",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 16,
-	"id"       : 100663402,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fma_pipe_s1",
-	"short_description": "inst_executed_fma_pipe_s1",
-	"long_description": "Number of warp instructions executed by fma pipe on SM sub-partition 1",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 17,
-	"id"       : 100663403,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fma_pipe_s2",
-	"short_description": "inst_executed_fma_pipe_s2",
-	"long_description": "Number of warp instructions executed by fma pipe on SM sub-partition 2",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 18,
-	"id"       : 100663404,
-	"domain_id"       : 20971522,
-	"name":       "inst_executed_fma_pipe_s3",
-	"short_description": "inst_executed_fma_pipe_s3",
-	"long_description": "Number of warp instructions executed by fma pipe on SM sub-partition 3",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 19,
-	"id"       : 100663387,
-	"domain_id"       : 20971522,
-	"name":       "shared_ld_bank_conflict",
-	"short_description": "Shared load bank conflict",
-	"long_description": "Number of shared load bank conflict generated when the addresses for two or more shared memory load requests fall in the same memory bank.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 20,
-	"id"       : 100663388,
-	"domain_id"       : 20971522,
-	"name":       "shared_st_bank_conflict",
-	"short_description": "Shared store bank conflict",
-	"long_description": "Number of shared store bank conflict generated when the addresses for two or more shared memory store requests fall in the same memory bank.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 21,
-	"id"       : 100663405,
-	"domain_id"       : 20971522,
-	"name":       "tensor_pipe_active_cycles_s0",
-	"short_description": "tensor_pipe_active_cycles_s0",
-	"long_description": "Number of cycles where tensor pipe was active on  SM sub-partition 0",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 22,
-	"id"       : 100663406,
-	"domain_id"       : 20971522,
-	"name":       "tensor_pipe_active_cycles_s1",
-	"short_description": "tensor_pipe_active_cycles_s1",
-	"long_description": "Number of cycles where tensor pipe was active on  SM sub-partition 1",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 23,
-	"id"       : 100663407,
-	"domain_id"       : 20971522,
-	"name":       "tensor_pipe_active_cycles_s2",
-	"short_description": "tensor_pipe_active_cycles_s2",
-	"long_description": "Number of cycles where tensor pipe was active on  SM sub-partition 2",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 24,
-	"id"       : 100663408,
-	"domain_id"       : 20971522,
-	"name":       "tensor_pipe_active_cycles_s3",
-	"short_description": "tensor_pipe_active_cycles_s3",
-	"long_description": "Number of cycles where tensor pipe was active on  SM sub-partition 3",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 1,
-	"id"       : 100663301,
-	"domain_id"       : 20971545,
-	"name":       "fb_subp0_read_sectors",
-	"short_description": "fb subp0 read sectors",
-	"long_description": "Number of DRAM read requests to sub partition 0, increments by 1 for 32 byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_MEMORY"
-},
-{
-	"event": 2,
-	"id"       : 100663302,
-	"domain_id"       : 20971545,
-	"name":       "fb_subp1_read_sectors",
-	"short_description": "fb subp1 read sectors",
-	"long_description": "Number of DRAM read requests to sub partition 1, increments by 1 for 32 byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_MEMORY"
-},
-{
-	"event": 3,
-	"id"       : 100663303,
-	"domain_id"       : 20971545,
-	"name":       "fb_subp0_write_sectors",
-	"short_description": "fb subp0 write sectors",
-	"long_description": "Number of DRAM write requests to sub partition 0, increments by 1 for 32 byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_MEMORY"
-},
-{
-	"event": 4,
-	"id"       : 100663304,
-	"domain_id"       : 20971545,
-	"name":       "fb_subp1_write_sectors",
-	"short_description": "fb subp1 write sectors",
-	"long_description": "Number of DRAM write requests to sub partition 1, increments by 1 for 32 byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_MEMORY"
-},
-{
-	"event": 1,
-	"id"       : 100663370,
-	"domain_id"       : 20971553,
-	"name":       "active_cycles",
-	"short_description": "Active cycles",
-	"long_description": "Number of cycles a multiprocessor has at least one active warp",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 2,
-	"id"       : 100663371,
-	"domain_id"       : 20971553,
-	"name":       "active_warps",
-	"short_description": "Active warps",
-	"long_description": "Accumulated number of active warps per cycle. For every cycle it increments by the number of active warps in the cycle which can be in the range 0 to 64.",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 3,
-	"id"       : 100663356,
-	"domain_id"       : 20971553,
-	"name":       "prof_trigger_00",
-	"short_description": "pmtrig0",
-	"long_description": "Number of pmtrig instructions executed where Imm16 & 0x0001",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 4,
-	"id"       : 100663357,
-	"domain_id"       : 20971553,
-	"name":       "prof_trigger_01",
-	"short_description": "pmtrig1",
-	"long_description": "Number of pmtrig instructions executed where Imm16 & 0x0002",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 5,
-	"id"       : 100663358,
-	"domain_id"       : 20971553,
-	"name":       "prof_trigger_02",
-	"short_description": "pmtrig2",
-	"long_description": "Number of pmtrig instructions executed where Imm16 & 0x0004",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 6,
-	"id"       : 100663359,
-	"domain_id"       : 20971553,
-	"name":       "prof_trigger_03",
-	"short_description": "pmtrig3",
-	"long_description": "Number of pmtrig instructions executed where Imm16 & 0x0008",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 7,
-	"id"       : 100663360,
-	"domain_id"       : 20971553,
-	"name":       "prof_trigger_04",
-	"short_description": "pmtrig4",
-	"long_description": "Number of pmtrig instructions executed where Imm16 & 0x0010",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 8,
-	"id"       : 100663361,
-	"domain_id"       : 20971553,
-	"name":       "prof_trigger_05",
-	"short_description": "pmtrig5",
-	"long_description": "Number of pmtrig instructions executed where Imm16 & 0x0020",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 9,
-	"id"       : 100663362,
-	"domain_id"       : 20971553,
-	"name":       "prof_trigger_06",
-	"short_description": "pmtrig6",
-	"long_description": "Number of pmtrig instructions executed where Imm16 & 0x0040",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 10,
-	"id"       : 100663363,
-	"domain_id"       : 20971553,
-	"name":       "prof_trigger_07",
-	"short_description": "pmtrig7",
-	"long_description": "Number of pmtrig instructions executed where Imm16 & 0x0080",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 11,
-	"id"       : 100663365,
-	"domain_id"       : 20971553,
-	"name":       "inst_issued0",
-	"short_description": "Instruction not issued",
-	"long_description": "Number of cycles that did not issue any instruction, increments per warp.",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 12,
-	"id"       : 100663366,
-	"domain_id"       : 20971553,
-	"name":       "inst_issued1",
-	"short_description": "Instruction issued",
-	"long_description": "Number of cycles that issued single instruction, increments per warp.",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 13,
-	"id"       : 100663367,
-	"domain_id"       : 20971553,
-	"name":       "inst_executed",
-	"short_description": "Instruction executed",
-	"long_description": "Number of instructions executed per warp.",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 14,
-	"id"       : 100663368,
-	"domain_id"       : 20971553,
-	"name":       "thread_inst_executed",
-	"short_description": "Thread_instruction executed",
-	"long_description": "Number of instructions executed by the active threads. For each instruction it increments by number of threads, including predicated-off threads, that execute the instruction. It does not include replays.",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 15,
-	"id"       : 100663369,
-	"domain_id"       : 20971553,
-	"name":       "not_predicated_off_thread_inst_executed",
-	"short_description": "Not predicated off thread instruction executed",
-	"long_description": "Number of instructions executed by the active and not predicated off threads. For each instruction it increments by number of active and non-predicated off threads that execute the instruction. It does not include replays.",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 16,
-	"id"       : 100663377,
-	"domain_id"       : 20971553,
-	"name":       "generic_load",
-	"short_description": "Generic load",
-	"long_description": "Number of LD instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 17,
-	"id"       : 100663378,
-	"domain_id"       : 20971553,
-	"name":       "generic_store",
-	"short_description": "Generic store",
-	"long_description": "Number of ST instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 18,
-	"id"       : 100663383,
-	"domain_id"       : 20971553,
-	"name":       "atom_count",
-	"short_description": "Atom count",
-	"long_description": "Number of ATOM instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 19,
-	"id"       : 100663389,
-	"domain_id"       : 20971553,
-	"name":       "global_atom_cas",
-	"short_description": "Global atom.cas count",
-	"long_description": "Number of ATOM.CAS instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 20,
-	"id"       : 100663384,
-	"domain_id"       : 20971553,
-	"name":       "gred_count",
-	"short_description": "Gred count",
-	"long_description": "Number of RED instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 21,
-	"id"       : 100663379,
-	"domain_id"       : 20971553,
-	"name":       "global_load",
-	"short_description": "Global load",
-	"long_description": "Number of LDG instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 22,
-	"id"       : 100663380,
-	"domain_id"       : 20971553,
-	"name":       "global_store",
-	"short_description": "Global store",
-	"long_description": "Number of STG instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 23,
-	"id"       : 100663381,
-	"domain_id"       : 20971553,
-	"name":       "local_load",
-	"short_description": "Local load",
-	"long_description": "Number of LDL instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 24,
-	"id"       : 100663382,
-	"domain_id"       : 20971553,
-	"name":       "local_store",
-	"short_description": "Local store",
-	"long_description": "Number of STL instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 25,
-	"id"       : 100663372,
-	"domain_id"       : 20971553,
-	"name":       "shared_atom",
-	"short_description": "Shared atom",
-	"long_description": "Number of shared ATOMS instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 26,
-	"id"       : 100663374,
-	"domain_id"       : 20971553,
-	"name":       "shared_atom_cas",
-	"short_description": "Shared atom cas",
-	"long_description": "Number of shared ATOMS.CAS instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 27,
-	"id"       : 100663375,
-	"domain_id"       : 20971553,
-	"name":       "shared_load",
-	"short_description": "Shared load",
-	"long_description": "Number of LDS instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 28,
-	"id"       : 100663376,
-	"domain_id"       : 20971553,
-	"name":       "shared_store",
-	"short_description": "Shared store",
-	"long_description": "Number of STS instructions executed",
-	"category"  : "CUPTI_EVENT_CATEGORY_INSTRUCTION"
-},
-{
-	"event": 29,
-	"id"       : 100663364,
-	"domain_id"       : 20971553,
-	"name":       "warps_launched",
-	"short_description": "warps_launched",
-	"long_description": "Number of warps launched",
-	"category"  : "CUPTI_EVENT_CATEGORY_MEMORY"
-},
-{
-	"event": 30,
-	"id"       : 100663373,
-	"domain_id"       : 20971553,
-	"name":       "sm_cta_launched",
-	"short_description": "sm_cta_launched",
-	"long_description": "Number of ctas launched",
-	"category"  : "CUPTI_EVENT_CATEGORY_MEMORY"
-},
-{
-	"event": 1,
-	"id"       : 100663305,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_write_sector_misses",
-	"short_description": "l2 subp0 write sector misses",
-	"long_description": "Number of write requests sent to DRAM from slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 2,
-	"id"       : 100663306,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_write_sector_misses",
-	"short_description": "l2 subp1 write sector misses",
-	"long_description": "Number of write requests sent to DRAM from slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 3,
-	"id"       : 100663309,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_read_sector_misses",
-	"short_description": "l2 subp0 read sector misses",
-	"long_description": "Number of read requests sent to DRAM from slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 4,
-	"id"       : 100663310,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_read_sector_misses",
-	"short_description": "l2 subp1 read sector misses",
-	"long_description": "Number of read requests sent to DRAM from slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 5,
-	"id"       : 100663313,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_read_tex_sector_queries",
-	"short_description": "l2 subp0 read tex sector queries",
-	"long_description": "Number of read requests from Texture cache to slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 6,
-	"id"       : 100663317,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_write_tex_sector_queries",
-	"short_description": "l2 subp0 write tex sector queries",
-	"long_description": "Number of write requests from Texture cache to slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 7,
-	"id"       : 100663321,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_read_tex_hit_sectors",
-	"short_description": "l2 subp0 read tex hit sectors",
-	"long_description": "Number of read requests from Texture cache that hit in slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 8,
-	"id"       : 100663325,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_write_tex_hit_sectors",
-	"short_description": "l2 subp0 write tex hit sectors",
-	"long_description": "Number of write requests from Texture cache that hit in slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 9,
-	"id"       : 100663337,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_read_sysmem_sector_queries",
-	"short_description": "l2_subp0_read_sysmem_sector_queries",
-	"long_description": "Number of system memory read requests to slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 10,
-	"id"       : 100663341,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_write_sysmem_sector_queries",
-	"short_description": "l2_subp0_write_sysmem_sector_queries",
-	"long_description": "Number of system memory write requests to slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 11,
-	"id"       : 100663329,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_total_read_sector_queries",
-	"short_description": "l2_subp0_total_read_sector_queries",
-	"long_description": "Total read requests to slice 0 of L2 cache. This includes requests from  L1, Texture cache, system memory. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 12,
-	"id"       : 100663333,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp0_total_write_sector_queries",
-	"short_description": "l2_subp0_total_write_sector_queries",
-	"long_description": "Total write requests to slice 0 of L2 cache. This includes requests from  L1, Texture cache, system memory. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 13,
-	"id"       : 100663314,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_read_tex_sector_queries",
-	"short_description": "l2 subp1 read tex sector queries",
-	"long_description": "Number of read requests from Texture cache to slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 14,
-	"id"       : 100663318,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_write_tex_sector_queries",
-	"short_description": "l2 subp1 write tex sector queries",
-	"long_description": "Number of write requests from Texture cache to slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 15,
-	"id"       : 100663322,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_read_tex_hit_sectors",
-	"short_description": "l2 subp1 read tex hit sectors",
-	"long_description": "Number of read requests from Texture cache that hit in slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 16,
-	"id"       : 100663326,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_write_tex_hit_sectors",
-	"short_description": "l2 subp1 write tex hit sectors",
-	"long_description": "Number of write requests from Texture cache that hit in slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 17,
-	"id"       : 100663338,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_read_sysmem_sector_queries",
-	"short_description": "l2_subp1_read_sysmem_sector_queries",
-	"long_description": "Number of system memory read requests to slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 18,
-	"id"       : 100663342,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_write_sysmem_sector_queries",
-	"short_description": "l2_subp1_write_sysmem_sector_queries",
-	"long_description": "Number of system memory write requests to slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 19,
-	"id"       : 100663330,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_total_read_sector_queries",
-	"short_description": "l2_subp1_total_read_sector_queries",
-	"long_description": "Total read requests to slice 1 of L2 cache. This includes requests from  L1, Texture cache, system memory. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 20,
-	"id"       : 100663334,
-	"domain_id"       : 20971547,
-	"name":       "l2_subp1_total_write_sector_queries",
-	"short_description": "l2_subp1_total_write_sector_queries",
-	"long_description": "Total write requests to slice 1 of L2 cache. This includes requests from  L1, Texture cache, system memory. This increments by 1 for each 32-byte access.",
-	"category"  : "CUPTI_EVENT_CATEGORY_CACHE"
-},
-{
-	"event": 1,
-	"id"       : 100663409,
-	"domain_id"       : 20971540,
-	"name":       "pcie_tx_active_pulse",
-	"short_description": "pcie_tx_active_pulse",
-	"long_description": "Number of pulses for which data transmission through PCIe was active.",
-	"category"  : "CUPTI_EVENT_CATEGORY_MEMORY"
-},
-{
-	"event": 2,
-	"id"       : 100663410,
-	"domain_id"       : 20971540,
-	"name":       "pcie_rx_active_pulse",
-	"short_description": "pcie_rx_active_pulse",
-	"long_description": "Number of pulses for which data receive through PCIe was active.",
-	"category"  : "CUPTI_EVENT_CATEGORY_MEMORY"
-},
-{
-	"event": 1,
-	"id"       : 100663412,
-	"domain_id"       : 20971542,
-	"name":       "elapsed_cycles_sys",
-	"short_description": "elapsed_cycles_sys",
-	"long_description": "elapsed system clocks"
-},
-{
-	"event": 2,
-	"id"       : 100663411,
-	"domain_id"       : 20971542,
-	"name":       "active_cycles_sys",
-	"short_description": "active_cycles_sys",
-	"long_description": "Number of cycles the system is active with workload"
-}
+  {
+    "event": 1,
+    "id": 100663390,
+    "domain_id": 20971522,
+    "name": "active_cycles_pm",
+    "short_description": "active cycles pm",
+    "long_description": "Number of cycles a multiprocessor has at least one active warp.",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 2,
+    "id": 100663391,
+    "domain_id": 20971522,
+    "name": "active_warps_pm",
+    "short_description": "active warps pm",
+    "long_description": "Accumulated number of active warps per cycle. For every cycle it increments by the number of active warps in the cycle which can be in the range 0 to 64.",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 3,
+    "id": 100663385,
+    "domain_id": 20971522,
+    "name": "shared_ld_transactions",
+    "short_description": "shared_ld_transactions",
+    "long_description": "Number of transactions for shared load accesses. Maximum transaction size in volta is 128 bytes, any warp accessing more than 128 bytes will cause multiple transactions for a shared load instruction. This also includes extra transactions caused by shared bank conflicts.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 4,
+    "id": 100663386,
+    "domain_id": 20971522,
+    "name": "shared_st_transactions",
+    "short_description": "shared_st_transactions",
+    "long_description": "Number of transactions for shared store accesses. Maximum transaction size in volta is 128 bytes, any warp accessing more than 128 bytes will cause multiple transactions for a shared store instruction. This also includes extra transactions caused by shared bank conflicts.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 5,
+    "id": 100663345,
+    "domain_id": 20971522,
+    "name": "elapsed_cycles_sm",
+    "short_description": "elapsed clocks",
+    "long_description": "elapsed clocks",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 6,
+    "id": 100663392,
+    "domain_id": 20971522,
+    "name": "elapsed_cycles_pm",
+    "short_description": "elapsed clocks on SM",
+    "long_description": "elapsed clocks on SM",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 7,
+    "id": 100663393,
+    "domain_id": 20971522,
+    "name": "inst_executed_fp16_pipe_s0",
+    "short_description": "inst_executed_fp16_pipe_s0",
+    "long_description": "Number of warp instructions executed by fp16 pipe on SM sub-partition 0.",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 8,
+    "id": 100663394,
+    "domain_id": 20971522,
+    "name": "inst_executed_fp16_pipe_s1",
+    "short_description": "inst_executed_fp16_pipe_s1",
+    "long_description": "Number of warp instructions executed by fp16 pipe on SM sub-partition 1",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 9,
+    "id": 100663395,
+    "domain_id": 20971522,
+    "name": "inst_executed_fp16_pipe_s2",
+    "short_description": "inst_executed_fp16_pipe_s2",
+    "long_description": "Number of warp instructions executed by fp16 pipe on SM sub-partition 2",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 10,
+    "id": 100663396,
+    "domain_id": 20971522,
+    "name": "inst_executed_fp16_pipe_s3",
+    "short_description": "inst_executed_fp16_pipe_s3",
+    "long_description": "Number of warp instructions executed by fp16 pipe on SM sub-partition 3",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 11,
+    "id": 100663397,
+    "domain_id": 20971522,
+    "name": "inst_executed_fp64_pipe_s0",
+    "short_description": "inst_executed_fp64_pipe_s0",
+    "long_description": "Number of warp instructions executed by fp64 pipe on SM sub-partition 0",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 12,
+    "id": 100663398,
+    "domain_id": 20971522,
+    "name": "inst_executed_fp64_pipe_s1",
+    "short_description": "inst_executed_fp64_pipe_s1",
+    "long_description": "Number of warp instructions executed by fp64 pipe on SM sub-partition 1",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 13,
+    "id": 100663399,
+    "domain_id": 20971522,
+    "name": "inst_executed_fp64_pipe_s2",
+    "short_description": "inst_executed_fp64_pipe_s2",
+    "long_description": "Number of warp instructions executed by fp64 pipe on SM sub-partition 2",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 14,
+    "id": 100663400,
+    "domain_id": 20971522,
+    "name": "inst_executed_fp64_pipe_s3",
+    "short_description": "inst_executed_fp64_pipe_s3",
+    "long_description": "Number of warp instructions executed by fp64 pipe on SM sub-partition 3",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 15,
+    "id": 100663401,
+    "domain_id": 20971522,
+    "name": "inst_executed_fma_pipe_s0",
+    "short_description": "inst_executed_fma_pipe_s0",
+    "long_description": "Number of warp instructions executed by fma pipe on SM sub-partition 0",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 16,
+    "id": 100663402,
+    "domain_id": 20971522,
+    "name": "inst_executed_fma_pipe_s1",
+    "short_description": "inst_executed_fma_pipe_s1",
+    "long_description": "Number of warp instructions executed by fma pipe on SM sub-partition 1",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 17,
+    "id": 100663403,
+    "domain_id": 20971522,
+    "name": "inst_executed_fma_pipe_s2",
+    "short_description": "inst_executed_fma_pipe_s2",
+    "long_description": "Number of warp instructions executed by fma pipe on SM sub-partition 2",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 18,
+    "id": 100663404,
+    "domain_id": 20971522,
+    "name": "inst_executed_fma_pipe_s3",
+    "short_description": "inst_executed_fma_pipe_s3",
+    "long_description": "Number of warp instructions executed by fma pipe on SM sub-partition 3",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 19,
+    "id": 100663387,
+    "domain_id": 20971522,
+    "name": "shared_ld_bank_conflict",
+    "short_description": "Shared load bank conflict",
+    "long_description": "Number of shared load bank conflict generated when the addresses for two or more shared memory load requests fall in the same memory bank.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 20,
+    "id": 100663388,
+    "domain_id": 20971522,
+    "name": "shared_st_bank_conflict",
+    "short_description": "Shared store bank conflict",
+    "long_description": "Number of shared store bank conflict generated when the addresses for two or more shared memory store requests fall in the same memory bank.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 21,
+    "id": 100663405,
+    "domain_id": 20971522,
+    "name": "tensor_pipe_active_cycles_s0",
+    "short_description": "tensor_pipe_active_cycles_s0",
+    "long_description": "Number of cycles where tensor pipe was active on  SM sub-partition 0",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 22,
+    "id": 100663406,
+    "domain_id": 20971522,
+    "name": "tensor_pipe_active_cycles_s1",
+    "short_description": "tensor_pipe_active_cycles_s1",
+    "long_description": "Number of cycles where tensor pipe was active on  SM sub-partition 1",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 23,
+    "id": 100663407,
+    "domain_id": 20971522,
+    "name": "tensor_pipe_active_cycles_s2",
+    "short_description": "tensor_pipe_active_cycles_s2",
+    "long_description": "Number of cycles where tensor pipe was active on  SM sub-partition 2",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 24,
+    "id": 100663408,
+    "domain_id": 20971522,
+    "name": "tensor_pipe_active_cycles_s3",
+    "short_description": "tensor_pipe_active_cycles_s3",
+    "long_description": "Number of cycles where tensor pipe was active on  SM sub-partition 3",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 1,
+    "id": 100663301,
+    "domain_id": 20971545,
+    "name": "fb_subp0_read_sectors",
+    "short_description": "fb subp0 read sectors",
+    "long_description": "Number of DRAM read requests to sub partition 0, increments by 1 for 32 byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_MEMORY"
+  },
+  {
+    "event": 2,
+    "id": 100663302,
+    "domain_id": 20971545,
+    "name": "fb_subp1_read_sectors",
+    "short_description": "fb subp1 read sectors",
+    "long_description": "Number of DRAM read requests to sub partition 1, increments by 1 for 32 byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_MEMORY"
+  },
+  {
+    "event": 3,
+    "id": 100663303,
+    "domain_id": 20971545,
+    "name": "fb_subp0_write_sectors",
+    "short_description": "fb subp0 write sectors",
+    "long_description": "Number of DRAM write requests to sub partition 0, increments by 1 for 32 byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_MEMORY"
+  },
+  {
+    "event": 4,
+    "id": 100663304,
+    "domain_id": 20971545,
+    "name": "fb_subp1_write_sectors",
+    "short_description": "fb subp1 write sectors",
+    "long_description": "Number of DRAM write requests to sub partition 1, increments by 1 for 32 byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_MEMORY"
+  },
+  {
+    "event": 1,
+    "id": 100663370,
+    "domain_id": 20971553,
+    "name": "active_cycles",
+    "short_description": "Active cycles",
+    "long_description": "Number of cycles a multiprocessor has at least one active warp",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 2,
+    "id": 100663371,
+    "domain_id": 20971553,
+    "name": "active_warps",
+    "short_description": "Active warps",
+    "long_description": "Accumulated number of active warps per cycle. For every cycle it increments by the number of active warps in the cycle which can be in the range 0 to 64.",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 3,
+    "id": 100663356,
+    "domain_id": 20971553,
+    "name": "prof_trigger_00",
+    "short_description": "pmtrig0",
+    "long_description": "Number of pmtrig instructions executed where Imm16 & 0x0001",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 4,
+    "id": 100663357,
+    "domain_id": 20971553,
+    "name": "prof_trigger_01",
+    "short_description": "pmtrig1",
+    "long_description": "Number of pmtrig instructions executed where Imm16 & 0x0002",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 5,
+    "id": 100663358,
+    "domain_id": 20971553,
+    "name": "prof_trigger_02",
+    "short_description": "pmtrig2",
+    "long_description": "Number of pmtrig instructions executed where Imm16 & 0x0004",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 6,
+    "id": 100663359,
+    "domain_id": 20971553,
+    "name": "prof_trigger_03",
+    "short_description": "pmtrig3",
+    "long_description": "Number of pmtrig instructions executed where Imm16 & 0x0008",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 7,
+    "id": 100663360,
+    "domain_id": 20971553,
+    "name": "prof_trigger_04",
+    "short_description": "pmtrig4",
+    "long_description": "Number of pmtrig instructions executed where Imm16 & 0x0010",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 8,
+    "id": 100663361,
+    "domain_id": 20971553,
+    "name": "prof_trigger_05",
+    "short_description": "pmtrig5",
+    "long_description": "Number of pmtrig instructions executed where Imm16 & 0x0020",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 9,
+    "id": 100663362,
+    "domain_id": 20971553,
+    "name": "prof_trigger_06",
+    "short_description": "pmtrig6",
+    "long_description": "Number of pmtrig instructions executed where Imm16 & 0x0040",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 10,
+    "id": 100663363,
+    "domain_id": 20971553,
+    "name": "prof_trigger_07",
+    "short_description": "pmtrig7",
+    "long_description": "Number of pmtrig instructions executed where Imm16 & 0x0080",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 11,
+    "id": 100663365,
+    "domain_id": 20971553,
+    "name": "inst_issued0",
+    "short_description": "Instruction not issued",
+    "long_description": "Number of cycles that did not issue any instruction, increments per warp.",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 12,
+    "id": 100663366,
+    "domain_id": 20971553,
+    "name": "inst_issued1",
+    "short_description": "Instruction issued",
+    "long_description": "Number of cycles that issued single instruction, increments per warp.",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 13,
+    "id": 100663367,
+    "domain_id": 20971553,
+    "name": "inst_executed",
+    "short_description": "Instruction executed",
+    "long_description": "Number of instructions executed per warp.",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 14,
+    "id": 100663368,
+    "domain_id": 20971553,
+    "name": "thread_inst_executed",
+    "short_description": "Thread_instruction executed",
+    "long_description": "Number of instructions executed by the active threads. For each instruction it increments by number of threads, including predicated-off threads, that execute the instruction. It does not include replays.",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 15,
+    "id": 100663369,
+    "domain_id": 20971553,
+    "name": "not_predicated_off_thread_inst_executed",
+    "short_description": "Not predicated off thread instruction executed",
+    "long_description": "Number of instructions executed by the active and not predicated off threads. For each instruction it increments by number of active and non-predicated off threads that execute the instruction. It does not include replays.",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 16,
+    "id": 100663377,
+    "domain_id": 20971553,
+    "name": "generic_load",
+    "short_description": "Generic load",
+    "long_description": "Number of LD instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 17,
+    "id": 100663378,
+    "domain_id": 20971553,
+    "name": "generic_store",
+    "short_description": "Generic store",
+    "long_description": "Number of ST instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 18,
+    "id": 100663383,
+    "domain_id": 20971553,
+    "name": "atom_count",
+    "short_description": "Atom count",
+    "long_description": "Number of ATOM instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 19,
+    "id": 100663389,
+    "domain_id": 20971553,
+    "name": "global_atom_cas",
+    "short_description": "Global atom.cas count",
+    "long_description": "Number of ATOM.CAS instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 20,
+    "id": 100663384,
+    "domain_id": 20971553,
+    "name": "gred_count",
+    "short_description": "Gred count",
+    "long_description": "Number of RED instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 21,
+    "id": 100663379,
+    "domain_id": 20971553,
+    "name": "global_load",
+    "short_description": "Global load",
+    "long_description": "Number of LDG instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 22,
+    "id": 100663380,
+    "domain_id": 20971553,
+    "name": "global_store",
+    "short_description": "Global store",
+    "long_description": "Number of STG instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 23,
+    "id": 100663381,
+    "domain_id": 20971553,
+    "name": "local_load",
+    "short_description": "Local load",
+    "long_description": "Number of LDL instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 24,
+    "id": 100663382,
+    "domain_id": 20971553,
+    "name": "local_store",
+    "short_description": "Local store",
+    "long_description": "Number of STL instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 25,
+    "id": 100663372,
+    "domain_id": 20971553,
+    "name": "shared_atom",
+    "short_description": "Shared atom",
+    "long_description": "Number of shared ATOMS instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 26,
+    "id": 100663374,
+    "domain_id": 20971553,
+    "name": "shared_atom_cas",
+    "short_description": "Shared atom cas",
+    "long_description": "Number of shared ATOMS.CAS instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 27,
+    "id": 100663375,
+    "domain_id": 20971553,
+    "name": "shared_load",
+    "short_description": "Shared load",
+    "long_description": "Number of LDS instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 28,
+    "id": 100663376,
+    "domain_id": 20971553,
+    "name": "shared_store",
+    "short_description": "Shared store",
+    "long_description": "Number of STS instructions executed",
+    "category": "CUPTI_EVENT_CATEGORY_INSTRUCTION"
+  },
+  {
+    "event": 29,
+    "id": 100663364,
+    "domain_id": 20971553,
+    "name": "warps_launched",
+    "short_description": "warps_launched",
+    "long_description": "Number of warps launched",
+    "category": "CUPTI_EVENT_CATEGORY_MEMORY"
+  },
+  {
+    "event": 30,
+    "id": 100663373,
+    "domain_id": 20971553,
+    "name": "sm_cta_launched",
+    "short_description": "sm_cta_launched",
+    "long_description": "Number of ctas launched",
+    "category": "CUPTI_EVENT_CATEGORY_MEMORY"
+  },
+  {
+    "event": 1,
+    "id": 100663305,
+    "domain_id": 20971547,
+    "name": "l2_subp0_write_sector_misses",
+    "short_description": "l2 subp0 write sector misses",
+    "long_description": "Number of write requests sent to DRAM from slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 2,
+    "id": 100663306,
+    "domain_id": 20971547,
+    "name": "l2_subp1_write_sector_misses",
+    "short_description": "l2 subp1 write sector misses",
+    "long_description": "Number of write requests sent to DRAM from slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 3,
+    "id": 100663309,
+    "domain_id": 20971547,
+    "name": "l2_subp0_read_sector_misses",
+    "short_description": "l2 subp0 read sector misses",
+    "long_description": "Number of read requests sent to DRAM from slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 4,
+    "id": 100663310,
+    "domain_id": 20971547,
+    "name": "l2_subp1_read_sector_misses",
+    "short_description": "l2 subp1 read sector misses",
+    "long_description": "Number of read requests sent to DRAM from slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 5,
+    "id": 100663313,
+    "domain_id": 20971547,
+    "name": "l2_subp0_read_tex_sector_queries",
+    "short_description": "l2 subp0 read tex sector queries",
+    "long_description": "Number of read requests from Texture cache to slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 6,
+    "id": 100663317,
+    "domain_id": 20971547,
+    "name": "l2_subp0_write_tex_sector_queries",
+    "short_description": "l2 subp0 write tex sector queries",
+    "long_description": "Number of write requests from Texture cache to slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 7,
+    "id": 100663321,
+    "domain_id": 20971547,
+    "name": "l2_subp0_read_tex_hit_sectors",
+    "short_description": "l2 subp0 read tex hit sectors",
+    "long_description": "Number of read requests from Texture cache that hit in slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 8,
+    "id": 100663325,
+    "domain_id": 20971547,
+    "name": "l2_subp0_write_tex_hit_sectors",
+    "short_description": "l2 subp0 write tex hit sectors",
+    "long_description": "Number of write requests from Texture cache that hit in slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 9,
+    "id": 100663337,
+    "domain_id": 20971547,
+    "name": "l2_subp0_read_sysmem_sector_queries",
+    "short_description": "l2_subp0_read_sysmem_sector_queries",
+    "long_description": "Number of system memory read requests to slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 10,
+    "id": 100663341,
+    "domain_id": 20971547,
+    "name": "l2_subp0_write_sysmem_sector_queries",
+    "short_description": "l2_subp0_write_sysmem_sector_queries",
+    "long_description": "Number of system memory write requests to slice 0 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 11,
+    "id": 100663329,
+    "domain_id": 20971547,
+    "name": "l2_subp0_total_read_sector_queries",
+    "short_description": "l2_subp0_total_read_sector_queries",
+    "long_description": "Total read requests to slice 0 of L2 cache. This includes requests from  L1, Texture cache, system memory. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 12,
+    "id": 100663333,
+    "domain_id": 20971547,
+    "name": "l2_subp0_total_write_sector_queries",
+    "short_description": "l2_subp0_total_write_sector_queries",
+    "long_description": "Total write requests to slice 0 of L2 cache. This includes requests from  L1, Texture cache, system memory. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 13,
+    "id": 100663314,
+    "domain_id": 20971547,
+    "name": "l2_subp1_read_tex_sector_queries",
+    "short_description": "l2 subp1 read tex sector queries",
+    "long_description": "Number of read requests from Texture cache to slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 14,
+    "id": 100663318,
+    "domain_id": 20971547,
+    "name": "l2_subp1_write_tex_sector_queries",
+    "short_description": "l2 subp1 write tex sector queries",
+    "long_description": "Number of write requests from Texture cache to slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 15,
+    "id": 100663322,
+    "domain_id": 20971547,
+    "name": "l2_subp1_read_tex_hit_sectors",
+    "short_description": "l2 subp1 read tex hit sectors",
+    "long_description": "Number of read requests from Texture cache that hit in slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 16,
+    "id": 100663326,
+    "domain_id": 20971547,
+    "name": "l2_subp1_write_tex_hit_sectors",
+    "short_description": "l2 subp1 write tex hit sectors",
+    "long_description": "Number of write requests from Texture cache that hit in slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 17,
+    "id": 100663338,
+    "domain_id": 20971547,
+    "name": "l2_subp1_read_sysmem_sector_queries",
+    "short_description": "l2_subp1_read_sysmem_sector_queries",
+    "long_description": "Number of system memory read requests to slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 18,
+    "id": 100663342,
+    "domain_id": 20971547,
+    "name": "l2_subp1_write_sysmem_sector_queries",
+    "short_description": "l2_subp1_write_sysmem_sector_queries",
+    "long_description": "Number of system memory write requests to slice 1 of L2 cache. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 19,
+    "id": 100663330,
+    "domain_id": 20971547,
+    "name": "l2_subp1_total_read_sector_queries",
+    "short_description": "l2_subp1_total_read_sector_queries",
+    "long_description": "Total read requests to slice 1 of L2 cache. This includes requests from  L1, Texture cache, system memory. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 20,
+    "id": 100663334,
+    "domain_id": 20971547,
+    "name": "l2_subp1_total_write_sector_queries",
+    "short_description": "l2_subp1_total_write_sector_queries",
+    "long_description": "Total write requests to slice 1 of L2 cache. This includes requests from  L1, Texture cache, system memory. This increments by 1 for each 32-byte access.",
+    "category": "CUPTI_EVENT_CATEGORY_CACHE"
+  },
+  {
+    "event": 1,
+    "id": 100663409,
+    "domain_id": 20971540,
+    "name": "pcie_tx_active_pulse",
+    "short_description": "pcie_tx_active_pulse",
+    "long_description": "Number of pulses for which data transmission through PCIe was active.",
+    "category": "CUPTI_EVENT_CATEGORY_MEMORY"
+  },
+  {
+    "event": 2,
+    "id": 100663410,
+    "domain_id": 20971540,
+    "name": "pcie_rx_active_pulse",
+    "short_description": "pcie_rx_active_pulse",
+    "long_description": "Number of pulses for which data receive through PCIe was active.",
+    "category": "CUPTI_EVENT_CATEGORY_MEMORY"
+  },
+  {
+    "event": 1,
+    "id": 100663412,
+    "domain_id": 20971542,
+    "name": "elapsed_cycles_sys",
+    "short_description": "elapsed_cycles_sys",
+    "long_description": "elapsed system clocks"
+  },
+  {
+    "event": 2,
+    "id": 100663411,
+    "domain_id": 20971542,
+    "name": "active_cycles_sys",
+    "short_description": "active_cycles_sys",
+    "long_description": "Number of cycles the system is active with workload"
+  }
 ]

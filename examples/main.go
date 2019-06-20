@@ -68,7 +68,21 @@ func main() {
 		span, ctx := tracer.StartSpanFromContext(ctx, tracer.FULL_TRACE, "vector_add")
 		defer span.Finish()
 
-		cupti, err := cupti.New(cupti.Context(ctx))
+		cupti, err := cupti.New(
+			cupti.Context(ctx),
+			cupti.Activities(nil),
+			cupti.Callbacks([]string{
+				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020",
+				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000",
+				"CUPTI_CBID_RESOURCE_CONTEXT_CREATED",
+				"CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING",
+			}),
+			cupti.Events([]string{
+				"inst_executed",
+				"global_load",
+				"global_store",
+			},
+			))
 		if err != nil {
 			log.WithError(err).Error("failed to create new cupti context")
 			os.Exit(-1)

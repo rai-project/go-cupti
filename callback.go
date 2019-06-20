@@ -944,7 +944,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 			eventVal += int64(values[ii])
 		}
 
-		pp.Println(eventName, "  ", eventVal)
+		// pp.Println(eventName, "  ", eventVal)
 		span.LogFields(spanlog.Int64(eventName, eventVal))
 	}
 

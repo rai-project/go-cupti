@@ -22,24 +22,36 @@ func Context(ctx context.Context) Option {
 }
 
 func Activities(activities []string) Option {
+	if activities == nil {
+		activities = []string{}
+	}
 	return func(o *Options) {
 		o.activities = activities
 	}
 }
 
 func Domains(domains []string) Option {
+	if domains == nil {
+		domains = []string{}
+	}
 	return func(o *Options) {
 		o.domains = domains
 	}
 }
 
 func Callbacks(callbacks []string) Option {
+	if callbacks == nil {
+		callbacks = []string{}
+	}
 	return func(o *Options) {
 		o.callbacks = callbacks
 	}
 }
 
 func Events(events []string) Option {
+	if events == nil {
+		events = []string{}
+	}
 	return func(o *Options) {
 		o.events = events
 	}
