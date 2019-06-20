@@ -342,7 +342,7 @@ int enumMetrics(CUdevice dev) {
     printf("\t \"id\"       : %d,\n", metricData.Id.metricId);
     printf("\t \"name\":       \"%s\",\n", metricData.eventName);
     printf("\t \"short_description\": \"%s\",\n", metricData.shortDesc);
-    printf("\t \"long_description\"  = \"%s\",\n}\n", metricData.longDesc);
+    printf("\t \"long_description\" : \"%s\"\n},\n", metricData.longDesc);
   }
 
 Exit:
@@ -416,7 +416,7 @@ int main(int argc, char *argv[]) {
     // default is device 0
    // printf("Assuming default device id 0\n");
     deviceId = 0;
-  } 
+  }
   printf("[\n");
 
   // show events if no explicit flag is set
@@ -480,14 +480,16 @@ int main(int argc, char *argv[]) {
     /* if (domainIdArr[i] == domainId) { */
     /*     break; */
     /* } */
-    if (enumEvents(domainIdArr[i])) {
-      printf("enumEvents failed\n");
-      continue ;
-    }
+    // if (enumEvents(domainIdArr[i])) {
+    //   printf("enumEvents failed\n");
+    //   continue ;
+    // }
   }
   free(domainIdArr);
 
   }
+
+  enumMetrics(dev);
 
 Exit:
   cudaDeviceSynchronize();

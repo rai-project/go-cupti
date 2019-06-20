@@ -1,7 +1,7 @@
 #
 # Copyright 2011-2018 NVIDIA Corporation. All rights reserved
-# 
-INCLUDES=-I/usr/local/cuda/extra/CUPTI/include
+#
+INCLUDES=-I/usr/local/cuda/extras/CUPTI/include
 
 ifndef OS
  OS   := $(shell uname)
@@ -11,7 +11,7 @@ endif
 ifeq ($(OS),Windows_NT)
     LIB_PATH ?= ..\..\lib64
 else
-    LIB_PATH ?= /usr/local/cuda/extra/CUPTI/lib64
+    LIB_PATH ?= /usr/local/cuda/extras/CUPTI/lib64
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -23,7 +23,7 @@ else
         export DYLD_LIBRARY_PATH := $(DYLD_LIBRARY_PATH):$(LIB_PATH)
         LIBS= -Xlinker -framework -Xlinker cuda -L $(LIB_PATH) -lcupti
     else
-        export LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):/usr/local/cuda/extra/CUPTI/lib64
+        export LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):/usr/local/cuda/extras/CUPTI/lib64
         LIBS= -lcuda -L $(LIB_PATH) -lcupti
     endif
     OBJ = o

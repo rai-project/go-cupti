@@ -11,6 +11,7 @@ type Options struct {
 	domains        []string
 	callbacks      []string
 	events         []string
+	metrics        []string
 }
 
 type Option func(o *Options)
@@ -54,6 +55,28 @@ func Events(events []string) Option {
 	}
 	return func(o *Options) {
 		o.events = strUnion(events)
+		if len(o.events) == 0 {
+			return
+		}
+		// maybe this is too automated, but we depend on the following
+		// callbacks to run for events to work
+		extraCallbacks := []string{
+			"CUPTI_CBID_RESOURCE_CONTEXT_CREATED",
+			"CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING",
+		}
+		o.callbacks = strUnion(append(o.callbacks, extraCallbacks...))
+	}
+}
+
+func Metrics(metrics []string) Option {
+	if metrics == nil {
+		metrics = []string{}
+	}
+	return func(o *Options) {
+		o.metrics = strUnion(metrics)
+		if len(o.metrics) == 0 {
+			return
+		}
 		// maybe this is too automated, but we depend on the following
 		// callbacks to run for events to work
 		extraCallbacks := []string{

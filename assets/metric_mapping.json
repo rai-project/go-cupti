@@ -1,0 +1,1234 @@
+[
+  {
+    "metric": 1,
+    "id": 20971521,
+    "name": "inst_per_warp",
+    "short_description": "Instructions per warp",
+    "long_description": "Average number of instructions executed by each warp"
+  },
+  {
+    "metric": 2,
+    "id": 20971522,
+    "name": "branch_efficiency",
+    "short_description": "Branch Efficiency",
+    "long_description": "Ratio of branch instruction to sum of branch and divergent branch instruction"
+  },
+  {
+    "metric": 3,
+    "id": 20971523,
+    "name": "warp_execution_efficiency",
+    "short_description": "Warp Execution Efficiency",
+    "long_description": "Ratio of the average active threads per warp to the maximum number of threads per warp supported on a multiprocessor"
+  },
+  {
+    "metric": 4,
+    "id": 20971524,
+    "name": "warp_nonpred_execution_efficiency",
+    "short_description": "Warp Non-Predicated Execution Efficiency",
+    "long_description": "Ratio of the average active threads per warp executing non-predicated instructions to the maximum number of threads per warp supported on a multiprocessor"
+  },
+  {
+    "metric": 5,
+    "id": 20971525,
+    "name": "inst_replay_overhead",
+    "short_description": "Instruction Replay Overhead",
+    "long_description": "Average number of replays for each instruction executed"
+  },
+  {
+    "metric": 6,
+    "id": 20971526,
+    "name": "shared_load_transactions_per_request",
+    "short_description": "Shared Memory Load Transactions Per Request",
+    "long_description": "Average number of shared memory load transactions performed for each shared memory load"
+  },
+  {
+    "metric": 7,
+    "id": 20971527,
+    "name": "shared_store_transactions_per_request",
+    "short_description": "Shared Memory Store Transactions Per Request",
+    "long_description": "Average number of shared memory store transactions performed for each shared memory store"
+  },
+  {
+    "metric": 8,
+    "id": 20971528,
+    "name": "local_load_transactions_per_request",
+    "short_description": "Local Memory Load Transactions Per Request",
+    "long_description": "Average number of local memory load transactions performed for each local memory load"
+  },
+  {
+    "metric": 9,
+    "id": 20971529,
+    "name": "local_store_transactions_per_request",
+    "short_description": "Local Memory Store Transactions Per Request",
+    "long_description": "Average number of local memory store transactions performed for each local memory store"
+  },
+  {
+    "metric": 10,
+    "id": 20971530,
+    "name": "gld_transactions_per_request",
+    "short_description": "Global Load Transactions Per Request",
+    "long_description": "Average number of global memory load transactions performed for each global memory load."
+  },
+  {
+    "metric": 11,
+    "id": 20971531,
+    "name": "gst_transactions_per_request",
+    "short_description": "Global Store Transactions Per Request",
+    "long_description": "Average number of global memory store transactions performed for each global memory store"
+  },
+  {
+    "metric": 12,
+    "id": 20971532,
+    "name": "shared_store_transactions",
+    "short_description": "Shared Store Transactions",
+    "long_description": "Number of shared memory store transactions"
+  },
+  {
+    "metric": 13,
+    "id": 20971533,
+    "name": "shared_load_transactions",
+    "short_description": "Shared Load Transactions",
+    "long_description": "Number of shared memory load transactions"
+  },
+  {
+    "metric": 14,
+    "id": 20971534,
+    "name": "local_load_transactions",
+    "short_description": "Local Load Transactions",
+    "long_description": "Number of local memory load transactions"
+  },
+  {
+    "metric": 15,
+    "id": 20971535,
+    "name": "local_store_transactions",
+    "short_description": "Local Store Transactions",
+    "long_description": "Number of local memory store transactions"
+  },
+  {
+    "metric": 16,
+    "id": 20971536,
+    "name": "gld_transactions",
+    "short_description": "Global Load Transactions",
+    "long_description": "Number of global memory load transactions"
+  },
+  {
+    "metric": 17,
+    "id": 20971537,
+    "name": "gst_transactions",
+    "short_description": "Global Store Transactions",
+    "long_description": "Number of global memory store transactions"
+  },
+  {
+    "metric": 18,
+    "id": 20971538,
+    "name": "sysmem_read_transactions",
+    "short_description": "System Memory Read Transactions",
+    "long_description": "Number of system memory read transactions"
+  },
+  {
+    "metric": 19,
+    "id": 20971539,
+    "name": "sysmem_write_transactions",
+    "short_description": "System Memory Write Transactions",
+    "long_description": "Number of system memory write transactions"
+  },
+  {
+    "metric": 20,
+    "id": 20971540,
+    "name": "l2_read_transactions",
+    "short_description": "L2 Read Transactions",
+    "long_description": "Memory read transactions seen at L2 cache for all read requests"
+  },
+  {
+    "metric": 21,
+    "id": 20971541,
+    "name": "l2_write_transactions",
+    "short_description": "L2 Write Transactions",
+    "long_description": "Memory write transactions seen at L2 cache for all write requests"
+  },
+  {
+    "metric": 22,
+    "id": 20971542,
+    "name": "dram_read_transactions",
+    "short_description": "Device Memory Read Transactions",
+    "long_description": "Device memory read transactions"
+  },
+  {
+    "metric": 23,
+    "id": 20971543,
+    "name": "dram_write_transactions",
+    "short_description": "Device Memory Write Transactions",
+    "long_description": "Device memory write transactions"
+  },
+  {
+    "metric": 24,
+    "id": 20971544,
+    "name": "global_hit_rate",
+    "short_description": "Global Hit Rate in unified l1/tex",
+    "long_description": "Hit rate for global load and store in unified l1/tex cache"
+  },
+  {
+    "metric": 25,
+    "id": 20971545,
+    "name": "local_hit_rate",
+    "short_description": "Local Hit Rate",
+    "long_description": "Hit rate for local loads and stores"
+  },
+  {
+    "metric": 26,
+    "id": 20971546,
+    "name": "gld_requested_throughput",
+    "short_description": "Requested Global Load Throughput",
+    "long_description": "Requested global memory load throughput"
+  },
+  {
+    "metric": 27,
+    "id": 20971547,
+    "name": "gst_requested_throughput",
+    "short_description": "Requested Global Store Throughput",
+    "long_description": "Requested global memory store throughput"
+  },
+  {
+    "metric": 28,
+    "id": 20971548,
+    "name": "gld_throughput",
+    "short_description": "Global Load Throughput",
+    "long_description": "Global memory load throughput"
+  },
+  {
+    "metric": 29,
+    "id": 20971549,
+    "name": "gst_throughput",
+    "short_description": "Global Store Throughput",
+    "long_description": "Global memory store throughput"
+  },
+  {
+    "metric": 30,
+    "id": 20971550,
+    "name": "local_memory_overhead",
+    "short_description": "Local Memory Overhead",
+    "long_description": "Ratio of local memory traffic to total memory traffic between the L1 and L2 caches expressed as percentage"
+  },
+  {
+    "metric": 31,
+    "id": 20971551,
+    "name": "tex_cache_hit_rate",
+    "short_description": "Unified Cache Hit Rate",
+    "long_description": "Unified cache hit rate"
+  },
+  {
+    "metric": 32,
+    "id": 20971552,
+    "name": "l2_tex_read_hit_rate",
+    "short_description": "L2 Hit Rate (Texture Reads)",
+    "long_description": "Hit rate at L2 cache for all read requests from texture cache"
+  },
+  {
+    "metric": 33,
+    "id": 20971553,
+    "name": "l2_tex_write_hit_rate",
+    "short_description": "L2 Hit Rate (Texture Writes)",
+    "long_description": "Hit Rate at L2 cache for all write requests from texture cache"
+  },
+  {
+    "metric": 34,
+    "id": 20971554,
+    "name": "dram_read_throughput",
+    "short_description": "Device Memory Read Throughput",
+    "long_description": "Device memory read throughput"
+  },
+  {
+    "metric": 35,
+    "id": 20971555,
+    "name": "dram_write_throughput",
+    "short_description": "Device Memory Write Throughput",
+    "long_description": "Device memory write throughput"
+  },
+  {
+    "metric": 36,
+    "id": 20971556,
+    "name": "tex_cache_throughput",
+    "short_description": "Unified cache to Multiprocessor throughput",
+    "long_description": "Unified cache to Multiprocessor read throughput"
+  },
+  {
+    "metric": 37,
+    "id": 20971557,
+    "name": "l2_tex_read_throughput",
+    "short_description": "L2 Throughput (Texture Reads)",
+    "long_description": "Memory read throughput seen at L2 cache for read requests from the texture cache"
+  },
+  {
+    "metric": 38,
+    "id": 20971558,
+    "name": "l2_tex_write_throughput",
+    "short_description": "L2 Throughput (Texture Writes)",
+    "long_description": "Memory write throughput seen at L2 cache for write requests from the texture cache"
+  },
+  {
+    "metric": 39,
+    "id": 20971559,
+    "name": "l2_read_throughput",
+    "short_description": "L2 Throughput (Reads)",
+    "long_description": "Memory read throughput seen at L2 cache for all read requests"
+  },
+  {
+    "metric": 40,
+    "id": 20971560,
+    "name": "l2_write_throughput",
+    "short_description": "L2 Throughput (Writes)",
+    "long_description": "Memory write throughput seen at L2 cache for all write requests"
+  },
+  {
+    "metric": 41,
+    "id": 20971561,
+    "name": "sysmem_read_throughput",
+    "short_description": "System Memory Read Throughput",
+    "long_description": "System memory read throughput"
+  },
+  {
+    "metric": 42,
+    "id": 20971562,
+    "name": "sysmem_write_throughput",
+    "short_description": "System Memory Write Throughput",
+    "long_description": "System memory write throughput"
+  },
+  {
+    "metric": 43,
+    "id": 20971563,
+    "name": "local_load_throughput",
+    "short_description": "Local Memory Load Throughput",
+    "long_description": "Local memory load throughput"
+  },
+  {
+    "metric": 44,
+    "id": 20971564,
+    "name": "local_store_throughput",
+    "short_description": "Local Memory Store Throughput",
+    "long_description": "Local memory store throughput"
+  },
+  {
+    "metric": 45,
+    "id": 20971565,
+    "name": "shared_load_throughput",
+    "short_description": "Shared Memory Load Throughput",
+    "long_description": "Shared memory load throughput"
+  },
+  {
+    "metric": 46,
+    "id": 20971566,
+    "name": "shared_store_throughput",
+    "short_description": "Shared Memory Store Throughput",
+    "long_description": "Shared memory store throughput"
+  },
+  {
+    "metric": 47,
+    "id": 20971567,
+    "name": "gld_efficiency",
+    "short_description": "Global Memory Load Efficiency",
+    "long_description": "Ratio of requested global memory load throughput to required global memory load throughput expressed as percentage."
+  },
+  {
+    "metric": 48,
+    "id": 20971568,
+    "name": "gst_efficiency",
+    "short_description": "Global Memory Store Efficiency",
+    "long_description": "Ratio of requested global memory store throughput to required global memory store throughput expressed as percentage."
+  },
+  {
+    "metric": 49,
+    "id": 20971569,
+    "name": "tex_cache_transactions",
+    "short_description": "Unified cache to Multiprocessor transactions",
+    "long_description": "Unified cache to Multiprocessor read transactions"
+  },
+  {
+    "metric": 50,
+    "id": 20971570,
+    "name": "flop_count_dp",
+    "short_description": "Floating Point Operations(Double Precision)",
+    "long_description": "Number of double-precision floating-point operations executed by non-predicated threads (add, multiply, and multiply-accumulate). Each multiply-accumulate operation contributes 2 to the count."
+  },
+  {
+    "metric": 51,
+    "id": 20971571,
+    "name": "flop_count_dp_add",
+    "short_description": "Floating Point Operations(Double Precision Add)",
+    "long_description": "Number of double-precision floating-point add operations executed by non-predicated threads."
+  },
+  {
+    "metric": 52,
+    "id": 20971572,
+    "name": "flop_count_dp_fma",
+    "short_description": "Floating Point Operations(Double Precision FMA)",
+    "long_description": "Number of double-precision floating-point multiply-accumulate operations executed by non-predicated threads. Each multiply-accumulate operation contributes 1 to the count."
+  },
+  {
+    "metric": 53,
+    "id": 20971573,
+    "name": "flop_count_dp_mul",
+    "short_description": "Floating Point Operations(Double Precision Mul)",
+    "long_description": "Number of double-precision floating-point multiply operations executed by non-predicated threads."
+  },
+  {
+    "metric": 54,
+    "id": 20971574,
+    "name": "flop_count_sp",
+    "short_description": "Floating Point Operations(Single Precision)",
+    "long_description": "Number of single-precision floating-point operations executed by non-predicated threads (add, multiply, and multiply-accumulate). Each multiply-accumulate operation contributes 2 to the count. The count does not include special operations."
+  },
+  {
+    "metric": 55,
+    "id": 20971575,
+    "name": "flop_count_sp_add",
+    "short_description": "Floating Point Operations(Single Precision Add)",
+    "long_description": "Number of single-precision floating-point add operations executed by non-predicated threads."
+  },
+  {
+    "metric": 56,
+    "id": 20971576,
+    "name": "flop_count_sp_fma",
+    "short_description": "Floating Point Operations(Single Precision FMA)",
+    "long_description": "Number of single-precision floating-point multiply-accumulate operations executed by non-predicated threads. Each multiply-accumulate operation contributes 1 to the count."
+  },
+  {
+    "metric": 57,
+    "id": 20971577,
+    "name": "flop_count_sp_mul",
+    "short_description": "Floating Point Operation(Single Precision Mul)",
+    "long_description": "Number of single-precision floating-point multiply operations executed by non-predicated threads."
+  },
+  {
+    "metric": 58,
+    "id": 20971578,
+    "name": "flop_count_sp_special",
+    "short_description": "Floating Point Operations(Single Precision Special)",
+    "long_description": "Number of single-precision floating-point special operations executed by non-predicated threads."
+  },
+  {
+    "metric": 59,
+    "id": 20971579,
+    "name": "inst_executed",
+    "short_description": "Instructions Executed",
+    "long_description": "The number of instructions executed"
+  },
+  {
+    "metric": 60,
+    "id": 20971580,
+    "name": "inst_issued",
+    "short_description": "Instructions Issued",
+    "long_description": "The number of instructions issued"
+  },
+  {
+    "metric": 61,
+    "id": 20971581,
+    "name": "dram_utilization",
+    "short_description": "Device Memory Utilization",
+    "long_description": "The utilization level of the device memory relative to the peak utilization on a scale of 0 to 10"
+  },
+  {
+    "metric": 62,
+    "id": 20971582,
+    "name": "sysmem_utilization",
+    "short_description": "System Memory Utilization",
+    "long_description": "The utilization level of the system memory relative to the peak utilization on a scale of 0 to 10"
+  },
+  {
+    "metric": 63,
+    "id": 20971583,
+    "name": "stall_inst_fetch",
+    "short_description": "Issue Stall Reasons (Instructions Fetch)",
+    "long_description": "Percentage of stalls occurring because the next assembly instruction has not yet been fetched"
+  },
+  {
+    "metric": 64,
+    "id": 20971584,
+    "name": "stall_exec_dependency",
+    "short_description": "Issue Stall Reasons (Execution Dependency)",
+    "long_description": "Percentage of stalls occurring because an input required by the instruction is not yet available"
+  },
+  {
+    "metric": 65,
+    "id": 20971585,
+    "name": "stall_memory_dependency",
+    "short_description": "Issue Stall Reasons (Data Request)",
+    "long_description": "Percentage of stalls occurring because a memory operation cannot be performed due to the required resources not being available or fully utilized, or because too many requests of a given type are outstanding"
+  },
+  {
+    "metric": 66,
+    "id": 20971586,
+    "name": "stall_texture",
+    "short_description": "Issue Stall Reasons (Texture)",
+    "long_description": "Percentage of stalls occurring because the texture sub-system is fully utilized or has too many outstanding requests"
+  },
+  {
+    "metric": 67,
+    "id": 20971587,
+    "name": "stall_sync",
+    "short_description": "Issue Stall Reasons (Synchronization)",
+    "long_description": "Percentage of stalls occurring because the warp is blocked at a __syncthreads() call"
+  },
+  {
+    "metric": 68,
+    "id": 20971588,
+    "name": "stall_other",
+    "short_description": "Issue Stall Reasons (Other)",
+    "long_description": "Percentage of stalls occurring due to miscellaneous reasons"
+  },
+  {
+    "metric": 69,
+    "id": 20971589,
+    "name": "stall_constant_memory_dependency",
+    "short_description": "Issue Stall Reasons (Immediate constant)",
+    "long_description": "Percentage of stalls occurring because of immediate constant cache miss"
+  },
+  {
+    "metric": 70,
+    "id": 20971590,
+    "name": "stall_pipe_busy",
+    "short_description": "Issue Stall Reasons (Pipe Busy)",
+    "long_description": "Percentage of stalls occurring because a compute operation cannot be performed because the compute pipeline is busy"
+  },
+  {
+    "metric": 71,
+    "id": 20971591,
+    "name": "shared_efficiency",
+    "short_description": "Shared Memory Efficiency",
+    "long_description": "Ratio of requested shared memory throughput to required shared memory throughput expressed as percentage"
+  },
+  {
+    "metric": 72,
+    "id": 20971592,
+    "name": "inst_fp_32",
+    "short_description": "FP Instructions(Single)",
+    "long_description": "Number of single-precision floating-point instructions executed by non-predicated threads (arithmetic, compare, etc.)"
+  },
+  {
+    "metric": 73,
+    "id": 20971593,
+    "name": "inst_fp_64",
+    "short_description": "FP Instructions(Double)",
+    "long_description": "Number of double-precision floating-point instructions executed by non-predicated threads (arithmetic, compare, etc.)"
+  },
+  {
+    "metric": 74,
+    "id": 20971594,
+    "name": "inst_integer",
+    "short_description": "Integer Instructions",
+    "long_description": "Number of integer instructions executed by non-predicated threads"
+  },
+  {
+    "metric": 75,
+    "id": 20971595,
+    "name": "inst_bit_convert",
+    "short_description": "Bit-Convert Instructions",
+    "long_description": "Number of bit-conversion instructions executed by non-predicated threads"
+  },
+  {
+    "metric": 76,
+    "id": 20971596,
+    "name": "inst_control",
+    "short_description": "Control-Flow Instructions",
+    "long_description": "Number of control-flow instructions executed by non-predicated threads (jump, branch, etc.)"
+  },
+  {
+    "metric": 77,
+    "id": 20971597,
+    "name": "inst_compute_ld_st",
+    "short_description": "Load/Store Instructions",
+    "long_description": "Number of compute load/store instructions executed by non-predicated threads"
+  },
+  {
+    "metric": 78,
+    "id": 20971598,
+    "name": "inst_misc",
+    "short_description": "Misc Instructions",
+    "long_description": "Number of miscellaneous instructions executed by non-predicated threads"
+  },
+  {
+    "metric": 79,
+    "id": 20971599,
+    "name": "inst_inter_thread_communication",
+    "short_description": "Inter-Thread Instructions",
+    "long_description": "Number of inter-thread communication instructions executed by non-predicated threads"
+  },
+  {
+    "metric": 80,
+    "id": 20971600,
+    "name": "issue_slots",
+    "short_description": "Issue Slots",
+    "long_description": "The number of issue slots used"
+  },
+  {
+    "metric": 81,
+    "id": 20971601,
+    "name": "cf_issued",
+    "short_description": "Issued Control-Flow Instructions",
+    "long_description": "Number of issued control-flow instructions"
+  },
+  {
+    "metric": 82,
+    "id": 20971602,
+    "name": "cf_executed",
+    "short_description": "Executed Control-Flow Instructions",
+    "long_description": "Number of executed control-flow instructions"
+  },
+  {
+    "metric": 83,
+    "id": 20971603,
+    "name": "ldst_issued",
+    "short_description": "Issued Load/Store Instructions",
+    "long_description": "Number of issued local, global, shared and texture memory load and store instructions"
+  },
+  {
+    "metric": 84,
+    "id": 20971604,
+    "name": "ldst_executed",
+    "short_description": "Executed Load/Store Instructions",
+    "long_description": "Number of executed local, global, shared and texture memory load and store instructions"
+  },
+  {
+    "metric": 85,
+    "id": 20971605,
+    "name": "atomic_transactions",
+    "short_description": "Atomic Transactions",
+    "long_description": "Global memory atomic and reduction transactions"
+  },
+  {
+    "metric": 86,
+    "id": 20971606,
+    "name": "atomic_transactions_per_request",
+    "short_description": "Atomic Transactions Per Request",
+    "long_description": "Average number of global memory atomic and reduction transactions performed for each atomic and reduction instruction"
+  },
+  {
+    "metric": 87,
+    "id": 20971607,
+    "name": "l2_atomic_throughput",
+    "short_description": "L2 Throughput (Atomic requests)",
+    "long_description": "Memory read throughput seen at L2 cache for atomic and reduction requests"
+  },
+  {
+    "metric": 88,
+    "id": 20971608,
+    "name": "l2_atomic_transactions",
+    "short_description": "L2 Transactions (Atomic requests)",
+    "long_description": "Memory read transactions seen at L2 cache for atomic and reduction requests"
+  },
+  {
+    "metric": 89,
+    "id": 20971609,
+    "name": "l2_tex_read_transactions",
+    "short_description": "L2 Transactions (Texture Reads)",
+    "long_description": "Memory read transactions seen at L2 cache for read requests from the texture cache"
+  },
+  {
+    "metric": 90,
+    "id": 20971610,
+    "name": "stall_memory_throttle",
+    "short_description": "Issue Stall Reasons (Memory Throttle)",
+    "long_description": "Percentage of stalls occurring because of memory throttle"
+  },
+  {
+    "metric": 91,
+    "id": 20971611,
+    "name": "stall_not_selected",
+    "short_description": "Issue Stall Reasons (Not Selected)",
+    "long_description": "Percentage of stalls occurring because warp was not selected"
+  },
+  {
+    "metric": 92,
+    "id": 20971612,
+    "name": "l2_tex_write_transactions",
+    "short_description": "L2 Transactions (Texture Writes)",
+    "long_description": "Memory write transactions seen at L2 cache for write requests from the texture cache"
+  },
+  {
+    "metric": 93,
+    "id": 20971613,
+    "name": "nvlink_total_data_transmitted",
+    "short_description": "NVLink Total Data Transmitted",
+    "long_description": "Total data bytes transmitted through NVLink including headers"
+  },
+  {
+    "metric": 94,
+    "id": 20971614,
+    "name": "nvlink_total_data_received",
+    "short_description": "NVLink Total Data Received",
+    "long_description": "Total data bytes received through NVLink including headers"
+  },
+  {
+    "metric": 95,
+    "id": 20971615,
+    "name": "nvlink_user_data_transmitted",
+    "short_description": "NVLink User Data Transmitted",
+    "long_description": "User data bytes transmitted through NVLink, doesn't include headers"
+  },
+  {
+    "metric": 96,
+    "id": 20971616,
+    "name": "nvlink_user_data_received",
+    "short_description": "NVLink User Data Received",
+    "long_description": "User data bytes received through NVLink, doesn't include headers"
+  },
+  {
+    "metric": 97,
+    "id": 20971617,
+    "name": "nvlink_overhead_data_transmitted",
+    "short_description": "NVLink Overhead Data Transmitted",
+    "long_description": "Ratio of overhead data to the total data, transmitted through NVLink"
+  },
+  {
+    "metric": 98,
+    "id": 20971618,
+    "name": "nvlink_overhead_data_received",
+    "short_description": "NVLink Overhead Data Received",
+    "long_description": "Ratio of overhead data to the total data, received through NVLink"
+  },
+  {
+    "metric": 99,
+    "id": 20971619,
+    "name": "nvlink_total_nratom_data_transmitted",
+    "short_description": "NVLink Total Nratom Data Transmitted",
+    "long_description": "Total non-reduction atomic data bytes transmitted through NVLink"
+  },
+  {
+    "metric": 100,
+    "id": 20971620,
+    "name": "nvlink_user_nratom_data_transmitted",
+    "short_description": "NVLink User Nratom Data Transmitted",
+    "long_description": "Total non-reduction atomic user data bytes transmitted through NVLink"
+  },
+  {
+    "metric": 101,
+    "id": 20971621,
+    "name": "nvlink_total_ratom_data_transmitted",
+    "short_description": "NVLink Total Ratom Data Transmitted",
+    "long_description": "Total reduction atomic data bytes transmitted through NVLink"
+  },
+  {
+    "metric": 102,
+    "id": 20971622,
+    "name": "nvlink_user_ratom_data_transmitted",
+    "short_description": "NVLink User Ratom Data Transmitted",
+    "long_description": "Total reduction atomic user data bytes transmitted through NVLink"
+  },
+  {
+    "metric": 103,
+    "id": 20971623,
+    "name": "nvlink_total_write_data_transmitted",
+    "short_description": "NVLink Total Write Data Transmitted",
+    "long_description": "Total write data bytes transmitted through NVLink"
+  },
+  {
+    "metric": 104,
+    "id": 20971624,
+    "name": "nvlink_user_write_data_transmitted",
+    "short_description": "NVLink User Write Data Transmitted",
+    "long_description": "User write data bytes transmitted through NVLink"
+  },
+  {
+    "metric": 105,
+    "id": 20971625,
+    "name": "nvlink_transmit_throughput",
+    "short_description": "NVLink Transmit Throughput",
+    "long_description": "Number of bytes transmitted per second through NVLink"
+  },
+  {
+    "metric": 106,
+    "id": 20971626,
+    "name": "nvlink_receive_throughput",
+    "short_description": "NVLink Receive Throughput",
+    "long_description": "Number of bytes received per second through NVLink"
+  },
+  {
+    "metric": 107,
+    "id": 20971627,
+    "name": "nvlink_total_response_data_received",
+    "short_description": "NVLink Total Response Data Received",
+    "long_description": "Total response data bytes received through NVLink, response data includes data for read requests and result of non-reduction atomic requests"
+  },
+  {
+    "metric": 108,
+    "id": 20971628,
+    "name": "nvlink_user_response_data_received",
+    "short_description": "NVLink User Response Data Received",
+    "long_description": "Total user response data bytes received through NVLink, response data includes data for read requests and result of non-reduction atomic requests"
+  },
+  {
+    "metric": 109,
+    "id": 20971629,
+    "name": "flop_count_hp",
+    "short_description": "Floating Point Operations(Half Precision)",
+    "long_description": "Number of half-precision floating-point operations executed by non-predicated threads (add, multiply, and multiply-accumulate). Each multiply-accumulate contributes 2 or 4 to the count based on the number of inputs."
+  },
+  {
+    "metric": 110,
+    "id": 20971630,
+    "name": "flop_count_hp_add",
+    "short_description": "Floating Point Operations(Half Precision Add)",
+    "long_description": "Number of half-precision floating-point add operations executed by non-predicated threads."
+  },
+  {
+    "metric": 111,
+    "id": 20971631,
+    "name": "flop_count_hp_mul",
+    "short_description": "Floating Point Operation(Half Precision Mul)",
+    "long_description": "Number of half-precision floating-point multiply operations executed by non-predicated threads."
+  },
+  {
+    "metric": 112,
+    "id": 20971632,
+    "name": "flop_count_hp_fma",
+    "short_description": "Floating Point Operations(Half Precision FMA)",
+    "long_description": "Number of half-precision floating-point multiply-accumulate operations executed by non-predicated threads. Each multiply-accumulate contributes 2 or 4 to the count based on the number of inputs."
+  },
+  {
+    "metric": 113,
+    "id": 20971633,
+    "name": "inst_fp_16",
+    "short_description": "HP Instructions(Half)",
+    "long_description": "Number of half-precision floating-point instructions executed by non-predicated threads (arithmetic, compare, etc.)"
+  },
+  {
+    "metric": 114,
+    "id": 20971634,
+    "name": "ipc",
+    "short_description": "Executed IPC",
+    "long_description": "Instructions executed per cycle"
+  },
+  {
+    "metric": 115,
+    "id": 20971635,
+    "name": "issued_ipc",
+    "short_description": "Issued IPC",
+    "long_description": "Instructions issued per cycle"
+  },
+  {
+    "metric": 116,
+    "id": 20971636,
+    "name": "issue_slot_utilization",
+    "short_description": "Issue Slot Utilization",
+    "long_description": "Percentage of issue slots that issued at least one instruction, averaged across all cycles"
+  },
+  {
+    "metric": 117,
+    "id": 20971637,
+    "name": "sm_efficiency",
+    "short_description": "Multiprocessor Activity",
+    "long_description": "The percentage of time at least one warp is active on a specific multiprocessor"
+  },
+  {
+    "metric": 118,
+    "id": 20971638,
+    "name": "achieved_occupancy",
+    "short_description": "Achieved Occupancy",
+    "long_description": "Ratio of the average active warps per active cycle to the maximum number of warps supported on a multiprocessor"
+  },
+  {
+    "metric": 119,
+    "id": 20971639,
+    "name": "eligible_warps_per_cycle",
+    "short_description": "Eligible Warps Per Active Cycle",
+    "long_description": "Average number of warps that are eligible to issue per active cycle"
+  },
+  {
+    "metric": 120,
+    "id": 20971640,
+    "name": "shared_utilization",
+    "short_description": "Shared Memory Utilization",
+    "long_description": "The utilization level of the shared memory relative to peak utilization on a scale of 0 to 10"
+  },
+  {
+    "metric": 121,
+    "id": 20971641,
+    "name": "l2_utilization",
+    "short_description": "L2 Cache Utilization",
+    "long_description": "The utilization level of the L2 cache relative to the peak utilization on a scale of 0 to 10"
+  },
+  {
+    "metric": 122,
+    "id": 20971642,
+    "name": "tex_utilization",
+    "short_description": "Unified Cache Utilization",
+    "long_description": "The utilization level of the unified cache relative to the peak utilization on a scale of 0 to 10"
+  },
+  {
+    "metric": 123,
+    "id": 20971643,
+    "name": "ldst_fu_utilization",
+    "short_description": "Load/Store Function Unit Utilization",
+    "long_description": "The utilization level of the multiprocessor function units that execute shared load, shared store and constant load instructions on a scale of 0 to 10"
+  },
+  {
+    "metric": 124,
+    "id": 20971644,
+    "name": "cf_fu_utilization",
+    "short_description": "Control-Flow Function Unit Utilization",
+    "long_description": "The utilization level of the multiprocessor function units that execute control-flow instructions on a scale of 0 to 10"
+  },
+  {
+    "metric": 125,
+    "id": 20971645,
+    "name": "tex_fu_utilization",
+    "short_description": "Texture Function Unit Utilization",
+    "long_description": "The utilization level of the multiprocessor function units that execute global, local and texture memory instructions on a scale of 0 to 10"
+  },
+  {
+    "metric": 126,
+    "id": 20971646,
+    "name": "special_fu_utilization",
+    "short_description": "Special Function Unit Utilization",
+    "long_description": "The utilization level of the multiprocessor function units that execute sin, cos, ex2, popc, flo, and similar instructions on a scale of 0 to 10"
+  },
+  {
+    "metric": 127,
+    "id": 20971647,
+    "name": "half_precision_fu_utilization",
+    "short_description": "Half-Precision Function Unit Utilization",
+    "long_description": "The utilization level of the multiprocessor function units that execute 16 bit floating-point instructions on a scale of 0 to 10. Note that this doesn't specify the utilization level of tensor core unit"
+  },
+  {
+    "metric": 128,
+    "id": 20971648,
+    "name": "single_precision_fu_utilization",
+    "short_description": "Single-Precision Function Unit Utilization",
+    "long_description": "The utilization level of the multiprocessor function units that execute single-precision floating-point instructions on a scale of 0 to 10"
+  },
+  {
+    "metric": 129,
+    "id": 20971649,
+    "name": "double_precision_fu_utilization",
+    "short_description": "Double-Precision Function Unit Utilization",
+    "long_description": "The utilization level of the multiprocessor function units that execute double-precision floating-point instructions on a scale of 0 to 10"
+  },
+  {
+    "metric": 130,
+    "id": 20971650,
+    "name": "flop_hp_efficiency",
+    "short_description": "FLOP Efficiency(Peak Half)",
+    "long_description": "Ratio of achieved to peak half-precision floating-point operations"
+  },
+  {
+    "metric": 131,
+    "id": 20971651,
+    "name": "flop_sp_efficiency",
+    "short_description": "FLOP Efficiency(Peak Single)",
+    "long_description": "Ratio of achieved to peak single-precision floating-point operations"
+  },
+  {
+    "metric": 132,
+    "id": 20971652,
+    "name": "flop_dp_efficiency",
+    "short_description": "FLOP Efficiency(Peak Double)",
+    "long_description": "Ratio of achieved to peak double-precision floating-point operations"
+  },
+  {
+    "metric": 133,
+    "id": 20971653,
+    "name": "sysmem_read_utilization",
+    "short_description": "System Memory Read Utilization",
+    "long_description": "The read utilization level of the system memory relative to the peak utilization on a scale of 0 to 10"
+  },
+  {
+    "metric": 134,
+    "id": 20971654,
+    "name": "sysmem_write_utilization",
+    "short_description": "System Memory Write Utilization",
+    "long_description": "The write utilization level of the system memory relative to the peak utilization on a scale of 0 to 10"
+  },
+  {
+    "metric": 135,
+    "id": 20971655,
+    "name": "nvlink_data_transmission_efficiency",
+    "short_description": "NVLink Data Transmission Efficiency",
+    "long_description": "Data transmission efficiency of NVLink"
+  },
+  {
+    "metric": 136,
+    "id": 20971656,
+    "name": "nvlink_data_receive_efficiency",
+    "short_description": "NVLink Data Receive Efficiency",
+    "long_description": "Data receive efficiency of NVLink"
+  },
+  {
+    "metric": 137,
+    "id": 20971657,
+    "name": "stall_sleeping",
+    "short_description": "Issue Stall Reasons (Sleeping)",
+    "long_description": "Percentage of stalls occurring because warp was sleeping"
+  },
+  {
+    "metric": 138,
+    "id": 20971658,
+    "name": "pcie_total_data_transmitted",
+    "short_description": "PCIe Total Data Transmitted",
+    "long_description": "Total data bytes transmitted through PCIe"
+  },
+  {
+    "metric": 139,
+    "id": 20971659,
+    "name": "pcie_total_data_received",
+    "short_description": "PCIe Total Data Received",
+    "long_description": "Total data bytes received through PCIe"
+  },
+  {
+    "metric": 140,
+    "id": 20971660,
+    "name": "inst_executed_global_loads",
+    "short_description": "Warp level instructions for global loads",
+    "long_description": "Warp level instructions for global loads"
+  },
+  {
+    "metric": 141,
+    "id": 20971661,
+    "name": "inst_executed_local_loads",
+    "short_description": "Warp level instructions for local loads",
+    "long_description": "Warp level instructions for local loads"
+  },
+  {
+    "metric": 142,
+    "id": 20971662,
+    "name": "inst_executed_shared_loads",
+    "short_description": "Warp level instructions for shared loads",
+    "long_description": "Warp level instructions for shared loads"
+  },
+  {
+    "metric": 143,
+    "id": 20971663,
+    "name": "inst_executed_surface_loads",
+    "short_description": "Warp level instructions for surface loads",
+    "long_description": "Warp level instructions for surface loads"
+  },
+  {
+    "metric": 144,
+    "id": 20971664,
+    "name": "inst_executed_global_stores",
+    "short_description": "Warp level instructions for global stores",
+    "long_description": "Warp level instructions for global stores"
+  },
+  {
+    "metric": 145,
+    "id": 20971665,
+    "name": "inst_executed_local_stores",
+    "short_description": "Warp level instructions for local stores",
+    "long_description": "Warp level instructions for local stores"
+  },
+  {
+    "metric": 146,
+    "id": 20971666,
+    "name": "inst_executed_shared_stores",
+    "short_description": "Warp level instructions for shared stores",
+    "long_description": "Warp level instructions for shared stores"
+  },
+  {
+    "metric": 147,
+    "id": 20971667,
+    "name": "inst_executed_surface_stores",
+    "short_description": "Warp level instructions for surface stores",
+    "long_description": "Warp level instructions for surface stores"
+  },
+  {
+    "metric": 148,
+    "id": 20971668,
+    "name": "inst_executed_global_atomics",
+    "short_description": "Warp level instructions for global atom and atom cas",
+    "long_description": "Warp level instructions for global atom and atom cas"
+  },
+  {
+    "metric": 149,
+    "id": 20971669,
+    "name": "inst_executed_global_reductions",
+    "short_description": "Warp level instructions for global reductions",
+    "long_description": "Warp level instructions for global reductions"
+  },
+  {
+    "metric": 150,
+    "id": 20971670,
+    "name": "inst_executed_surface_atomics",
+    "short_description": "Warp level instructions for surface atom and atom cas",
+    "long_description": "Warp level instructions for surface atom and atom cas"
+  },
+  {
+    "metric": 151,
+    "id": 20971671,
+    "name": "inst_executed_surface_reductions",
+    "short_description": "Warp level instructions for surface reductions",
+    "long_description": "Warp level instructions for surface reductions"
+  },
+  {
+    "metric": 152,
+    "id": 20971672,
+    "name": "inst_executed_shared_atomics",
+    "short_description": "Warp level shared instructions for atom and atom CAS",
+    "long_description": "Warp level shared instructions for atom and atom CAS"
+  },
+  {
+    "metric": 153,
+    "id": 20971673,
+    "name": "inst_executed_tex_ops",
+    "short_description": "Warp level instructions for texture",
+    "long_description": "Warp level instructions for texture"
+  },
+  {
+    "metric": 154,
+    "id": 20971674,
+    "name": "dram_read_bytes",
+    "short_description": "Total bytes read from DRAM to L2 cache",
+    "long_description": "Total bytes read from DRAM to L2 cache"
+  },
+  {
+    "metric": 155,
+    "id": 20971675,
+    "name": "dram_write_bytes",
+    "short_description": "Total bytes written from L2 cache to DRAM",
+    "long_description": "Total bytes written from L2 cache to DRAM"
+  },
+  {
+    "metric": 156,
+    "id": 20971676,
+    "name": "global_load_requests",
+    "short_description": "Total number of global load requests from Multiprocessor",
+    "long_description": "Total number of global load requests from Multiprocessor"
+  },
+  {
+    "metric": 157,
+    "id": 20971677,
+    "name": "local_load_requests",
+    "short_description": "Total number of local load requests from Multiprocessor",
+    "long_description": "Total number of local load requests from Multiprocessor"
+  },
+  {
+    "metric": 158,
+    "id": 20971678,
+    "name": "surface_load_requests",
+    "short_description": "Total number of surface load requests from Multiprocessor",
+    "long_description": "Total number of surface load requests from Multiprocessor"
+  },
+  {
+    "metric": 159,
+    "id": 20971679,
+    "name": "global_store_requests",
+    "short_description": "Total number of global store requests from Multiprocessor",
+    "long_description": "Total number of global store requests from Multiprocessor. This does not include atomic requests."
+  },
+  {
+    "metric": 160,
+    "id": 20971680,
+    "name": "local_store_requests",
+    "short_description": "Total number of local store requests from Multiprocessor",
+    "long_description": "Total number of local store requests from Multiprocessor"
+  },
+  {
+    "metric": 161,
+    "id": 20971681,
+    "name": "surface_store_requests",
+    "short_description": "Total number of surface store requests from Multiprocessor",
+    "long_description": "Total number of surface store requests from Multiprocessor"
+  },
+  {
+    "metric": 162,
+    "id": 20971682,
+    "name": "global_atomic_requests",
+    "short_description": "Total number of global atomic requests from Multiprocessor",
+    "long_description": "Total number of global atomic(Atom and Atom CAS) requests from Multiprocessor"
+  },
+  {
+    "metric": 163,
+    "id": 20971683,
+    "name": "global_reduction_requests",
+    "short_description": "Total number of global reduction requests from Multiprocessor",
+    "long_description": "Total number of global reduction requests from Multiprocessor"
+  },
+  {
+    "metric": 164,
+    "id": 20971684,
+    "name": "surface_atomic_requests",
+    "short_description": "Total number of surface atomic requests from Multiprocessor",
+    "long_description": "Total number of surface atomic(Atom and Atom CAS) requests from Multiprocessor"
+  },
+  {
+    "metric": 165,
+    "id": 20971685,
+    "name": "surface_reduction_requests",
+    "short_description": "Total number of surface reduction requests from Multiprocessor",
+    "long_description": "Total number of surface reduction requests from Multiprocessor"
+  },
+  {
+    "metric": 166,
+    "id": 20971690,
+    "name": "l2_global_load_bytes",
+    "short_description": "Bytes read from L2 for misses in L1 for global loads",
+    "long_description": "Bytes read from L2 for misses in L1 for global loads"
+  },
+  {
+    "metric": 167,
+    "id": 20971691,
+    "name": "l2_local_load_bytes",
+    "short_description": "Bytes read from L2 for misses in L1 for local loads",
+    "long_description": "Bytes read from L2 for misses in L1 for local loads"
+  },
+  {
+    "metric": 168,
+    "id": 20971692,
+    "name": "l2_surface_load_bytes",
+    "short_description": "Bytes read from L2 for misses in L1 for surface loads",
+    "long_description": "Bytes read from L2 for misses in L1 for surface loads"
+  },
+  {
+    "metric": 169,
+    "id": 20971693,
+    "name": "l2_global_atomic_store_bytes",
+    "short_description": "Bytes written to L2 from L1 for global atomics",
+    "long_description": "Bytes written to L2 from L1 for global atomics (ATOM and ATOM CAS)"
+  },
+  {
+    "metric": 170,
+    "id": 20971694,
+    "name": "l2_local_global_store_bytes",
+    "short_description": "Bytes written to L2 from L1 for local and global stores.",
+    "long_description": "Bytes written to L2 from L1 for local and global stores. This does not include global atomics."
+  },
+  {
+    "metric": 171,
+    "id": 20971695,
+    "name": "l2_surface_store_bytes",
+    "short_description": "Bytes read from L2 for misses in L1 for surface stores",
+    "long_description": "Bytes read from L2 for misses in L1 for surface stores"
+  },
+  {
+    "metric": 172,
+    "id": 20971696,
+    "name": "sysmem_read_bytes",
+    "short_description": "System Memory Read Bytes",
+    "long_description": "Number of bytes read from system memory"
+  },
+  {
+    "metric": 173,
+    "id": 20971697,
+    "name": "sysmem_write_bytes",
+    "short_description": "System Memory Write Bytes",
+    "long_description": "Number of bytes written to system memory"
+  },
+  {
+    "metric": 174,
+    "id": 20971698,
+    "name": "l2_tex_hit_rate",
+    "short_description": "L2 Cache Hit Rate",
+    "long_description": "Hit rate at L2 cache for all requests from texture cache"
+  },
+  {
+    "metric": 175,
+    "id": 20971699,
+    "name": "texture_load_requests",
+    "short_description": "Total number of texture Load requests from Multiprocessor",
+    "long_description": "Total number of texture Load requests from Multiprocessor"
+  },
+  {
+    "metric": 176,
+    "id": 20971700,
+    "name": "tensor_precision_fu_utilization",
+    "short_description": "Tensor-Precision Function Unit Utilization",
+    "long_description": "The utilization level of the multiprocessor function units that execute tensor core instructions on a scale of 0 to 10"
+  }
+]

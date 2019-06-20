@@ -3,7 +3,7 @@ TARGETS = vector_add vector_add.so
 all: $(TARGETS)
 
 NVCC=/usr/local/cuda/bin/nvcc
-NVCC_FLAGS=--cudart=shared -g -O0
+NVCC_FLAGS=--cudart=shared -g -O3
 LIB=-lnvToolsExt
 
 vector_add: vector_add.cu main.cpp

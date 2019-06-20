@@ -1732,6 +1732,11 @@ func (c *CUPTI) onContextCreate(domain types.CUpti_CallbackDomain, cuCtx C.CUcon
 		return errors.Wrap(err, "unable to get device id when creating resource context")
 	}
 
+	err = c.addMetricGroup(cuCtx, uint32(ctxId), uint32(deviceId))
+	if err != nil {
+		return errors.Wrap(err, "cannot add metric group")
+	}
+
 	err = c.addEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
 	if err != nil {
 		return errors.Wrap(err, "cannot add event group")
@@ -1762,7 +1767,13 @@ func (c *CUPTI) onContextDestroy(domain types.CUpti_CallbackDomain, cuCtx C.CUco
 	err = c.removeEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
 	if err != nil {
 		return errors.Wrap(err, "cannot remove event group")
-	}
+  }
+  
+	err = c.removeMetricGroup(cuCtx, uint32(ctxId), uint32(deviceId))
+	if err != nil {
+		return errors.Wrap(err, "cannot remove metric group")
+  }
+  
 	return nil
 }
 

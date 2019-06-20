@@ -27,8 +27,9 @@ type CUPTI struct {
 	deviceResetTime time.Time
 	startTimeStamp  uint64
 	beginTime       time.Time
-  eventData       []*eventData
-  spans sync.Map
+	eventData       []*eventData
+	metricData      []*metricData
+	spans           sync.Map
 }
 
 type eventData struct {
@@ -37,6 +38,14 @@ type eventData struct {
 	deviceId   uint32
 	eventGroup C.CUpti_EventGroup
 	eventIds   map[string]C.CUpti_EventID
+}
+
+type metricData struct {
+	cuCtx       C.CUcontext
+	cuCtxID     uint32
+	deviceId    uint32
+	metricGroup *C.CUpti_EventGroupSets
+	metricIds   map[string]C.CUpti_MetricID
 }
 
 var (
@@ -84,6 +93,7 @@ func (c *CUPTI) SetContext(ctx context.Context) {
 
 func runInit() {
 	initAvailableEvents()
+	initAvailableMetrics()
 
 	if err := checkCUResult(C.cuInit(0)); err != nil {
 		log.WithError(err).Error("failed to perform cuInit")
@@ -231,6 +241,22 @@ func (c *CUPTI) init() error {
 	return nil
 }
 
+func (c *CUPTI) addMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32) error {
+	if len(c.metrics) == 0 {
+		return nil
+	}
+
+	metricData, err := c.createMetricGroup(cuCtx, cuCtxID, deviceId)
+	if err != nil {
+		err := errors.Wrapf(err, "cannot create metric group for device %d", deviceId)
+		log.WithError(err).WithField("device_id", deviceId).Error("cannot create metric group")
+		return err
+	}
+
+	c.metricData = append(c.metricData, metricData)
+	return nil
+}
+
 func (c *CUPTI) addEventGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32) error {
 	if len(c.events) == 0 {
 		return nil
@@ -247,6 +273,18 @@ func (c *CUPTI) addEventGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32
 	return nil
 }
 
+func (c *CUPTI) findMetricDataByCUCtxID(cuCtxID uint32) (*metricData, error) {
+	for _, metricDataItem := range c.metricData {
+		if metricDataItem == nil {
+			continue
+		}
+		if metricDataItem.cuCtxID == cuCtxID {
+			return metricDataItem, nil
+		}
+	}
+	return nil, errors.Errorf("cannot find metric group for cutxid = %d", cuCtxID)
+}
+
 func (c *CUPTI) findEventDataByCUCtxID(cuCtxID uint32) (*eventData, error) {
 	for _, eventDataItem := range c.eventData {
 		if eventDataItem == nil {
@@ -257,6 +295,19 @@ func (c *CUPTI) findEventDataByCUCtxID(cuCtxID uint32) (*eventData, error) {
 		}
 	}
 	return nil, errors.Errorf("cannot find event group for cutxid = %d", cuCtxID)
+}
+
+func (c *CUPTI) removeMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32) error {
+	for ii, metricDataItem := range c.metricData {
+		if metricDataItem == nil {
+			continue
+		}
+		if metricDataItem.cuCtxID == cuCtxID && metricDataItem.deviceId == deviceId {
+			c.deleteMetricGroup(metricDataItem)
+			c.metricData[ii] = nil
+		}
+	}
+	return nil
 }
 
 func (c *CUPTI) removeEventGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32) error {
@@ -270,6 +321,53 @@ func (c *CUPTI) removeEventGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uin
 		}
 	}
 	return nil
+}
+
+func (c *CUPTI) createMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32) (*metricData, error) {
+	if len(c.metrics) == 0 {
+		return nil, nil
+	}
+
+	metricIds := map[string]C.CUpti_MetricID{}
+	metricIdArry := []C.CUpti_MetricID{}
+	for _, userMetricName := range c.metrics {
+		metricName := userMetricName
+		metricInfo, err := FindMetricByName(userMetricName)
+		if err == nil {
+			metricName = metricInfo.Name
+		}
+
+		var metricId C.CUpti_MetricID
+		cMetricName := C.CString(metricName)
+
+		err = checkCUPTIError(C.cuptiMetricGetIdFromName(C.CUdevice(deviceId), cMetricName, &metricId))
+		C.free(unsafe.Pointer(cMetricName))
+		if err != nil {
+			return nil, errors.Wrapf(err, "cannot find metric id %v", userMetricName)
+		}
+
+		metricIds[userMetricName] = metricId
+		metricIdArry = append(metricIdArry, metricId)
+	}
+
+	metricGroup := new(C.CUpti_EventGroupSets)
+
+	err := checkCUPTIError(C.cuptiMetricCreateEventGroupSets(cuCtx,
+	(C.size_t)(int(unsafe.Sizeof(metricIdArry[0]))*len(metricIdArry)),
+		&metricIdArry[0],
+		&metricGroup,
+	))
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot create metric even group set")
+	}
+
+	return &metricData{
+		cuCtx:       cuCtx,
+		cuCtxID:     cuCtxID,
+		deviceId:    deviceId,
+		metricGroup: metricGroup,
+		metricIds:   metricIds,
+	}, nil
 }
 
 func (c *CUPTI) createEventGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint32) (*eventData, error) {
@@ -335,6 +433,18 @@ func (c *CUPTI) deleteEventGroups() error {
 	for ii, eventDataItem := range c.eventData {
 		c.deleteEventGroup(eventDataItem)
 		c.eventData[ii] = nil
+	}
+	return nil
+}
+
+func (c *CUPTI) deleteMetricGroup(metricDataItem *metricData) error {
+	if metricDataItem == nil {
+		return nil
+	}
+
+	err := checkCUPTIError(C.cuptiEventGroupSetsDestroy(metricDataItem.metricGroup))
+	if err != nil {
+		log.WithError(err).Error("unable to remove metric group")
 	}
 	return nil
 }
