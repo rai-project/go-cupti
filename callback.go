@@ -79,27 +79,45 @@ func (c *CUPTI) enableCallback(name string) error {
 	return errors.Errorf("cannot find callback %v by name", name)
 }
 
-func (c *CUPTI) setSpanContextCorrelationId(span opentracing.Span, correlationId uint64) {
-	c.spans.Store(correlationId, span)
+type spanKey struct {
+	correlationId uint64
+	tag           string
 }
 
-func (c *CUPTI) removeSpanContextByCorrelationId(correlationId uint64) {
+func (c *CUPTI) setSpanContextCorrelationId(span opentracing.Span, correlationId uint64, tag string) {
+	key := spanKey{
+		correlationId: correlationId,
+		tag:           tag,
+	}
+	// log.WithField("correlation_id", correlationId).WithField("tag", tag).Error("span added")
+	c.spans.Store(key, span)
+}
+
+func (c *CUPTI) removeSpanContextByCorrelationId(correlationId uint64, tag string) {
 	// if correlationId == 109 {
 	// 	panic("fdsa")
 	// }
-	// log.WithField("correlation_id", correlationId).Error("span removed")
-	c.spans.Delete(correlationId)
+	// log.WithField("correlation_id", correlationId).WithField("tag", tag).Error("span removed")
+	key := spanKey{
+		correlationId: correlationId,
+		tag:           tag,
+	}
+	c.spans.Delete(key)
 }
 
-func (c *CUPTI) spanFromContextCorrelationId(correlationId uint64) (opentracing.Span, error) {
-	val, ok := c.spans.Load(correlationId)
+func (c *CUPTI) spanFromContextCorrelationId(correlationId uint64, tag string) (opentracing.Span, error) {
+	key := spanKey{
+		correlationId: correlationId,
+		tag:           tag,
+	}
+	val, ok := c.spans.Load(key)
 	if !ok {
-		log.WithField("correlation_id", correlationId).Error("span not found")
+		// log.WithField("correlation_id", correlationId).WithField("tag", tag).Error("span not found")
 		return nil, errors.Errorf("span for correlationId=%v was not found", correlationId)
 	}
 	span, ok := val.(opentracing.Span)
 	if !ok {
-		log.WithField("correlation_id", correlationId).Error("span not correct type")
+		// log.WithField("correlation_id", correlationId).WithField("tag", tag).Error("span not correct type")
 		return nil, errors.Errorf("span for correlationId=%v was not found", correlationId)
 	}
 	return span, nil
@@ -139,7 +157,7 @@ func (c *CUPTI) spanFromContextCorrelationId(correlationId uint64) (opentracing.
 // 	if functionName != "" {
 // 		ext.Component.Set(span, functionName)
 // 	}
-// 	c.setSpanContextCorrelationId(span, correlationId)
+// 	c.setSpanContextCorrelationId(span,"configure_call", correlationId)
 
 // 	return nil
 // }
@@ -202,14 +220,14 @@ func (c *CUPTI) onCULaunchKernelEnter(domain types.CUpti_CallbackDomain, cbid ty
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "launch_kernel")
 
 	return nil
 }
 
 func (c *CUPTI) onCULaunchKernelExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "launch_kernel")
 	if err != nil {
 		return err
 	}
@@ -222,7 +240,7 @@ func (c *CUPTI) onCULaunchKernelExit(domain types.CUpti_CallbackDomain, cbid typ
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "launch_kernel")
 	return nil
 }
 
@@ -230,14 +248,14 @@ func (c *CUPTI) onCULaunchKernel(domain types.CUpti_CallbackDomain, cbid types.C
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		res := c.onCULaunchKernelEnter(domain, cbid, cbInfo)
-		if res == nil && len(c.events) != 0 {
-			c.onCudaLaunchCaptureEventsEnter(domain, cbInfo)
-		}
+		// if res == nil && len(c.events) != 0 {
+		// 	c.onCudaLaunchCaptureEventsEnter(domain, "launch_kernel", cbInfo)
+		// }
 		return res
 	case C.CUPTI_API_EXIT:
-		if len(c.events) != 0 {
-			c.onCudaLaunchCaptureEventsExit(domain, cbInfo)
-		}
+		// if len(c.events) != 0 {
+		// 	c.onCudaLaunchCaptureEventsExit(domain, "launch_kernel", cbInfo)
+		// }
 		return c.onCULaunchKernelExit(domain, cbid, cbInfo)
 	default:
 		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
@@ -265,14 +283,14 @@ func (c *CUPTI) onCudaDeviceSynchronizeEnter(domain types.CUpti_CallbackDomain, 
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "device_synchronize")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaDeviceSynchronizeExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "device_synchronize")
 	if err != nil {
 		return err
 	}
@@ -281,7 +299,7 @@ func (c *CUPTI) onCudaDeviceSynchronizeExit(domain types.CUpti_CallbackDomain, c
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "device_synchronize")
 	return nil
 }
 
@@ -317,14 +335,14 @@ func (c *CUPTI) onCudaStreamSynchronizeEnter(domain types.CUpti_CallbackDomain, 
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "stream_synchronize")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaStreamSynchronizeExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "stream_synchronize")
 	if err != nil {
 		return err
 	}
@@ -333,7 +351,7 @@ func (c *CUPTI) onCudaStreamSynchronizeExit(domain types.CUpti_CallbackDomain, c
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "stream_synchronize")
 	return nil
 }
 
@@ -352,7 +370,7 @@ func (c *CUPTI) onCudaStreamSynchronize(domain types.CUpti_CallbackDomain, cbid 
 
 func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	if _, err := c.spanFromContextCorrelationId(correlationId); err == nil {
+	if _, err := c.spanFromContextCorrelationId(correlationId, "cudaMalloc"); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaMalloc_v3020_params)(cbInfo.functionParams)
@@ -370,14 +388,14 @@ func (c *CUPTI) onCudaMallocEnter(domain types.CUpti_CallbackDomain, cbid types.
 		"destination_ptr": uintptr(unsafe.Pointer(params.devPtr)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "cudaMalloc", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaMalloc")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaMallocExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaMalloc")
 	if err != nil {
 		return err
 	}
@@ -385,7 +403,7 @@ func (c *CUPTI) onCudaMallocExit(domain types.CUpti_CallbackDomain, cbid types.C
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaMalloc")
 
 	return nil
 }
@@ -405,7 +423,7 @@ func (c *CUPTI) onCudaMalloc(domain types.CUpti_CallbackDomain, cbid types.CUPTI
 
 func (c *CUPTI) onCudaMallocHostEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	if _, err := c.spanFromContextCorrelationId(correlationId); err == nil {
+	if _, err := c.spanFromContextCorrelationId(correlationId, "cudaMallocHost"); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaMallocHost_v3020_params)(cbInfo.functionParams)
@@ -423,14 +441,14 @@ func (c *CUPTI) onCudaMallocHostEnter(domain types.CUpti_CallbackDomain, cbid ty
 		"destination_ptr": uintptr(unsafe.Pointer(*params.ptr)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "cudaMallocHost", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaMallocHost")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaMallocHostExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaMallocHost")
 	if err != nil {
 		return err
 	}
@@ -438,7 +456,7 @@ func (c *CUPTI) onCudaMallocHostExit(domain types.CUpti_CallbackDomain, cbid typ
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaMallocHost")
 
 	return nil
 }
@@ -458,7 +476,7 @@ func (c *CUPTI) onCudaMallocHost(domain types.CUpti_CallbackDomain, cbid types.C
 
 func (c *CUPTI) onCudaHostAllocEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	if _, err := c.spanFromContextCorrelationId(correlationId); err == nil {
+	if _, err := c.spanFromContextCorrelationId(correlationId, "cudaHostAlloc"); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaHostAlloc_v3020_params)(cbInfo.functionParams)
@@ -477,14 +495,14 @@ func (c *CUPTI) onCudaHostAllocEnter(domain types.CUpti_CallbackDomain, cbid typ
 		"flags":    params.flags,
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "cudaHostAlloc", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaHostAlloc")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaHostAllocExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaHostAlloc")
 	if err != nil {
 		return err
 	}
@@ -492,7 +510,7 @@ func (c *CUPTI) onCudaHostAllocExit(domain types.CUpti_CallbackDomain, cbid type
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaHostAlloc")
 
 	return nil
 }
@@ -512,7 +530,7 @@ func (c *CUPTI) onCudaHostAlloc(domain types.CUpti_CallbackDomain, cbid types.CU
 
 func (c *CUPTI) onCudaMallocManagedEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	if _, err := c.spanFromContextCorrelationId(correlationId); err == nil {
+	if _, err := c.spanFromContextCorrelationId(correlationId, "cudaMallocManaged"); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaMallocManaged_v6000_params)(cbInfo.functionParams)
@@ -531,14 +549,14 @@ func (c *CUPTI) onCudaMallocManagedEnter(domain types.CUpti_CallbackDomain, cbid
 		"flags": params.flags,
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "cudaMallocManaged", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaMallocManaged")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaMallocManagedExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaMallocManaged")
 	if err != nil {
 		return err
 	}
@@ -546,7 +564,7 @@ func (c *CUPTI) onCudaMallocManagedExit(domain types.CUpti_CallbackDomain, cbid 
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaMallocManaged")
 
 	return nil
 }
@@ -566,7 +584,7 @@ func (c *CUPTI) onCudaMallocManaged(domain types.CUpti_CallbackDomain, cbid type
 
 func (c *CUPTI) onCudaMallocPitchEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	if _, err := c.spanFromContextCorrelationId(correlationId); err == nil {
+	if _, err := c.spanFromContextCorrelationId(correlationId, "cudaMallocPitch"); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaMallocPitch_v3020_params)(cbInfo.functionParams)
@@ -585,14 +603,14 @@ func (c *CUPTI) onCudaMallocPitchEnter(domain types.CUpti_CallbackDomain, cbid t
 		"height":            params.height,
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "cudaMallocPitch", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaMallocPitch")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaMallocPitchExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaMallocPitch")
 	if err != nil {
 		return err
 	}
@@ -600,7 +618,7 @@ func (c *CUPTI) onCudaMallocPitchExit(domain types.CUpti_CallbackDomain, cbid ty
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaMallocPitch")
 	return nil
 }
 
@@ -619,7 +637,7 @@ func (c *CUPTI) onCudaMallocPitch(domain types.CUpti_CallbackDomain, cbid types.
 
 func (c *CUPTI) onCudaFreeEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	if _, err := c.spanFromContextCorrelationId(correlationId); err == nil {
+	if _, err := c.spanFromContextCorrelationId(correlationId, "cudaFree"); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaFree_v3020_params)(cbInfo.functionParams)
@@ -635,14 +653,14 @@ func (c *CUPTI) onCudaFreeEnter(domain types.CUpti_CallbackDomain, cbid types.CU
 		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "cudaFree", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaFree")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaFreeExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaFree")
 	if err != nil {
 		return err
 	}
@@ -650,7 +668,7 @@ func (c *CUPTI) onCudaFreeExit(domain types.CUpti_CallbackDomain, cbid types.CUP
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaFree")
 
 	return nil
 }
@@ -670,7 +688,7 @@ func (c *CUPTI) onCudaFree(domain types.CUpti_CallbackDomain, cbid types.CUPTI_R
 
 func (c *CUPTI) onCudaFreeHostEnter(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	if _, err := c.spanFromContextCorrelationId(correlationId); err == nil {
+	if _, err := c.spanFromContextCorrelationId(correlationId, "cudaFreeHost"); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cudaFree_v3020_params)(cbInfo.functionParams)
@@ -686,14 +704,14 @@ func (c *CUPTI) onCudaFreeHostEnter(domain types.CUpti_CallbackDomain, cbid type
 		"ptr":               uintptr(unsafe.Pointer(params.devPtr)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "cudaFreeHost", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaFreeHost")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaFreeHostExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaFreeHost")
 	if err != nil {
 		return err
 	}
@@ -701,7 +719,7 @@ func (c *CUPTI) onCudaFreeHostExit(domain types.CUpti_CallbackDomain, cbid types
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaFreeHost")
 
 	return nil
 }
@@ -721,7 +739,7 @@ func (c *CUPTI) onCudaFreeHost(domain types.CUpti_CallbackDomain, cbid types.CUP
 
 func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	if _, err := c.spanFromContextCorrelationId(correlationId); err == nil {
+	if _, err := c.spanFromContextCorrelationId(correlationId, "cuda_memcpy_dev"); err == nil {
 		return errors.Errorf("span %d already exists", correlationId)
 	}
 	params := (*C.cuMemcpyHtoD_v2_params)(cbInfo.functionParams)
@@ -746,14 +764,14 @@ func (c *CUPTI) onCudaMemCopyDeviceEnter(domain types.CUpti_CallbackDomain, cbid
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cuda_memcpy_dev")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaMemCopyDeviceExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cuda_memcpy_dev")
 	if err != nil {
 		return err
 	}
@@ -765,7 +783,7 @@ func (c *CUPTI) onCudaMemCopyDeviceExit(domain types.CUpti_CallbackDomain, cbid 
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cuda_memcpy_dev")
 
 	return nil
 }
@@ -807,17 +825,17 @@ func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.
 		ext.Component.Set(span, functionName)
 	}
 
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cuda_launch")
 
-	pp.Println("onCudaLaunchEnter correlationId = ", int(correlationId))
+	// pp.Println("onCudaLaunchEnter correlationId = ", int(correlationId))
 
 	return nil
 }
 
 func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-	pp.Println("onCudaLaunch Exit")
+	// pp.Println("onCudaLaunch Exit")
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cuda_launch")
 	if err != nil {
 		return err
 	}
@@ -829,12 +847,12 @@ func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.C
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cuda_launch")
 
 	return nil
 }
 
-func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
 	eventData, err := c.findEventDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
 		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find event data")
@@ -863,7 +881,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 	return nil
 }
 
-func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain, cbInfo *C.CUpti_CallbackData) error {
+func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
 	eventData, err := c.findEventDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
 		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find event data")
@@ -892,8 +910,8 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 	C.cudaDeviceSynchronize()
 
 	correlationId := uint64(cbInfo.correlationId)
-	pp.Println("onCudaLaunchCaptureEventsExit correlationId = ", int(correlationId))
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	// pp.Println("onCudaLaunchCaptureEventsExit correlationId = ", int(correlationId))
+	span, err := c.spanFromContextCorrelationId(correlationId, callbackName)
 	if err != nil {
 		return err
 	}
@@ -901,7 +919,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 		return errors.New("nil span found")
 	}
 
-	pp.Println(len(eventIDs))
+	// pp.Println(len(eventIDs))
 
 	for eventName, eventId := range eventIDs {
 		values := make([]C.size_t, int(numInstances))
@@ -909,13 +927,16 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 
 		err = checkCUPTIError(
 			C.cuptiEventGroupReadEvent(
-				eventGroup, C.CUPTI_EVENT_READ_FLAG_NONE,
+				eventGroup,
+				C.CUPTI_EVENT_READ_FLAG_NONE,
 				eventId,
 				&valuesByteCount,
 				&values[0],
 			))
 		if err != nil {
-			log.WithError(err).Error("failed to cuptiEventGroupReadEvent")
+			log.WithError(err).
+				WithField("event_name", eventName).
+				Error("failed to cuptiEventGroupReadEvent")
 			return err
 		}
 		eventVal := int64(0)
@@ -942,14 +963,14 @@ func (c *CUPTI) onCudaLaunch(domain types.CUpti_CallbackDomain, cbid types.CUPTI
 	case C.CUPTI_API_ENTER:
 		res := c.onCudaLaunchEnter(domain, cbid, cbInfo)
 		if res == nil && len(c.events) != 0 {
-			c.onCudaLaunchCaptureEventsEnter(domain, cbInfo)
+			c.onCudaLaunchCaptureEventsEnter(domain, "cuda_launch", cbInfo)
 		}
 		return res
 	case C.CUPTI_API_EXIT:
 		if len(c.events) != 0 {
-			err := c.onCudaLaunchCaptureEventsExit(domain, cbInfo)
-			if false && err != nil {
-				panic(err)
+			err := c.onCudaLaunchCaptureEventsExit(domain, "cuda_launch", cbInfo)
+			if err != nil {
+				log.WithError(err).Error("failed at exit events")
 			}
 		}
 		return c.onCudaLaunchExit(domain, cbid, cbInfo)
@@ -979,14 +1000,14 @@ func (c *CUPTI) onCudaSynchronizeEnter(domain types.CUpti_CallbackDomain, cbid t
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cuda_synchronize")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaSynchronizeExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cuda_synchronize")
 	if err != nil {
 		return err
 	}
@@ -995,7 +1016,7 @@ func (c *CUPTI) onCudaSynchronizeExit(domain types.CUpti_CallbackDomain, cbid ty
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cuda_synchronize")
 
 	return nil
 }
@@ -1038,14 +1059,14 @@ func (c *CUPTI) onCudaMemCopyEnter(domain types.CUpti_CallbackDomain, cbid types
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cuda_memcpy")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaMemCopyExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cuda_memcpy")
 	if err != nil {
 		return err
 	}
@@ -1054,7 +1075,7 @@ func (c *CUPTI) onCudaMemCopyExit(domain types.CUpti_CallbackDomain, cbid types.
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cuda_memcpy")
 
 	return nil
 }
@@ -1094,14 +1115,14 @@ func (c *CUPTI) onCudaIpcGetEventHandleEnter(domain types.CUpti_CallbackDomain, 
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaIpcGetEventHandle")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaIpcGetEventHandleExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaIpcGetEventHandle")
 	if err != nil {
 		return err
 	}
@@ -1110,7 +1131,7 @@ func (c *CUPTI) onCudaIpcGetEventHandleExit(domain types.CUpti_CallbackDomain, c
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaIpcGetEventHandle")
 
 	return nil
 }
@@ -1150,14 +1171,14 @@ func (c *CUPTI) onCudaIpcOpenEventHandleEnter(domain types.CUpti_CallbackDomain,
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaIpcOpenEventHandle")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaIpcOpenEventHandleExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaIpcOpenEventHandle")
 	if err != nil {
 		return err
 	}
@@ -1166,7 +1187,7 @@ func (c *CUPTI) onCudaIpcOpenEventHandleExit(domain types.CUpti_CallbackDomain, 
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaIpcOpenEventHandle")
 
 	return nil
 }
@@ -1206,14 +1227,14 @@ func (c *CUPTI) onCudaIpcGetMemHandleEnter(domain types.CUpti_CallbackDomain, cb
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaIpcGetMemHandle")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaIpcGetMemHandleExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaIpcGetMemHandle")
 	if err != nil {
 		return err
 	}
@@ -1222,7 +1243,7 @@ func (c *CUPTI) onCudaIpcGetMemHandleExit(domain types.CUpti_CallbackDomain, cbi
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaIpcGetMemHandle")
 
 	return nil
 }
@@ -1263,14 +1284,14 @@ func (c *CUPTI) onCudaIpcOpenMemHandleEnter(domain types.CUpti_CallbackDomain, c
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaIpcOpenMemHandle")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaIpcOpenMemHandleExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaIpcOpenMemHandle")
 	if err != nil {
 		return err
 	}
@@ -1279,7 +1300,7 @@ func (c *CUPTI) onCudaIpcOpenMemHandleExit(domain types.CUpti_CallbackDomain, cb
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaIpcOpenMemHandle")
 
 	return nil
 }
@@ -1318,14 +1339,14 @@ func (c *CUPTI) onCudaIpcCloseMemHandleEnter(domain types.CUpti_CallbackDomain, 
 	if functionName != "" {
 		ext.Component.Set(span, functionName)
 	}
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "cudaIpcCloseMemHandle")
 
 	return nil
 }
 
 func (c *CUPTI) onCudaIpcCloseMemHandleExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "cudaIpcCloseMemHandle")
 	if err != nil {
 		return err
 	}
@@ -1334,7 +1355,7 @@ func (c *CUPTI) onCudaIpcCloseMemHandleExit(domain types.CUpti_CallbackDomain, c
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "cudaIpcCloseMemHandle")
 
 	return nil
 }
@@ -1367,14 +1388,14 @@ func (c *CUPTI) onNvtxRangeStartAEnter(domain types.CUpti_CallbackDomain, cbid t
 		"message":           C.GoString(params.message),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "nvtxRangeStartA", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "nvtxRangeStartA")
 
 	return nil
 }
 
 func (c *CUPTI) onNvtxRangeStartAExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "nvtxRangeStartA")
 	if err != nil {
 		return err
 	}
@@ -1382,7 +1403,7 @@ func (c *CUPTI) onNvtxRangeStartAExit(domain types.CUpti_CallbackDomain, cbid ty
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "nvtxRangeStartA")
 
 	return nil
 }
@@ -1425,14 +1446,14 @@ func (c *CUPTI) onNvtxRangeStartExEnter(domain types.CUpti_CallbackDomain, cbid 
 		"message":           C.GoString(union_to_ascii_ptr(params.eventAttrib.message)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "nvtxRangeStartEx", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "nvtxRangeStartEx")
 
 	return nil
 }
 
 func (c *CUPTI) onNvtxRangeStartExExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "nvtxRangeStartEx")
 	if err != nil {
 		return err
 	}
@@ -1444,7 +1465,7 @@ func (c *CUPTI) onNvtxRangeStartExExit(domain types.CUpti_CallbackDomain, cbid t
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "nvtxRangeStartEx")
 
 	return nil
 }
@@ -1477,14 +1498,14 @@ func (c *CUPTI) onNvtxRangeEndEnter(domain types.CUpti_CallbackDomain, cbid type
 		"nvtx_range_id":     uint64(params.id),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "nvtxRangeEnd", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "nvtxRangeEnd")
 
 	return nil
 }
 
 func (c *CUPTI) onNvtxRangeEndExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "nvtxRangeEnd")
 	if err != nil {
 		return err
 	}
@@ -1492,7 +1513,7 @@ func (c *CUPTI) onNvtxRangeEndExit(domain types.CUpti_CallbackDomain, cbid types
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "nvtxRangeEnd")
 
 	return nil
 }
@@ -1525,14 +1546,14 @@ func (c *CUPTI) onNvtxRangePushAEnter(domain types.CUpti_CallbackDomain, cbid ty
 		"message":           C.GoString(params.message),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "nvtxRangePushA", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "nvtxRangePushA")
 
 	return nil
 }
 
 func (c *CUPTI) onNvtxRangePushAExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "nvtxRangePushA")
 	if err != nil {
 		return err
 	}
@@ -1540,7 +1561,7 @@ func (c *CUPTI) onNvtxRangePushAExit(domain types.CUpti_CallbackDomain, cbid typ
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "nvtxRangePushA")
 
 	return nil
 }
@@ -1573,14 +1594,14 @@ func (c *CUPTI) onNvtxRangePushExEnter(domain types.CUpti_CallbackDomain, cbid t
 		"message":           C.GoString(union_to_ascii_ptr(params.eventAttrib.message)),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "nvtxRangePushEx", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "nvtxRangePushEx")
 
 	return nil
 }
 
 func (c *CUPTI) onNvtxRangePushExExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "nvtxRangePushEx")
 	if err != nil {
 		return err
 	}
@@ -1592,7 +1613,7 @@ func (c *CUPTI) onNvtxRangePushExExit(domain types.CUpti_CallbackDomain, cbid ty
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "nvtxRangePushEx")
 
 	return nil
 }
@@ -1623,14 +1644,14 @@ func (c *CUPTI) onNvtxRangePopEnter(domain types.CUpti_CallbackDomain, cbid type
 		"cupti_callback_id": cbid.String(),
 	}
 	span, _ := tracer.StartSpanFromContext(c.ctx, tracer.SYSTEM_LIBRARY_TRACE, "nvtxRangePop", tags)
-	c.setSpanContextCorrelationId(span, correlationId)
+	c.setSpanContextCorrelationId(span, correlationId, "nvtxRangePop")
 
 	return nil
 }
 
 func (c *CUPTI) onNvtxRangePopExit(domain types.CUpti_CallbackDomain, cbid types.CUpti_nvtx_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
 	correlationId := uint64(cbInfo.correlationId)
-	span, err := c.spanFromContextCorrelationId(correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, "nvtxRangePop")
 	if err != nil {
 		return err
 	}
@@ -1638,7 +1659,7 @@ func (c *CUPTI) onNvtxRangePopExit(domain types.CUpti_CallbackDomain, cbid types
 		return errors.New("no span found")
 	}
 	span.Finish()
-	c.removeSpanContextByCorrelationId(correlationId)
+	c.removeSpanContextByCorrelationId(correlationId, "nvtxRangePop")
 
 	return nil
 }
@@ -1682,7 +1703,7 @@ func (c *CUPTI) onContextCreate(domain types.CUpti_CallbackDomain, cuCtx C.CUcon
 		return nil
 	}
 
-	pp.Println("onResourceContextCreated")
+	// pp.Println("onResourceContextCreated")
 
 	deviceId := uint32(0)
 	err := checkCUPTIError(C.cuptiGetDeviceId(cuCtx, (*C.uint32_t)(&deviceId)))
@@ -1731,12 +1752,7 @@ func (c *CUPTI) onContextDestroy(domain types.CUpti_CallbackDomain, cuCtx C.CUco
 }
 
 func (c *CUPTI) onResourceContextCreated(domain types.CUpti_CallbackDomain, cbid types.CUpti_CallbackIdResource, cbInfo *C.CUpti_ResourceData) error {
-	err := c.onContextCreate(domain, cbInfo.context)
-	if err != nil {
-		pp.Println("onResourceContextCreated error = ", err)
-	}
-	pp.Println("onResourceContextCreated no error")
-	return err
+	return c.onContextCreate(domain, cbInfo.context)
 }
 
 func (c *CUPTI) onResourceContextDestroyStarting(domain types.CUpti_CallbackDomain, cbid types.CUpti_CallbackIdResource, cbInfo *C.CUpti_ResourceData) error {
@@ -1760,7 +1776,12 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		// 	handle.onCUCtxCreate(domain, cbid, cbInfo)
 		// 	return
 		case types.CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel:
-			handle.onCULaunchKernel(domain, cbid, cbInfo)
+			err := handle.onCULaunchKernel(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoD_v2,
 			types.CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoH_v2,
@@ -1768,7 +1789,12 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			types.CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoDAsync_v2,
 			types.CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoHAsync_v2,
 			types.CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoDAsync_v2:
-			handle.onCudaMemCopyDevice(domain, cbid, cbInfo)
+			err := handle.onCudaMemCopyDevice(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		default:
 			log.WithField("cbid", cbid.String()).
@@ -1781,62 +1807,152 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		cbInfo := (*C.CUpti_CallbackData)(cbInfo0)
 		switch cbid {
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaDeviceSynchronize_v3020:
-			handle.onCudaDeviceSynchronize(domain, cbid, cbInfo)
+			err := handle.onCudaDeviceSynchronize(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaStreamSynchronize_v3020:
-			handle.onCudaStreamSynchronize(domain, cbid, cbInfo)
+			err := handle.onCudaStreamSynchronize(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMalloc_v3020:
-			handle.onCudaMalloc(domain, cbid, cbInfo)
+			err := handle.onCudaMalloc(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMallocHost_v3020:
-			handle.onCudaMallocHost(domain, cbid, cbInfo)
+			err := handle.onCudaMallocHost(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaHostAlloc_v3020:
-			handle.onCudaHostAlloc(domain, cbid, cbInfo)
+			err := handle.onCudaHostAlloc(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMallocManaged_v6000:
-			handle.onCudaMallocManaged(domain, cbid, cbInfo)
+			err := handle.onCudaMallocManaged(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMallocPitch_v3020:
-			handle.onCudaMallocPitch(domain, cbid, cbInfo)
+			err := handle.onCudaMallocPitch(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaFree_v3020:
-			handle.onCudaFree(domain, cbid, cbInfo)
+			err := handle.onCudaFree(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaFreeHost_v3020:
-			handle.onCudaFreeHost(domain, cbid, cbInfo)
+			err := handle.onCudaFreeHost(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020,
 			types.CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyAsync_v3020:
-			handle.onCudaMemCopy(domain, cbid, cbInfo)
+			err := handle.onCudaMemCopy(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020, types.CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000:
-			handle.onCudaLaunch(domain, cbid, cbInfo)
+			err := handle.onCudaLaunch(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaThreadSynchronize_v3020:
-			handle.onCudaSynchronize(domain, cbid, cbInfo)
+			err := handle.onCudaSynchronize(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		// case types.CUPTI_RUNTIME_TRACE_CBID_cudaConfigureCall_v3020:
 		// 	handle.onCudaConfigureCall(domain, cbid, cbInfo)
 		// return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaSetupArgument_v3020:
-			handle.onCudaSetupArgument(domain, cbid, cbInfo)
+			err := handle.onCudaSetupArgument(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaIpcGetEventHandle_v4010:
-			handle.onCudaIpcGetEventHandle(domain, cbid, cbInfo)
+			err := handle.onCudaIpcGetEventHandle(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaIpcOpenEventHandle_v4010:
-			handle.onCudaIpcOpenEventHandle(domain, cbid, cbInfo)
+			err := handle.onCudaIpcOpenEventHandle(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaIpcGetMemHandle_v4010:
-			handle.onCudaIpcGetMemHandle(domain, cbid, cbInfo)
+			err := handle.onCudaIpcGetMemHandle(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaIpcOpenMemHandle_v4010:
-			handle.onCudaIpcOpenMemHandle(domain, cbid, cbInfo)
+			err := handle.onCudaIpcOpenMemHandle(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		case types.CUPTI_RUNTIME_TRACE_CBID_cudaIpcCloseMemHandle_v4010:
-			handle.onCudaIpcOpenMemHandle(domain, cbid, cbInfo)
+			err := handle.onCudaIpcOpenMemHandle(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
 			return
 		default:
 			log.WithField("cbid", cbid.String()).
@@ -1849,17 +1965,53 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		cbInfo := (*C.CUpti_CallbackData)(cbInfo0)
 		switch cbid {
 		case types.CUPTI_CBID_NVTX_nvtxRangeStartA:
-			handle.onNvtxRangeStartA(domain, cbid, cbInfo)
+			err := handle.onNvtxRangeStartA(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
+			return
 		case types.CUPTI_CBID_NVTX_nvtxRangeStartEx:
-			handle.onNvtxRangeStartEx(domain, cbid, cbInfo)
+			err := handle.onNvtxRangeStartEx(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
+			return
 		case types.CUPTI_CBID_NVTX_nvtxRangeEnd:
-			handle.onNvtxRangeEnd(domain, cbid, cbInfo)
+			err := handle.onNvtxRangeEnd(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
+			return
 		case types.CUPTI_CBID_NVTX_nvtxRangePushA:
-			handle.onNvtxRangePushA(domain, cbid, cbInfo)
+			err := handle.onNvtxRangePushA(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
+			return
 		case types.CUPTI_CBID_NVTX_nvtxRangePushEx:
-			handle.onNvtxRangePushEx(domain, cbid, cbInfo)
+			err := handle.onNvtxRangePushEx(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
+			return
 		case types.CUPTI_CBID_NVTX_nvtxRangePop:
-			handle.onNvtxRangePop(domain, cbid, cbInfo)
+			err := handle.onNvtxRangePop(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
+			return
 		default:
 			log.WithField("cbid", cbid.String()).
 				WithField("function_name", demangleName(cbInfo.functionName)).
@@ -1871,9 +2023,21 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 		cbInfo := (*C.CUpti_ResourceData)(cbInfo0)
 		switch cbid {
 		case types.CUPTI_CBID_RESOURCE_CONTEXT_CREATED:
-			handle.onResourceContextCreated(domain, cbid, cbInfo)
+			err := handle.onResourceContextCreated(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
+			return
 		case types.CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING:
-			handle.onResourceContextDestroyStarting(domain, cbid, cbInfo)
+			err := handle.onResourceContextDestroyStarting(domain, cbid, cbInfo)
+			if err != nil {
+				log.WithError(err).
+					WithField("domain", domain.String()).
+					WithField("callback", cbid.String()).Error("failed during callback")
+			}
+			return
 		default:
 			log.WithField("cbid", cbid.String()).
 				Info("skipping resource domain event")
