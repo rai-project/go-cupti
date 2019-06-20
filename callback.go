@@ -885,7 +885,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 
 	err = checkCUPTIError(C.cuptiEventGroupEnable(eventData.eventGroup))
 	if err != nil {
-		log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiEventGroupEnable")
+		log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiEventGroupSetEnable")
 		return err
 	}
 
@@ -893,7 +893,9 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 }
 
 func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
-
+	if len(c.events) != 0 {
+		return nil
+	}
 	metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
 		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find metric data")
@@ -912,23 +914,235 @@ func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomai
 		log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiSetEventCollectionMode")
 		return err
 	}
+	return nil
+}
 
-	all := C.uint32_t(1)
-	for i := 0; i < int(metricData.eventGroupSets.numSets); i++ {
-		err = checkCUPTIError(C.cuptiEventGroupSetAttribute(metricData.eventGroupSets.sets.eventGroups[i],
-			C.CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,
-			unsafe.Sizeof(all), &all))
-		if err != nil {
-			log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiEventGroupSetAttribute")
-			return err
+func (c *CUPTI) onCudaLaunchCaptureMetricsExit(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
+	metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
+	if err != nil {
+		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find metric data")
+		return err
+	}
+
+	eventGroupSetsPtr := metricData.eventGroupSets
+	metricIds := metricData.metricIds
+
+	correlationId := uint64(cbInfo.correlationId)
+	span, err := c.spanFromContextCorrelationId(correlationId, callbackName)
+	if err != nil {
+		return err
+	}
+	if span == nil {
+		return errors.New("nil span found")
+	}
+
+	numSets := eventGroupSetsPtr.numSets
+	eventGroupSets := (*[1 << 28]C.CUpti_EventGroupSet)(unsafe.Pointer(eventGroupSetsPtr.sets))[:numSets:numSets]
+	for ii, eventGroupSet := range eventGroupSets {
+		numEventGroups := int(eventGroupSet.numEventGroups)
+		eventGroups := (*[1 << 28]C.CUpti_EventGroup)(unsafe.Pointer(eventGroupSet.eventGroups))[:numEventGroups:numEventGroups]
+		for _, eventGroup := range eventGroups {
+			var groupDomain C.CUpti_EventDomainID
+			grouDomainSize := (C.size_t)(unsafe.Sizeof(groupDomain))
+			err := checkCUPTIError(
+				C.cuptiEventGroupGetAttribute(
+					eventGroup,
+					C.CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID,
+					&grouDomainSize,
+					unsafe.Pointer(&groupDomain),
+				),
+			)
+			if err != nil {
+				log.WithError(err).
+					WithField("index", ii).
+					WithField("attribute", types.CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID.String()).
+					Error("failed to get cuptiEventGroupGetAttribute")
+				return err
+			}
+
+			var numTotalInstances uint32
+			numTotalInstancesSize := (C.size_t)(unsafe.Sizeof(numTotalInstances))
+			err = checkCUPTIError(
+				C.cuptiDeviceGetEventDomainAttribute(
+					C.CUdevice(metricData.deviceId),
+					groupDomain,
+					C.CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
+					&numTotalInstancesSize,
+					unsafe.Pointer(&numTotalInstances),
+				),
+			)
+			if err != nil {
+				log.WithError(err).
+					WithField("index", ii).
+					WithField("attribute", types.CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT.String()).
+					Error("failed to get cuptiEventGroupGetAttribute")
+				return err
+			}
+
+			var numInstances uint32
+			numInstancesSize := (C.size_t)(unsafe.Sizeof(numInstances))
+			err = checkCUPTIError(
+				C.cuptiEventGroupGetAttribute(
+					eventGroup,
+					C.CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT,
+					&numInstancesSize,
+					unsafe.Pointer(&numInstances),
+				),
+			)
+			if err != nil {
+				log.WithError(err).
+					WithField("index", ii).
+					WithField("attribute", types.CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT.String()).
+					Error("failed to get cuptiEventGroupGetAttribute")
+				return err
+			}
+
+			var numEvents uint32
+			numEventsSize := (C.size_t)(unsafe.Sizeof(numEvents))
+			err = checkCUPTIError(
+				C.cuptiEventGroupGetAttribute(
+					eventGroup,
+					C.CUPTI_EVENT_GROUP_ATTR_NUM_EVENTS,
+					&numEventsSize,
+					unsafe.Pointer(&numEvents),
+				),
+			)
+			if err != nil {
+				log.WithError(err).
+					WithField("index", ii).
+					WithField("attribute", types.CUPTI_EVENT_GROUP_ATTR_NUM_EVENTS.String()).
+					Error("failed to get cuptiEventGroupGetAttribute")
+				return err
+			}
+
+			eventIds := make([]C.CUpti_EventID, numEvents)
+			eventIdsSize := (C.size_t)(int(unsafe.Sizeof(eventIds[0])) * int(numEvents))
+			err = checkCUPTIError(
+				C.cuptiEventGroupGetAttribute(
+					eventGroup,
+					C.CUPTI_EVENT_GROUP_ATTR_EVENTS,
+					&eventIdsSize,
+					unsafe.Pointer(&eventIds),
+				),
+			)
+			if err != nil {
+				log.WithError(err).
+					WithField("index", ii).
+					WithField("attribute", types.CUPTI_EVENT_GROUP_ATTR_EVENTS.String()).
+					Error("failed to get cuptiEventGroupGetAttribute")
+				return err
+			}
+
+			eventValueArray := make([]C.uint64_t, int(numEvents))
+			for ii, eventId := range eventIds {
+				values := make([]C.size_t, numInstances)
+				valuesSize := (C.size_t)(int(unsafe.Sizeof(values[0])) * int(numInstances))
+				err = checkCUPTIError(
+					C.cuptiEventGroupReadEvent(
+						eventGroup,
+						C.CUPTI_EVENT_READ_FLAG_NONE,
+						eventId,
+						&valuesSize,
+						&values[0],
+					),
+				)
+				if err != nil {
+					log.WithError(err).
+						WithField("index", ii).
+						WithField("attribute", types.CUPTI_EVENT_READ_FLAG_NONE.String()).
+						Error("failed to get cuptiEventGroupReadEvent")
+					return err
+				}
+
+				accum := int64(0)
+				for _, value := range values {
+					accum += int64(value)
+				}
+
+				// normalize the event value to represent the total number of
+				// domain instances on the device
+				normalized := float64(accum) * float64(numTotalInstances) / float64(numInstances)
+
+				eventValueArray[ii] = C.uint64_t(normalized)
+			}
+
+			for metricName, metricId := range metricIds {
+				var metricValue C.CUpti_MetricValue
+				err = checkCUPTIError(
+					C.cuptiMetricGetValue(
+						C.CUdevice(metricData.deviceId),
+						metricId,
+						(C.size_t)(uintptr(numEvents)*unsafe.Sizeof(eventIds[0])),
+						&eventIds[0],
+						(C.size_t)(uintptr(numEvents)*unsafe.Sizeof(eventValueArray[0])),
+						&eventValueArray[0],
+						0, // kernelDuration
+						&metricValue,
+					),
+				)
+				if err != nil {
+					log.WithError(err).
+						WithField("metricName", metricName).
+						Error("failed to get cuptiMetricGetValue")
+					return err
+				}
+
+				var metricValueKind C.CUpti_MetricValueKind
+				metricValueKindSize := (C.size_t)(unsafe.Sizeof(metricValueKind))
+				err = checkCUPTIError(
+					C.cuptiMetricGetAttribute(
+						metricId,
+						C.CUPTI_METRIC_ATTR_VALUE_KIND,
+						&metricValueKindSize,
+						unsafe.Pointer(&metricValueKind),
+					),
+				)
+				if err != nil {
+					log.WithError(err).
+						WithField("index", ii).
+						WithField("attribute", types.CUPTI_METRIC_ATTR_VALUE_KIND.String()).
+						Error("failed to get cuptiMetricGetAttribute")
+					return err
+				}
+
+				switch types.CUpti_MetricValueKind(metricValueKind) {
+				case types.CUPTI_METRIC_VALUE_KIND_DOUBLE:
+					span.LogFields(spanlog.Float64(metricName, *(*float64)(unsafe.Pointer(&metricValue))))
+				case types.CUPTI_METRIC_VALUE_KIND_UINT64:
+					span.LogFields(spanlog.Uint64(metricName,  *(*uint64)(unsafe.Pointer(&metricValue))))
+				case types.CUPTI_METRIC_VALUE_KIND_INT64:
+					span.LogFields(spanlog.Int64(metricName,  *(*int64)(unsafe.Pointer(&metricValue))))
+				case types.CUPTI_METRIC_VALUE_KIND_PERCENT:
+					span.LogFields(spanlog.Float64(metricName,  *(*float64)(unsafe.Pointer(&metricValue))))
+				case types.CUPTI_METRIC_VALUE_KIND_THROUGHPUT:
+					span.LogFields(spanlog.Uint64(metricName,  *(*uint64)(unsafe.Pointer(&metricValue))))
+				case types.CUPTI_METRIC_VALUE_KIND_UTILIZATION_LEVEL:
+					utilization := *(*types.CUpti_MetricValueUtilizationLevel)(unsafe.Pointer(&metricValue))
+					span.LogFields(spanlog.String(metricName,  utilization.String()))
+				default:
+					log.WithError(err).
+						WithField("index", ii).
+						WithField("metric_value", types.CUpti_MetricValueKind(metricValueKind).String()).
+						Error("failed to get cast metric value")
+					return err
+
+				}
+
+			}
 		}
-		err = checkCUPTIError(C.cuptiEventGroupEnable(metricData.eventGroupSets.sets.eventGroups[i]))
-		if err != nil {
-			log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiEventGroupEnable")
-			return err
+
+		for _, eventGroup := range eventGroups {
+			err = checkCUPTIError(C.cuptiEventGroupDisable(eventGroup))
+			if err != nil {
+				log.WithError(err).Error("failed to cuptiEventGroupDisable")
+				return err
+			}
 		}
 	}
+
+	return nil
 }
+
 func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
 	eventData, err := c.findEventDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
@@ -1017,8 +1231,17 @@ func (c *CUPTI) onCudaLaunch(domain types.CUpti_CallbackDomain, cbid types.CUPTI
 		if res == nil && len(c.events) != 0 {
 			c.onCudaLaunchCaptureEventsEnter(domain, "cuda_launch", cbInfo)
 		}
+		if res == nil && len(c.metrics) != 0 {
+			c.onCudaLaunchCaptureMetricsEnter(domain, "cuda_launch", cbInfo)
+		}
 		return res
 	case C.CUPTI_API_EXIT:
+		if len(c.metrics) != 0 {
+			err := c.onCudaLaunchCaptureMetricsExit(domain, "cuda_launch", cbInfo)
+			if err != nil {
+				log.WithError(err).Error("failed at exit events")
+			}
+		}
 		if len(c.events) != 0 {
 			err := c.onCudaLaunchCaptureEventsExit(domain, "cuda_launch", cbInfo)
 			if err != nil {

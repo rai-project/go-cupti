@@ -350,22 +350,55 @@ func (c *CUPTI) createMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId ui
 		metricIdArry = append(metricIdArry, metricId)
 	}
 
-	eventGroupSets := new(C.CUpti_EventGroupSets)
+	eventGroupSetsPtr := new(C.CUpti_EventGroupSets)
 
 	err := checkCUPTIError(C.cuptiMetricCreateEventGroupSets(cuCtx,
 		(C.size_t)(int(unsafe.Sizeof(metricIdArry[0]))*len(metricIdArry)),
 		&metricIdArry[0],
-		&eventGroupSets,
+		&eventGroupSetsPtr,
 	))
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot create metric even group set")
+	}
+
+	numSets := eventGroupSetsPtr.numSets
+	eventGroupSets := (*[1 << 28]C.CUpti_EventGroupSet)(unsafe.Pointer(eventGroupSetsPtr.sets))[:numSets:numSets]
+	for ii, eventGroupSet := range eventGroupSets {
+		numEventGroups := int(eventGroupSet.numEventGroups)
+		eventGroups := (*[1 << 28]C.CUpti_EventGroup)(unsafe.Pointer(eventGroupSet.eventGroups))[:numEventGroups:numEventGroups]
+		for _, eventGroup := range eventGroups {
+			all := C.uint32_t(1)
+			err = checkCUPTIError(
+				C.cuptiEventGroupSetAttribute(
+					eventGroup,
+					C.CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,
+					C.size_t(unsafe.Sizeof(all)),
+					unsafe.Pointer(&all),
+				),
+			)
+			if err != nil {
+				log.WithError(err).
+					WithField("mode", types.CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES.String()).
+					WithField("index", ii).
+					Error("failed to cuptiEventGroupSetAttribute")
+				return nil, err
+			}
+			err = checkCUPTIError(C.cuptiEventGroupEnable(eventGroup))
+			if err != nil {
+				log.WithError(err).
+					WithField("mode", types.CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES.String()).
+					WithField("index", ii).
+					Error("failed to cuptiEventGroupEnable")
+				return nil, err
+			}
+		}
 	}
 
 	return &metricData{
 		cuCtx:          cuCtx,
 		cuCtxID:        cuCtxID,
 		deviceId:       deviceId,
-		eventGroupSets: eventGroupSets,
+		eventGroupSets: eventGroupSetsPtr,
 		metricIds:      metricIds,
 	}, nil
 }

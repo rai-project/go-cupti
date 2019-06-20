@@ -105,6 +105,7 @@ func NewOptions(opts ...Option) *Options {
 		Domains(Config.Domains),
 		Callbacks(Config.Callbacks),
 		Events(Config.Events),
+		Metrics(Config.Metrics),
 	}
 
 	for _, o := range append(defaultOptions, opts...) {

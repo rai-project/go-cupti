@@ -82,6 +82,11 @@ func main() {
 				// "CUPTI_CBID_NVTX_nvtxRangePushEx",
 				// "CUPTI_CBID_NVTX_nvtxRangePop",
 			}),
+			cupti.Metrics(
+				[]string{
+					"flop_count_sp",
+				},
+			),
 			cupti.Events(
 				[]string{
 					"inst_executed",
