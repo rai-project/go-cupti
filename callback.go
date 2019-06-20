@@ -871,6 +871,17 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 	}
 
 
+	if len(c.metrics) != 0 {
+	metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
+	if err != nil {
+		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find metric data")
+		return err
+	}
+
+	if metricData.eventGroupSets.numSets > 1 { // you have set the kernel to replay
+		return nil
+	}
+	}
 	mode, err := types.CUpti_EventCollectionModeString("CUPTI_EVENT_COLLECTION_MODE_KERNEL")
 	if err != nil {
 		return err
