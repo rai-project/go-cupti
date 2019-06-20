@@ -1,7 +1,7 @@
 #
 # Copyright 2011-2018 NVIDIA Corporation. All rights reserved
 # 
-INCLUDES=-I../../include
+INCLUDES=-I/usr/local/cuda/extra/CUPTI/include
 
 ifndef OS
  OS   := $(shell uname)
@@ -11,7 +11,7 @@ endif
 ifeq ($(OS),Windows_NT)
     LIB_PATH ?= ..\..\lib64
 else
-    LIB_PATH ?= ../../lib64
+    LIB_PATH ?= /usr/local/cuda/extra/CUPTI/lib64
 endif
 
 ifeq ($(OS),Windows_NT)
