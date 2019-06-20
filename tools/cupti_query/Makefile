@@ -23,7 +23,7 @@ else
         export DYLD_LIBRARY_PATH := $(DYLD_LIBRARY_PATH):$(LIB_PATH)
         LIBS= -Xlinker -framework -Xlinker cuda -L $(LIB_PATH) -lcupti
     else
-        export LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):../../lib64
+        export LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):/usr/local/cuda/extra/CUPTI/lib64
         LIBS= -lcuda -L $(LIB_PATH) -lcupti
     endif
     OBJ = o
