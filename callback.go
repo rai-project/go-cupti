@@ -906,7 +906,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 	}
 
 	eventGroup := eventData.eventGroup
-	eventIDs := eventData.eventIds
+	eventIds := eventData.eventIds
 
 	var numInstances C.size_t
 	numInstancesByteCount := (C.size_t)(unsafe.Sizeof(numInstances))
@@ -936,9 +936,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 		return errors.New("nil span found")
 	}
 
-	// pp.Println(len(eventIDs))
-
-	for eventName, eventId := range eventIDs {
+	for eventName, eventId := range eventIds {
 		values := make([]C.size_t, int(numInstances))
 		valuesByteCount := C.size_t(C.sizeof_size_t * numInstances)
 
