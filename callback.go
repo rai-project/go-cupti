@@ -945,7 +945,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 		}
 
 		// pp.Println(eventName, "  ", eventVal)
-		span.LogFields(spanlog.Int64(eventName, eventVal))
+			span.LogFields(spanlog.Int64(eventName, eventVal))
 	}
 
 	err = checkCUPTIError(C.cuptiEventGroupDisable(eventGroup))

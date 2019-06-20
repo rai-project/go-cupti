@@ -72,16 +72,18 @@ func main() {
 			cupti.Context(ctx),
 			cupti.Activities(nil),
 			cupti.Callbacks([]string{
+				// "CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel",
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020",
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000",
 				"CUPTI_CBID_RESOURCE_CONTEXT_CREATED",
 				"CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING",
 			}),
-			cupti.Events([]string{
-				"inst_executed",
-				"global_load",
-				"global_store",
-			},
+			cupti.Events(
+				[]string{
+					"inst_executed",
+					"global_load",
+					"global_store",
+				},
 			))
 		if err != nil {
 			log.WithError(err).Error("failed to create new cupti context")
@@ -97,9 +99,8 @@ func main() {
 				vectorAdd()
 			}()
 		}
-		time.Sleep(5 * time.Second)
 		wg.Wait()
 
 	}()
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 }
