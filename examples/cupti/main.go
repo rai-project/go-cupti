@@ -85,14 +85,14 @@ func main() {
 			cupti.Events(
 				[]string{
 					"inst_executed",
-					"inst_executed_fma_pipe_s0",
-					"inst_executed_fma_pipe_s1",
-					"inst_executed_fma_pipe_s2",
-					"inst_executed_fma_pipe_s3",
-					"fb_subp0_read_sectors",
-					"fb_subp1_read_sectors",
-					"fb_subp0_write_sectors",
-					"fb_subp1_write_sectors",
+					// "inst_executed_fma_pipe_s0",
+					// "inst_executed_fma_pipe_s1",
+					// "inst_executed_fma_pipe_s2",
+					// "inst_executed_fma_pipe_s3",
+					// "fb_subp0_read_sectors",
+					// "fb_subp1_read_sectors",
+					// "fb_subp0_write_sectors",
+					// "fb_subp1_write_sectors",
 				},
 			))
 		if err != nil {

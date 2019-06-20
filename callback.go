@@ -1767,13 +1767,13 @@ func (c *CUPTI) onContextDestroy(domain types.CUpti_CallbackDomain, cuCtx C.CUco
 	err = c.removeEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
 	if err != nil {
 		return errors.Wrap(err, "cannot remove event group")
-  }
-  
+	}
+
 	err = c.removeMetricGroup(cuCtx, uint32(ctxId), uint32(deviceId))
 	if err != nil {
 		return errors.Wrap(err, "cannot remove metric group")
-  }
-  
+	}
+
 	return nil
 }
 

@@ -96,16 +96,18 @@ func SamplingPeriod(s int) Option {
 func NewOptions(opts ...Option) *Options {
 	Config.Wait()
 
-	options := &Options{
-		ctx:            context.Background(),
-		samplingPeriod: Config.SamplingPeriod,
-		activities:     Config.Activities,
-		domains:        Config.Domains,
-		callbacks:      Config.Callbacks,
-		events:         Config.Events,
+	options := &Options{}
+
+	defaultOptions := []Option{
+		Context(context.Background()),
+		SamplingPeriod(Config.SamplingPeriod),
+		Activities(Config.Activities),
+		Domains(Config.Domains),
+		Callbacks(Config.Callbacks),
+		Events(Config.Events),
 	}
 
-	for _, o := range opts {
+	for _, o := range append(defaultOptions, opts...) {
 		o(options)
 	}
 
