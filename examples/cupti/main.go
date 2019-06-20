@@ -87,9 +87,12 @@ func main() {
 			}),
 			cupti.Metrics(
 				[]string{
-					// "flop_count_sp",
 					"dram_read_transactions",
-					// "dram_write_transactions",
+					"dram_write_transactions",
+					"flop_count_sp",
+					"global_hit_rate",
+					"dram_read_bytes",
+					"dram_write_bytes",
 				},
 			),
 			cupti.Events(

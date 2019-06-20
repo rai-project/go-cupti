@@ -870,7 +870,6 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 		return err
 	}
 
-	C.cudaDeviceSynchronize()
 
 	mode, err := types.CUpti_EventCollectionModeString("CUPTI_EVENT_COLLECTION_MODE_KERNEL")
 	if err != nil {
@@ -893,14 +892,16 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 }
 
 func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
+
+
+
 	metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
 		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find metric data")
 		return err
 	}
-
-	C.cudaDeviceSynchronize()
-
+	
+	if metricData.eventGroupSets.numSets <= 1 {
 	mode, err := types.CUpti_EventCollectionModeString("CUPTI_EVENT_COLLECTION_MODE_KERNEL")
 	if err != nil {
 		return err
@@ -911,6 +912,7 @@ func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomai
 		log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiSetEventCollectionMode")
 		return err
 	}
+}
 	return nil
 }
 
@@ -1078,10 +1080,11 @@ func (c *CUPTI) onCudaLaunchCaptureMetricsExit(domain types.CUpti_CallbackDomain
 					),
 				)
 				if err != nil {
-					log.WithError(err).
-						WithField("metricName", metricName).
-						Error("failed to get cuptiMetricGetValue")
-					return err
+					// this is not a hard error. a metric might not be able to 
+					// be computed using the current event group, but subsequent 
+					// values of the next event group might be able to compute the
+					// metric.
+					continue 
 				}
 
 				var metricValueKind C.CUpti_MetricValueKind
@@ -1225,12 +1228,15 @@ func (c *CUPTI) onCudaLaunch(domain types.CUpti_CallbackDomain, cbid types.CUPTI
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		res := c.onCudaLaunchEnter(domain, cbid, cbInfo)
-		if res == nil && len(c.events) != 0 {
+		if res == nil {
+			C.cudaDeviceSynchronize()
+			if  len(c.events) != 0 {
 			c.onCudaLaunchCaptureEventsEnter(domain, "cuda_launch", cbInfo)
 		}
-		if res == nil && len(c.metrics) != 0 {
+		if len(c.metrics) != 0 {
 			c.onCudaLaunchCaptureMetricsEnter(domain, "cuda_launch", cbInfo)
 		}
+	}
 		return res
 	case C.CUPTI_API_EXIT:
 		if len(c.metrics) != 0 {

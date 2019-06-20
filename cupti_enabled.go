@@ -359,7 +359,17 @@ func (c *CUPTI) createMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId ui
 		return nil, errors.Wrapf(err, "cannot create metric even group set")
 	}
 
+
 	numSets := eventGroupSetsPtr.numSets
+	
+	if numSets > 1 {
+		err := checkCUPTIError(C.cuptiEnableKernelReplayMode(cuCtx))
+		if err != nil {
+			log.WithError(err).Error("failed to enable cuptiEnableKernelReplayMode")
+			return nil, err
+		}
+	}
+
 	eventGroupSets := (*[1 << 28]C.CUpti_EventGroupSet)(unsafe.Pointer(eventGroupSetsPtr.sets))[:numSets:numSets]
 	for ii, eventGroupSet := range eventGroupSets {
 		numEventGroups := int(eventGroupSet.numEventGroups)
@@ -472,6 +482,16 @@ func (c *CUPTI) deleteMetricGroup(metricDataItem *metricData) error {
 	if metricDataItem == nil {
 		return nil
 	}
+
+
+if metricDataItem.eventGroupSets.numSets > 1 {
+	pp.Println("cuptiDisableKernelReplayMode...")
+	err := checkCUPTIError(C.cuptiDisableKernelReplayMode(metricDataItem.cuCtx))
+	if err != nil {
+		log.WithError(err).Error("failed to enable cuptiDisableKernelReplayMode")
+		return err
+	}
+}
 
 	err := checkCUPTIError(C.cuptiEventGroupSetsDestroy(metricDataItem.eventGroupSets))
 	if err != nil {
