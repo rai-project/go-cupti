@@ -353,7 +353,7 @@ func (c *CUPTI) createMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId ui
 	metricGroup := new(C.CUpti_EventGroupSets)
 
 	err := checkCUPTIError(C.cuptiMetricCreateEventGroupSets(cuCtx,
-	(C.size_t)(int(unsafe.Sizeof(metricIdArry[0]))*len(metricIdArry)),
+		(C.size_t)(int(unsafe.Sizeof(metricIdArry[0]))*len(metricIdArry)),
 		&metricIdArry[0],
 		&metricGroup,
 	))

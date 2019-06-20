@@ -343,6 +343,8 @@ int enumMetrics(CUdevice dev) {
     printf("\t \"name\":       \"%s\",\n", metricData.eventName);
     printf("\t \"short_description\": \"%s\",\n", metricData.shortDesc);
     printf("\t \"long_description\" : \"%s\"\n},\n", metricData.longDesc);
+
+
   }
 
 Exit:
