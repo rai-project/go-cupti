@@ -2,7 +2,7 @@ package cupti
 
 var (
 	DefaultCallbacks = []string{
-		"CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel",
+		// "CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel", // Not needed if enabling the runtime *cudaLaunch*
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoH_v2",
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoHAsync_v2",
 		"CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoD_v2",

@@ -265,14 +265,8 @@ func (c *CUPTI) onCULaunchKernel(domain types.CUpti_CallbackDomain, cbid types.C
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		res := c.onCULaunchKernelEnter(domain, cbid, cbInfo)
-		// if res == nil && len(c.events) != 0 {
-		// 	c.onCudaLaunchCaptureEventsEnter(domain, "launch_kernel", cbInfo)
-		// }
 		return res
 	case C.CUPTI_API_EXIT:
-		// if len(c.events) != 0 {
-		// 	c.onCudaLaunchCaptureEventsExit(domain, "launch_kernel", cbInfo)
-		// }
 		return c.onCULaunchKernelExit(domain, cbid, cbInfo)
 	default:
 		return errors.New("invalid callback site " + types.CUpti_ApiCallbackSite(cbInfo.callbackSite).String())
@@ -876,20 +870,20 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 		return err
 	}
 
-	eventGroup := eventData.eventGroup
-
 	C.cudaDeviceSynchronize()
 
 	mode, err := types.CUpti_EventCollectionModeString("CUPTI_EVENT_COLLECTION_MODE_KERNEL")
 	if err != nil {
 		return err
 	}
+
 	err = checkCUPTIError(C.cuptiSetEventCollectionMode(eventData.cuCtx, C.CUpti_EventCollectionMode(mode)))
 	if err != nil {
 		log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiSetEventCollectionMode")
 		return err
 	}
-	err = checkCUPTIError(C.cuptiEventGroupEnable(eventGroup))
+
+	err = checkCUPTIError(C.cuptiEventGroupEnable(eventData.eventGroup))
 	if err != nil {
 		log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiEventGroupEnable")
 		return err
@@ -898,6 +892,43 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 	return nil
 }
 
+func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
+
+	metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
+	if err != nil {
+		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find metric data")
+		return err
+	}
+
+	C.cudaDeviceSynchronize()
+
+	mode, err := types.CUpti_EventCollectionModeString("CUPTI_EVENT_COLLECTION_MODE_KERNEL")
+	if err != nil {
+		return err
+	}
+
+	err = checkCUPTIError(C.cuptiSetEventCollectionMode(metricData.cuCtx, C.CUpti_EventCollectionMode(mode)))
+	if err != nil {
+		log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiSetEventCollectionMode")
+		return err
+	}
+
+	all := C.uint32_t(1)
+	for i := 0; i < int(metricData.eventGroupSets.numSets); i++ {
+		err = checkCUPTIError(C.cuptiEventGroupSetAttribute(metricData.eventGroupSets.sets.eventGroups[i],
+			C.CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,
+			unsafe.Sizeof(all), &all))
+		if err != nil {
+			log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiEventGroupSetAttribute")
+			return err
+		}
+		err = checkCUPTIError(C.cuptiEventGroupEnable(metricData.eventGroupSets.sets.eventGroups[i]))
+		if err != nil {
+			log.WithError(err).WithField("mode", mode.String()).Error("failed to cuptiEventGroupEnable")
+			return err
+		}
+	}
+}
 func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
 	eventData, err := c.findEventDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
@@ -927,7 +958,6 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 	C.cudaDeviceSynchronize()
 
 	correlationId := uint64(cbInfo.correlationId)
-	// pp.Println("onCudaLaunchCaptureEventsExit correlationId = ", int(correlationId))
 	span, err := c.spanFromContextCorrelationId(correlationId, callbackName)
 	if err != nil {
 		return err
@@ -968,6 +998,13 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 		log.WithError(err).Error("failed to cuptiEventGroupDisable")
 		return err
 	}
+
+	// CUPTI_CALL(cuptiMetricGetValue(device, metricId,
+	//   metricData.numEvents * sizeof(CUpti_EventID),
+	//   metricData.eventIdArray,
+	//   metricData.numEvents * sizeof(uint64_t),
+	//   metricData.eventValueArray,
+	//   kernelDuration, &metricValue));
 
 	return nil
 }

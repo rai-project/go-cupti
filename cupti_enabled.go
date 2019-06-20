@@ -41,11 +41,11 @@ type eventData struct {
 }
 
 type metricData struct {
-	cuCtx       C.CUcontext
-	cuCtxID     uint32
-	deviceId    uint32
-	metricGroup *C.CUpti_EventGroupSets
-	metricIds   map[string]C.CUpti_MetricID
+	cuCtx          C.CUcontext
+	cuCtxID        uint32
+	deviceId       uint32
+	eventGroupSets *C.CUpti_EventGroupSets
+	metricIds      map[string]C.CUpti_MetricID
 }
 
 var (
@@ -350,23 +350,23 @@ func (c *CUPTI) createMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId ui
 		metricIdArry = append(metricIdArry, metricId)
 	}
 
-	metricGroup := new(C.CUpti_EventGroupSets)
+	eventGroupSets := new(C.CUpti_EventGroupSets)
 
 	err := checkCUPTIError(C.cuptiMetricCreateEventGroupSets(cuCtx,
 		(C.size_t)(int(unsafe.Sizeof(metricIdArry[0]))*len(metricIdArry)),
 		&metricIdArry[0],
-		&metricGroup,
+		&eventGroupSets,
 	))
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot create metric even group set")
 	}
 
 	return &metricData{
-		cuCtx:       cuCtx,
-		cuCtxID:     cuCtxID,
-		deviceId:    deviceId,
-		metricGroup: metricGroup,
-		metricIds:   metricIds,
+		cuCtx:          cuCtx,
+		cuCtxID:        cuCtxID,
+		deviceId:       deviceId,
+		eventGroupSets: eventGroupSets,
+		metricIds:      metricIds,
 	}, nil
 }
 
@@ -442,7 +442,7 @@ func (c *CUPTI) deleteMetricGroup(metricDataItem *metricData) error {
 		return nil
 	}
 
-	err := checkCUPTIError(C.cuptiEventGroupSetsDestroy(metricDataItem.metricGroup))
+	err := checkCUPTIError(C.cuptiEventGroupSetsDestroy(metricDataItem.eventGroupSets))
 	if err != nil {
 		log.WithError(err).Error("unable to remove metric group")
 	}
