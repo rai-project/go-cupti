@@ -26,7 +26,7 @@ func Activities(activities []string) Option {
 		activities = []string{}
 	}
 	return func(o *Options) {
-		o.activities = activities
+		o.activities = strUnion(activities)
 	}
 }
 
@@ -35,7 +35,7 @@ func Domains(domains []string) Option {
 		domains = []string{}
 	}
 	return func(o *Options) {
-		o.domains = domains
+		o.domains = strUnion(domains)
 	}
 }
 
@@ -44,7 +44,7 @@ func Callbacks(callbacks []string) Option {
 		callbacks = []string{}
 	}
 	return func(o *Options) {
-		o.callbacks = callbacks
+		o.callbacks = strUnion(callbacks)
 	}
 }
 
@@ -53,7 +53,14 @@ func Events(events []string) Option {
 		events = []string{}
 	}
 	return func(o *Options) {
-		o.events = events
+		o.events = strUnion(events)
+		// maybe this is too automated, but we depend on the following
+		// callbacks to run for events to work
+		extraCallbacks := []string{
+			"CUPTI_CBID_RESOURCE_CONTEXT_CREATED",
+			"CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING",
+		}
+		o.callbacks = strUnion(append(o.callbacks, extraCallbacks...))
 	}
 }
 
@@ -80,4 +87,21 @@ func NewOptions(opts ...Option) *Options {
 	}
 
 	return options
+}
+
+func strUnion(inputs []string) []string {
+	res := make([]string, 0, len(inputs))
+	for _, input := range inputs {
+		found := false
+		for _, r := range res {
+			if r == input {
+				found = true
+				break
+			}
+		}
+		if !found {
+			res = append(res, input)
+		}
+	}
+	return res
 }

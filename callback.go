@@ -65,17 +65,34 @@ func (c *CUPTI) currentTimeStamp() time.Time {
 
 func (c *CUPTI) enableCallback(name string) error {
 	if cbid, err := types.CUpti_driver_api_trace_cbidString(name); err == nil {
-		return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_DRIVER_API, C.CUpti_CallbackId(cbid)))
+		err := checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_DRIVER_API, C.CUpti_CallbackId(cbid)))
+		if err != nil {
+			log.WithError(err).WithField("name", name).WithField("domain", types.CUPTI_CB_DOMAIN_DRIVER_API.String()).Error("cannot enable driver callback")
+		}
+		return err
 	}
 	if cbid, err := types.CUPTI_RUNTIME_TRACE_CBIDString(name); err == nil {
-		return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_RUNTIME_API, C.CUpti_CallbackId(cbid)))
+		err := checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_RUNTIME_API, C.CUpti_CallbackId(cbid)))
+		if err != nil {
+			log.WithError(err).WithField("name", name).WithField("domain", types.CUPTI_CB_DOMAIN_RUNTIME_API.String()).Error("cannot enable runtime callback")
+		}
+		return err
 	}
 	if cbid, err := types.CUpti_nvtx_api_trace_cbidString(name); err == nil {
-		return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_NVTX, C.CUpti_CallbackId(cbid)))
+		err := checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_NVTX, C.CUpti_CallbackId(cbid)))
+		if err != nil {
+			log.WithError(err).WithField("name", name).WithField("domain", types.CUPTI_CB_DOMAIN_NVTX.String()).Error("cannot enable nvtx callback")
+		}
+		return err
 	}
 	if cbid, err := types.CUpti_CallbackIdResourceString(name); err == nil {
-		return checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_RESOURCE, C.CUpti_CallbackId(cbid)))
+		err := checkCUPTIError(C.cuptiEnableCallback( /*enable=*/ 1, c.subscriber, C.CUPTI_CB_DOMAIN_RESOURCE, C.CUpti_CallbackId(cbid)))
+		if err != nil {
+			log.WithError(err).WithField("name", name).WithField("domain", types.CUPTI_CB_DOMAIN_RESOURCE.String()).Error("cannot enable resource callback")
+		}
+		return err
 	}
+	log.WithField("name", name).Error("cannot enable callback")
 	return errors.Errorf("cannot find callback %v by name", name)
 }
 
@@ -945,7 +962,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 		}
 
 		// pp.Println(eventName, "  ", eventVal)
-			span.LogFields(spanlog.Int64(eventName, eventVal))
+		span.LogFields(spanlog.Int64(eventName, eventVal))
 	}
 
 	err = checkCUPTIError(C.cuptiEventGroupDisable(eventGroup))
@@ -1961,6 +1978,7 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			return
 		}
 	case types.CUPTI_CB_DOMAIN_NVTX:
+		pp.Println("in nvtx domain")
 		cbid := types.CUpti_nvtx_api_trace_cbid(cbid0)
 		cbInfo := (*C.CUpti_CallbackData)(cbInfo0)
 		switch cbid {

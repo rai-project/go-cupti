@@ -75,8 +75,12 @@ func main() {
 				// "CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel",
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020",
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000",
-				"CUPTI_CBID_RESOURCE_CONTEXT_CREATED",
-				"CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING",
+				// "CUPTI_CBID_NVTX_nvtxRangeStartA",
+				// "CUPTI_CBID_NVTX_nvtxRangeStartEx",
+				// "CUPTI_CBID_NVTX_nvtxRangeEnd",
+				// "CUPTI_CBID_NVTX_nvtxRangePushA",
+				// "CUPTI_CBID_NVTX_nvtxRangePushEx",
+				// "CUPTI_CBID_NVTX_nvtxRangePop",
 			}),
 			cupti.Events(
 				[]string{
