@@ -33,16 +33,15 @@ __global__ void vectorAdd(const float *A, const float *B, float *C,
                           int numElements)
 {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
-C[i] = A[i]+B[i];
-  // if (i < numElements)
-  // {
-  //   for (int ii = 0; ii < i % 1000; ii++)
-  //   {
-  //     if (i + ii >= numElements)
-  //       return;
-  //     C[i + ii] = A[i + ii] + B[i + ii];
-  //   }
-  // }
+  if (i < numElements)
+  {
+    for (int ii = 0; ii < i % 1000; ii++)
+    {
+      if (i + ii >= numElements)
+        return;
+      C[i + ii] = A[i + ii] + B[i + ii];
+    }
+  }
 }
 
 /**
