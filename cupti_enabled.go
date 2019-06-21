@@ -5,11 +5,12 @@ package cupti
 // #include <cupti.h>
 import "C"
 import (
-	"github.com/k0kubun/pp"
 	"context"
 	"sync"
 	"time"
 	"unsafe"
+
+	"github.com/k0kubun/pp"
 
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
@@ -243,7 +244,7 @@ func (c *CUPTI) addMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId uint3
 	if len(c.metrics) == 0 {
 		return nil
 	}
-	
+
 	metricData, err := c.createMetricGroup(cuCtx, cuCtxID, deviceId)
 	if err != nil {
 		err := errors.Wrapf(err, "cannot create metric group for device %d", deviceId)
@@ -280,7 +281,7 @@ func (c *CUPTI) findMetricDataByCUCtxID(cuCtxID uint32) (*metricData, error) {
 			return metricDataItem, nil
 		}
 	}
-	return nil, errors.Errorf("cannot find metric group for cutxid = %d", cuCtxID)
+	return nil, errors.Errorf("cannot find metric data for cutxid = %d", cuCtxID)
 }
 
 func (c *CUPTI) findEventDataByCUCtxID(cuCtxID uint32) (*eventData, error) {
@@ -359,9 +360,8 @@ func (c *CUPTI) createMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId ui
 		return nil, errors.Wrapf(err, "cannot create metric even group set")
 	}
 
-
 	numSets := eventGroupSetsPtr.numSets
-	
+
 	if numSets > 1 {
 		err := checkCUPTIError(C.cuptiEnableKernelReplayMode(cuCtx))
 		if err != nil {
@@ -483,15 +483,14 @@ func (c *CUPTI) deleteMetricGroup(metricDataItem *metricData) error {
 		return nil
 	}
 
-
-if metricDataItem.eventGroupSets.numSets > 1 {
-	pp.Println("cuptiDisableKernelReplayMode...")
-	err := checkCUPTIError(C.cuptiDisableKernelReplayMode(metricDataItem.cuCtx))
-	if err != nil {
-		log.WithError(err).Error("failed to enable cuptiDisableKernelReplayMode")
-		return err
+	if metricDataItem.eventGroupSets.numSets > 1 {
+		pp.Println("cuptiDisableKernelReplayMode...")
+		err := checkCUPTIError(C.cuptiDisableKernelReplayMode(metricDataItem.cuCtx))
+		if err != nil {
+			log.WithError(err).Error("failed to enable cuptiDisableKernelReplayMode")
+			return err
+		}
 	}
-}
 
 	err := checkCUPTIError(C.cuptiEventGroupSetsDestroy(metricDataItem.eventGroupSets))
 	if err != nil {

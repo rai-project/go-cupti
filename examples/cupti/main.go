@@ -75,7 +75,7 @@ func main() {
 			cupti.Context(ctx),
 			cupti.Activities(nil),
 			cupti.Callbacks([]string{
-				// "CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel",
+				"CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel",
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020",
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000",
 				// "CUPTI_CBID_NVTX_nvtxRangeStartA",
@@ -87,24 +87,14 @@ func main() {
 			}),
 			cupti.Metrics(
 				[]string{
-					"dram_read_transactions",
-					"dram_write_transactions",
-					"flop_count_sp",
-					"dram_read_bytes",
-					"dram_write_bytes",
+					// "flop_count_sp",
+					// "dram_read_bytes",
+					// "dram_write_bytes",
 				},
 			),
 			cupti.Events(
 				[]string{
 					// "inst_executed",
-					// "inst_executed_fma_pipe_s0",
-					// "inst_executed_fma_pipe_s1",
-					// "inst_executed_fma_pipe_s2",
-					// "inst_executed_fma_pipe_s3",
-					// "fb_subp0_read_sectors",
-					// "fb_subp1_read_sectors",
-					// "fb_subp0_write_sectors",
-					// "fb_subp1_write_sectors",
 				},
 			))
 		if err != nil {

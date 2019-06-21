@@ -1,5 +1,7 @@
 package cupti
 
 var (
-	DefaultEvents = []string{}
+	DefaultEvents = []string{
+		"",
+	}
 )
