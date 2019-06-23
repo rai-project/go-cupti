@@ -112,9 +112,6 @@ func (c *CUPTI) setSpanContextCorrelationId(span opentracing.Span, correlationId
 }
 
 func (c *CUPTI) removeSpanContextByCorrelationId(correlationId uint64, tag string) {
-	// if correlationId == 109 {
-	// 	panic("fdsa")
-	// }
 	// log.WithField("correlation_id", correlationId).WithField("tag", tag).Error("span removed")
 	key := spanKey{
 		correlationId: correlationId,
@@ -839,14 +836,14 @@ func (c *CUPTI) onCudaLaunchEnter(domain types.CUpti_CallbackDomain, cbid types.
 
 	c.setSpanContextCorrelationId(span, correlationId, "cuda_launch")
 
-	// pp.Println("onCudaLaunchEnter correlationId = ", int(correlationId))
+	pp.Println("onCudaLaunchEnter correlationId = ", int(correlationId))
 
 	return nil
 }
 
 func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
-	// pp.Println("onCudaLaunch Exit")
 	correlationId := uint64(cbInfo.correlationId)
+	// pp.Println("onCudaLaunch Exit correlationId = ", int(correlationId))
 	span, err := c.spanFromContextCorrelationId(correlationId, "cuda_launch")
 	if err != nil {
 		return err
@@ -854,11 +851,11 @@ func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.C
 	if span == nil {
 		return errors.New("no span found")
 	}
+	span.Finish()
 	if cbInfo.functionReturnValue != nil {
 		cuError := (*C.CUresult)(cbInfo.functionReturnValue)
 		span.SetTag("result", types.CUresult(*cuError).String())
 	}
-	span.Finish()
 	c.removeSpanContextByCorrelationId(correlationId, "cuda_launch")
 
 	return nil
@@ -867,21 +864,40 @@ func (c *CUPTI) onCudaLaunchExit(domain types.CUpti_CallbackDomain, cbid types.C
 func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
 	eventData, err := c.findEventDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
-		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find event data")
-		return err
+		err = c.onContextCreateAddEventGroup(domain, cbInfo.context)
+		if err != nil {
+			log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot add event data")
+		}
+		eventData, err = c.findEventDataByCUCtxID(uint32(cbInfo.contextUid))
+		if err != nil {
+			log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find added event data")
+			return err
+		}
+		eventData.destroyAfterKernelLaunch = true
 	}
 
 	if len(c.metrics) != 0 {
 		metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
 		if err != nil {
-			log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find metric data")
-			return err
+			err = c.onContextCreateAddMetricGroup(domain, cbInfo.context)
+			if err != nil {
+				log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot add metric data")
+			}
+			metricData, err = c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
+			if err != nil {
+				log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find added metric data")
+				return err
+			}
+			metricData.destroyAfterKernelLaunch = true
 		}
 
 		if metricData.eventGroupSets.numSets > 1 { // you have set the kernel to replay
 			return nil
 		}
 	}
+
+	C.cudaDeviceSynchronize()
+
 	mode, err := types.CUpti_EventCollectionModeString("CUPTI_EVENT_COLLECTION_MODE_KERNEL")
 	if err != nil {
 		return err
@@ -903,14 +919,28 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 }
 
 func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
-
 	metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
-		log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find metric data in onCudaLaunchCaptureMetricsEnter")
-		return err
+		err = c.onContextCreateAddMetricGroup(domain, cbInfo.context)
+		if err != nil {
+			log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot add metric data")
+		}
+		metricData, err = c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
+		if err != nil {
+			log.WithError(err).WithField("context_id", uint32(cbInfo.contextUid)).Error("cannot find added metric data")
+			return err
+		}
+		metricData.destroyAfterKernelLaunch = true
 	}
 
-	if metricData.eventGroupSets.numSets <= 1 {
+	// pp.Println("metricData = ", len(metricData.metricIds))
+
+	C.cudaDeviceSynchronize()
+
+	eventGroupSetsPtr := metricData.eventGroupSets
+	numSets := eventGroupSetsPtr.numSets
+
+	if numSets <= 1 {
 		mode, err := types.CUpti_EventCollectionModeString("CUPTI_EVENT_COLLECTION_MODE_KERNEL")
 		if err != nil {
 			return err
@@ -922,6 +952,16 @@ func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomai
 			return err
 		}
 	}
+
+	eventGroupSets := (*[1 << 28]C.CUpti_EventGroupSet)(unsafe.Pointer(eventGroupSetsPtr.sets))[:numSets:numSets]
+	for ii, eventGroupSet := range eventGroupSets {
+		err = checkCUPTIError(C.cuptiEventGroupSetEnable(&eventGroupSet))
+		if err != nil {
+			log.WithError(err).WithField("index", ii).Error("failed to cuptiEventGroupSetEnable")
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -944,6 +984,8 @@ func (c *CUPTI) onCudaLaunchCaptureMetricsExit(domain types.CUpti_CallbackDomain
 		return errors.New("nil span found")
 	}
 
+	C.cudaDeviceSynchronize()
+
 	numSets := eventGroupSetsPtr.numSets
 	eventGroupSets := (*[1 << 28]C.CUpti_EventGroupSet)(unsafe.Pointer(eventGroupSetsPtr.sets))[:numSets:numSets]
 	for ii, eventGroupSet := range eventGroupSets {
@@ -964,7 +1006,7 @@ func (c *CUPTI) onCudaLaunchCaptureMetricsExit(domain types.CUpti_CallbackDomain
 				log.WithError(err).
 					WithField("index", ii).
 					WithField("attribute", types.CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID.String()).
-					Error("failed to get cuptiEventGroupGetAttribute")
+					Error("failed to get cuptiEventGroupGetAttribute for group domain")
 				return err
 			}
 
@@ -1057,6 +1099,7 @@ func (c *CUPTI) onCudaLaunchCaptureMetricsExit(domain types.CUpti_CallbackDomain
 				if err != nil {
 					log.WithError(err).
 						WithField("index", ii).
+						WithField("event_id", int(eventId)).
 						WithField("attribute", types.CUPTI_EVENT_READ_FLAG_NONE.String()).
 						Error("failed to get cuptiEventGroupReadEvent")
 					return err
@@ -1165,6 +1208,8 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 	var numInstances C.size_t
 	numInstancesByteCount := (C.size_t)(unsafe.Sizeof(numInstances))
 
+	C.cudaDeviceSynchronize()
+
 	err = checkCUPTIError(
 		C.cuptiEventGroupGetAttribute(
 			eventGroup,
@@ -1177,8 +1222,6 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 		log.WithError(err).Error("failed to cuptiEventGroupGetAttribute")
 		return err
 	}
-
-	C.cudaDeviceSynchronize()
 
 	correlationId := uint64(cbInfo.correlationId)
 	span, err := c.spanFromContextCorrelationId(correlationId, callbackName)
@@ -1204,6 +1247,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 		if err != nil {
 			log.WithError(err).
 				WithField("event_name", eventName).
+				WithField("mode", types.CUPTI_EVENT_READ_FLAG_NONE.String()).
 				Error("failed to cuptiEventGroupReadEvent")
 			return err
 		}
@@ -1251,7 +1295,7 @@ func (c *CUPTI) onCudaLaunch(domain types.CUpti_CallbackDomain, cbid types.CUPTI
 		if len(c.metrics) != 0 {
 			err := c.onCudaLaunchCaptureMetricsExit(domain, "cuda_launch", cbInfo)
 			if err != nil {
-				log.WithError(err).Error("failed at exit events")
+				log.WithError(err).Error("failed at exit metrics")
 			}
 		}
 		if len(c.events) != 0 {
@@ -1986,9 +2030,24 @@ func (c *CUPTI) onCUCtxCreate(domain types.CUpti_CallbackDomain, cbid types.CUpt
 }
 
 func (c *CUPTI) onContextCreate(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
-	if len(c.events) == 0 && len(c.metrics) == 0 {
+
+	if err := c.onContextCreateAddEventGroup(domain, cuCtx); err != nil {
+		return err
+	}
+	if err := c.onContextCreateAddMetricGroup(domain, cuCtx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *CUPTI) onContextCreateAddMetricGroup(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
+
+	if len(c.metrics) == 0 {
 		return nil
 	}
+
+	// pp.Println("onContextCreateAddMetricGroup")
 
 	deviceId := uint32(0)
 	err := checkCUPTIError(C.cuptiGetDeviceId(cuCtx, (*C.uint32_t)(&deviceId)))
@@ -2002,25 +2061,55 @@ func (c *CUPTI) onContextCreate(domain types.CUpti_CallbackDomain, cuCtx C.CUcon
 		return errors.Wrap(err, "unable to get device id when creating resource context")
 	}
 
-	if len(c.metrics) != 0 {
-		err = c.addMetricGroup(cuCtx, uint32(ctxId), uint32(deviceId))
-		if err != nil {
-			return errors.Wrap(err, "cannot add metric group")
-		}
+	err = c.addMetricGroup(cuCtx, uint32(ctxId), uint32(deviceId))
+	if err != nil {
+		return errors.Wrap(err, "cannot add metric group")
 	}
 
-	if len(c.events) != 0 {
-		err = c.addEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
-		if err != nil {
-			return errors.Wrap(err, "cannot add event group")
-		}
+	return nil
+}
+
+func (c *CUPTI) onContextCreateAddEventGroup(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
+
+	if len(c.events) == 0 {
+		return nil
+	}
+
+	pp.Println("onContextCreateAddEventGroup")
+
+	deviceId := uint32(0)
+	err := checkCUPTIError(C.cuptiGetDeviceId(cuCtx, (*C.uint32_t)(&deviceId)))
+	if err != nil {
+		return errors.Wrap(err, "unable to get device id when creating resource context")
+	}
+
+	ctxId := uint32(0)
+	err = checkCUPTIError(C.cuptiGetContextId(cuCtx, (*C.uint32_t)(&ctxId)))
+	if err != nil {
+		return errors.Wrap(err, "unable to get device id when creating resource context")
+	}
+
+	err = c.addEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
+	if err != nil {
+		return errors.Wrap(err, "cannot add event group")
 	}
 
 	return nil
 }
 
 func (c *CUPTI) onContextDestroy(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
-	if len(c.events) == 0 && len(c.metrics) == 0 {
+	if err := c.onContextDestroyMetricGroup(domain, cuCtx); err != nil {
+		return err
+	}
+
+	if err := c.onContextDestroyEventGroup(domain, cuCtx); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CUPTI) onContextDestroyMetricGroup(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
+	if len(c.metrics) == 0 {
 		return nil
 	}
 
@@ -2036,18 +2125,34 @@ func (c *CUPTI) onContextDestroy(domain types.CUpti_CallbackDomain, cuCtx C.CUco
 		return errors.Wrap(err, "unable to get device id when creating resource context")
 	}
 
-	if len(c.events) != 0 {
-		err = c.removeEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
-		if err != nil {
-			return errors.Wrap(err, "cannot remove event group")
-		}
+	err = c.removeMetricGroup(cuCtx, uint32(ctxId), uint32(deviceId))
+	if err != nil {
+		return errors.Wrap(err, "cannot remove metric group")
 	}
 
-	if len(c.metrics) != 0 {
-		err = c.removeMetricGroup(cuCtx, uint32(ctxId), uint32(deviceId))
-		if err != nil {
-			return errors.Wrap(err, "cannot remove metric group")
-		}
+	return nil
+}
+
+func (c *CUPTI) onContextDestroyEventGroup(domain types.CUpti_CallbackDomain, cuCtx C.CUcontext) error {
+	if len(c.events) == 0 {
+		return nil
+	}
+
+	deviceId := uint32(0)
+	err := checkCUPTIError(C.cuptiGetDeviceId(cuCtx, (*C.uint32_t)(&deviceId)))
+	if err != nil {
+		return errors.Wrap(err, "unable to get device id when creating resource context")
+	}
+
+	ctxId := uint32(0)
+	err = checkCUPTIError(C.cuptiGetContextId(cuCtx, (*C.uint32_t)(&ctxId)))
+	if err != nil {
+		return errors.Wrap(err, "unable to get device id when creating resource context")
+	}
+
+	err = c.removeEventGroup(cuCtx, uint32(ctxId), uint32(deviceId))
+	if err != nil {
+		return errors.Wrap(err, "cannot remove event group")
 	}
 
 	return nil

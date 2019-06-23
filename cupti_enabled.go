@@ -32,19 +32,21 @@ type CUPTI struct {
 }
 
 type eventData struct {
-	cuCtx      C.CUcontext
-	cuCtxID    uint32
-	deviceId   uint32
-	eventGroup C.CUpti_EventGroup
-	eventIds   map[string]C.CUpti_EventID
+	cuCtx                    C.CUcontext
+	destroyAfterKernelLaunch bool
+	cuCtxID                  uint32
+	deviceId                 uint32
+	eventGroup               C.CUpti_EventGroup
+	eventIds                 map[string]C.CUpti_EventID
 }
 
 type metricData struct {
-	cuCtx          C.CUcontext
-	cuCtxID        uint32
-	deviceId       uint32
-	eventGroupSets *C.CUpti_EventGroupSets
-	metricIds      map[string]C.CUpti_MetricID
+	cuCtx                    C.CUcontext
+	destroyAfterKernelLaunch bool
+	cuCtxID                  uint32
+	deviceId                 uint32
+	eventGroupSets           *C.CUpti_EventGroupSets
+	metricIds                map[string]C.CUpti_MetricID
 }
 
 var (

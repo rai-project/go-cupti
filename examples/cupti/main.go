@@ -75,7 +75,6 @@ func main() {
 			cupti.Context(ctx),
 			cupti.Activities(nil),
 			cupti.Callbacks([]string{
-				"CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel",
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020",
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000",
 				// "CUPTI_CBID_NVTX_nvtxRangeStartA",
@@ -88,8 +87,8 @@ func main() {
 			cupti.Metrics(
 				[]string{
 					// "flop_count_sp",
-					// "dram_read_bytes",
-					// "dram_write_bytes",
+					"dram_read_bytes",
+					"dram_write_bytes",
 				},
 			),
 			cupti.Events(
