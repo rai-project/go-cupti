@@ -12,10 +12,13 @@ import "C"
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"time"
 	"unsafe"
 
+	"github.com/ianlancetaylor/demangle"
 	"github.com/k0kubun/pp"
+	"github.com/spf13/cast"
 
 	//humanize "github.com/dustin/go-humanize"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -2442,6 +2445,10 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 
 //export kernelReplayCallback
 func kernelReplayCallback(cKernelName *C.char, numReplaysDone C.int, customData unsafe.Pointer) {
-	kernelName := C.GoString(cKernelName)
-	pp.Println(kernelName, "  ", numReplaysDone)
+	mangledName := C.GoString(cKernelName)
+	kernelName, err := demangle.ToString(mangledName)
+	if err != nil {
+		kernelName = mangledName
+	}
+	fmt.Println(kernelName + " was called " + cast.ToString(int(numReplaysDone)) + " times")
 }
