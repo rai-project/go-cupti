@@ -1,6 +1,12 @@
 package main
 
+// #cgo linux CFLAGS: -I/usr/local/cuda/include
+// #cgo linux LDFLAGS: -lcuda -lcudart -L/usr/local/cuda/lib64
+// #include <cuda.h>
+// #include <cuda_runtime.h>
+// #include <cuda_profiler_api.h>
 import "C"
+
 import (
 	"context"
 	"os"
@@ -86,7 +92,7 @@ func main() {
 			}),
 			cupti.Metrics(
 				[]string{
-					// "flop_count_sp",
+					"flop_count_sp",
 					"dram_read_bytes",
 					"dram_write_bytes",
 				},
@@ -108,9 +114,15 @@ func main() {
 			go func() {
 				defer wg.Done()
 				vectorAdd()
+				C.cudaDeviceSynchronize()
 			}()
 		}
 		wg.Wait()
+
+		for ii := 0; ii < 5; ii++ {
+			vectorAdd()
+			C.cudaDeviceSynchronize()
+		}
 
 	}()
 	time.Sleep(5 * time.Second)

@@ -37,7 +37,7 @@ func vectorAdd() {
 func main() {
 	func() {
 		var wg sync.WaitGroup
-		for ii := 0; ii < 1; ii++ {
+		for ii := 0; ii < 3; ii++ {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
