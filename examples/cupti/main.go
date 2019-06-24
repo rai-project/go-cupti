@@ -110,12 +110,12 @@ func main() {
 
 		var wg sync.WaitGroup
 		for ii := 0; ii < 1; ii++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				vectorAdd()
-				C.cudaDeviceSynchronize()
-			}()
+			// wg.Add(1)
+			// go func() {
+			// 	defer wg.Done()
+			vectorAdd()
+			C.cudaDeviceSynchronize()
+			// }()
 		}
 		wg.Wait()
 

@@ -918,6 +918,8 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 }
 
 func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
+	pp.Println("onCudaLaunchCaptureMetricsEnter")
+
 	metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
 		err = c.onContextCreateAddMetricGroup(domain, cbInfo.context)
@@ -947,7 +949,7 @@ func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomai
 			return err
 		}
 	}
-	C.cudaDeviceSynchronize()
+	// C.cudaDeviceSynchronize()
 
 	eventGroupSets := (*[1 << 28]C.CUpti_EventGroupSet)(unsafe.Pointer(eventGroupSetsPtr.sets))[:numSets:numSets]
 	for ii, eventGroupSet := range eventGroupSets {
@@ -2353,7 +2355,6 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			return
 		}
 	case types.CUPTI_CB_DOMAIN_NVTX:
-		pp.Println("in nvtx domain")
 		cbid := types.CUpti_nvtx_api_trace_cbid(cbid0)
 		cbInfo := (*C.CUpti_CallbackData)(cbInfo0)
 		switch cbid {
@@ -2437,4 +2438,10 @@ func callback(userData unsafe.Pointer, domain0 C.CUpti_CallbackDomain, cbid0 C.C
 			return
 		}
 	}
+}
+
+//export kernelReplayCallback
+func kernelReplayCallback(cKernelName *C.char, numReplaysDone C.int, customData unsafe.Pointer) {
+	kernelName := C.GoString(cKernelName)
+	pp.Println(kernelName, "  ", numReplaysDone)
 }
