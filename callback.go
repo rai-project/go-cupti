@@ -263,6 +263,7 @@ func (c *CUPTI) onCULaunchKernelExit(domain types.CUpti_CallbackDomain, cbid typ
 }
 
 func (c *CUPTI) onCULaunchKernel(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
+	pp.Println("onCULaunchKernel")
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		res := c.onCULaunchKernelEnter(domain, cbid, cbInfo)
@@ -921,7 +922,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsEnter(domain types.CUpti_CallbackDomain
 }
 
 func (c *CUPTI) onCudaLaunchCaptureMetricsEnter(domain types.CUpti_CallbackDomain, callbackName string, cbInfo *C.CUpti_CallbackData) error {
-	pp.Println("onCudaLaunchCaptureMetricsEnter")
+	// pp.Println("onCudaLaunchCaptureMetricsEnter")
 
 	metricData, err := c.findMetricDataByCUCtxID(uint32(cbInfo.contextUid))
 	if err != nil {
@@ -1272,6 +1273,7 @@ func (c *CUPTI) onCudaLaunchCaptureEventsExit(domain types.CUpti_CallbackDomain,
 }
 
 func (c *CUPTI) onCudaLaunch(domain types.CUpti_CallbackDomain, cbid types.CUPTI_RUNTIME_TRACE_CBID, cbInfo *C.CUpti_CallbackData) error {
+	// pp.Println("onCudaLaunch")
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		res := c.onCudaLaunchEnter(domain, cbid, cbInfo)

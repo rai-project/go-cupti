@@ -371,7 +371,7 @@ func (c *CUPTI) createMetricGroup(cuCtx C.CUcontext, cuCtxID uint32, deviceId ui
 			log.WithError(err).Error("failed to enable cuptiEnableKernelReplayMode")
 			return nil, err
 		}
-		C.cuptiKernelReplaySubscribeUpdate((C.CUpti_KernelReplayUpdateFunc)(unsafe.Pointer(C.kernelReplayCallback)), nil)
+		// C.cuptiKernelReplaySubscribeUpdate((C.CUpti_KernelReplayUpdateFunc)(unsafe.Pointer(C.kernelReplayCallback)), nil)
 	}
 
 	eventGroupSets := (*[1 << 28]C.CUpti_EventGroupSet)(unsafe.Pointer(eventGroupSetsPtr.sets))[:numSets:numSets]

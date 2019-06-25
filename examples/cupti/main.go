@@ -11,7 +11,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	sourcepath "github.com/GeertJohan/go-sourcepath"
@@ -83,12 +82,6 @@ func main() {
 			cupti.Callbacks([]string{
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020",
 				"CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000",
-				// "CUPTI_CBID_NVTX_nvtxRangeStartA",
-				// "CUPTI_CBID_NVTX_nvtxRangeStartEx",
-				// "CUPTI_CBID_NVTX_nvtxRangeEnd",
-				// "CUPTI_CBID_NVTX_nvtxRangePushA",
-				// "CUPTI_CBID_NVTX_nvtxRangePushEx",
-				// "CUPTI_CBID_NVTX_nvtxRangePop",
 			}),
 			cupti.Metrics(
 				[]string{
@@ -108,22 +101,10 @@ func main() {
 		}
 		defer cupti.Close()
 
-		var wg sync.WaitGroup
 		for ii := 0; ii < 1; ii++ {
-			// wg.Add(1)
-			// go func() {
-			// 	defer wg.Done()
-			vectorAdd()
-			C.cudaDeviceSynchronize()
-			// }()
-		}
-		wg.Wait()
-
-		for ii := 0; ii < 5; ii++ {
 			vectorAdd()
 			C.cudaDeviceSynchronize()
 		}
-
 	}()
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 }
