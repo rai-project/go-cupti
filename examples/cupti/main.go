@@ -85,19 +85,19 @@ func main() {
 			}),
 			cupti.Metrics(
 				[]string{
-					// "flop_count_sp",
+					"flop_count_sp",
 					// "dram_read_bytes",
 					// "dram_write_bytes",
 				},
 			),
 			cupti.Events(
 				[]string{
-					"inst_executed",
-					"warps_launched",
-					"l2_subp0_read_sector_misses",
-					"l2_subp1_read_sector_misses",
-					"l2_subp0_write_sector_misses",
-					"l2_subp0_write_sector_misses",
+					// "inst_executed",
+					// "warps_launched",
+					// "l2_subp0_read_sector_misses",
+					// "l2_subp1_read_sector_misses",
+					// "l2_subp0_write_sector_misses",
+					// "l2_subp0_write_sector_misses",
 				},
 			))
 		if err != nil {
