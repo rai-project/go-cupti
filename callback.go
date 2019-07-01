@@ -17,9 +17,7 @@ import (
 	"unsafe"
 
 	"github.com/ianlancetaylor/demangle"
-	"github.com/k0kubun/pp"
 	"github.com/spf13/cast"
-
 	//humanize "github.com/dustin/go-humanize"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -263,7 +261,6 @@ func (c *CUPTI) onCULaunchKernelExit(domain types.CUpti_CallbackDomain, cbid typ
 }
 
 func (c *CUPTI) onCULaunchKernel(domain types.CUpti_CallbackDomain, cbid types.CUpti_driver_api_trace_cbid, cbInfo *C.CUpti_CallbackData) error {
-	pp.Println("onCULaunchKernel")
 	switch cbInfo.callbackSite {
 	case C.CUPTI_API_ENTER:
 		res := c.onCULaunchKernelEnter(domain, cbid, cbInfo)
