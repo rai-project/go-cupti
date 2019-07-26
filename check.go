@@ -1,4 +1,4 @@
-// +build linux,cgo,!arm64,!nogpu
+// +build linux,cgo,!nogpu
 
 package cupti
 
