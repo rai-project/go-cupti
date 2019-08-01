@@ -12,7 +12,6 @@ import (
 	"unsafe"
 
 	"github.com/k0kubun/pp"
-
 	"github.com/pkg/errors"
 	"github.com/rai-project/go-cupti/types"
 	nvidiasmi "github.com/rai-project/nvidia-smi"
